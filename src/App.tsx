@@ -1,34 +1,27 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/electron-vite.animate.svg'
 import './App.css'
+import MainPanel from './components/main-panel/MainPanel'
+import LeftSidebar from './components/sidebar/LeftSidebar'
+import RightSidebar from './components/sidebar/RightSidebar'
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <div>
-        <a href="https://electron-vite.github.io" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    // 'h-screen', 'w-screen' is to make the page full screen
+    // In CSS, it is same as 'height: 100vh; width: 100vw'
+    // While 'h-full', 'w-full' is same as 'height: 100%; width: 100%', it means the height and width is 100% of the parent element
+    <div className="flex h-screen w-screen bg-gray-200">
+
+      {/* Left sidebar */}
+      <LeftSidebar />
+
+      {/* Main panel */}
+      {/* 'flex-1': to allow a flex item to grow and shrink as needed, then it will push the right sidebar to the right */}
+      <div className="flex-1">
+        <MainPanel />
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+
+      {/* Right sidebar */}
+      <RightSidebar />
+    </div>
   )
 }
 
