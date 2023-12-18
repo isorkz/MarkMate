@@ -68,7 +68,8 @@ const FileTree = ({
   }, [dirPath]);
 
   return (
-    <div className="m-2">
+    // flex-grow: allow a flex item to grow and shrink as needed, then it will push the settings to the bottom
+    <div className="flex flex-col flex-grow w-full overflow-y-auto overflow-x-hidden m-2">
       <ul>
         {data ? <TreeNode node={data} isRoot setContent={setContent} /> : <div className="p-5 text-center text-gray-500">Loading...</div>}
       </ul>

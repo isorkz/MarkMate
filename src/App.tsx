@@ -11,7 +11,7 @@ function App() {
     // 'h-screen', 'w-screen' is to make the page full screen
     // In CSS, it is same as 'height: 100vh; width: 100vw'
     // While 'h-full', 'w-full' is same as 'height: 100%; width: 100%', it means the height and width is 100% of the parent element
-    <div className="flex h-screen w-screen bg-gray-200">
+    <div className="flex h-screen w-screen bg-white">
 
       {/* Left sidebar */}
       <LeftSidebar setContent={setContent} />
