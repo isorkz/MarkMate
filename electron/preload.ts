@@ -1,5 +1,19 @@
 import { contextBridge, ipcRenderer } from 'electron'
 
+// --------- Expose my API to the Renderer process ---------
+contextBridge.exposeInMainWorld('api', {
+  readFile: (path: string, callback: (error: NodeJS.ErrnoException | null, data: string) => void) => {
+    ipcRenderer.invoke('read-file', path).then((data) => {
+      callback(null, data);
+    }).catch((err) => {
+      callback(err, '');
+    });
+  },
+  readDirTree: (path: string) => {
+    return ipcRenderer.invoke('read-dir-tree', path);
+  }
+});
+
 // --------- Expose some API to the Renderer process ---------
 contextBridge.exposeInMainWorld('ipcRenderer', withPrototype(ipcRenderer))
 

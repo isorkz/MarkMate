@@ -1,5 +1,6 @@
 import { app, BrowserWindow } from 'electron'
 import path from 'node:path'
+import { setupIpcHandlers } from './ipcHandlers';
 
 // The built directory structure
 //
@@ -24,6 +25,9 @@ function createWindow() {
     height: 600,
     icon: path.join(process.env.VITE_PUBLIC, 'electron-vite.svg'),
     webPreferences: {
+      // using contextBridge to expose API to the Renderer-process, instead of `nodeIntegration: true`
+      // nodeIntegration: true,
+      // contextIsolation: false,
       preload: path.join(__dirname, 'preload.js'),
     },
   })
@@ -56,7 +60,11 @@ app.on('activate', () => {
   // dock icon is clicked and there are no other windows open.
   if (BrowserWindow.getAllWindows().length === 0) {
     createWindow()
+
   }
 })
 
-app.whenReady().then(createWindow)
+app.whenReady().then(() => {
+  createWindow();
+  setupIpcHandlers(); // 设置 IPC 处理程序
+});

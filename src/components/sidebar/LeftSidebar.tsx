@@ -2,6 +2,8 @@ import React from 'react'
 import FileTree from '../file-tree/FileTree'
 import Settings from '../settings/Settings'
 
+const dirPath = "/my/path"
+
 const LeftSidebar = () => {
   return (
     // flex-none: don't grow or shrink
@@ -10,7 +12,7 @@ const LeftSidebar = () => {
 
       {/* flex-grow: allow a flex item to grow and shrink as needed, then it will push the settings to the bottom */}
       <div className="flex flex-col flex-grow">
-        <FileTree />
+        <FileTree dirPath={dirPath} />
       </div>
 
       <Settings />
