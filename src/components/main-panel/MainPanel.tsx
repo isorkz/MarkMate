@@ -1,12 +1,20 @@
-import React from 'react'
+import { Dispatch, SetStateAction } from 'react'
 import ContentEditor from '../content-edit/ContentEditor'
 
-const MainPanel = () => {
+interface MainPanelProps {
+  content: string;
+  setContent: Dispatch<SetStateAction<string>>;
+}
+
+const MainPanel = ({
+  content,
+  setContent,
+}: MainPanelProps) => {
   return (
     <main className="relative top-0 left-0 flex flex-none flex-col h-full">
       <span className="flex-none px-4 py-2 text-lg font-medium">Main Panel</span>
 
-      <ContentEditor />
+      <ContentEditor content={content} setContent={setContent} />
     </main>
   )
 }
