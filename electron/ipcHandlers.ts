@@ -10,6 +10,7 @@ export const setupIpcHandlers = (): void => {
   });
 
   ipcMain.handle('read-dir-tree', async (event, path: string) => {
-    return dirTree(path);
+    // filter by md files
+    return dirTree(path, { extensions: /\.md$/ });
   });
 };
