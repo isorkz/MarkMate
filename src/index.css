@@ -35,9 +35,102 @@ body {
   min-height: 100vh;
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+.MarkMateContent h1 {
+  font-size: 3em;
+  line-height: 1.5;
+  font-weight: 500;
+}
+
+.MarkMateContent h2 {
+  font-size: 2.5em;
+  line-height: 1.5;
+  font-weight: 500;
+}
+
+.MarkMateContent h3 {
+  font-size: 2em;
+  line-height: 1.4;
+  font-weight: 450;
+}
+
+.MarkMateContent h4 {
+  font-size: 1.5em;
+  line-height: 1.3;
+  font-weight: 450;
+}
+
+.MarkMateContent p {
+  margin-top: 0;
+  margin-bottom: 10px;
+}
+
+.MarkMateContent a {
+  font-weight: 500;
+  color: #646cff;
+  text-decoration: inherit;
+}
+
+.MarkMateContent a:hover {
+  color: #535bf2;
+}
+
+.MarkMateContent ul {
+  margin-top: 0;
+  margin-bottom: 10px;
+  padding-left: 2em;
+  list-style-type: disc;
+}
+
+.MarkMateContent ul ul {
+  list-style-type: circle;
+}
+
+.MarkMateContent ul ul ul {
+  list-style-type: square;
+}
+
+.MarkMateContent ol {
+  margin-top: 0;
+  margin-bottom: 10px;
+  padding-left: 2em;
+  list-style-type: decimal;
+}
+
+.MarkMateContent blockquote {
+  padding: 0 1em;
+  color: #666;
+  border-left: 0.25em solid #ddd;
+}
+
+/* code:not(pre > code): <code> blocks inside <pre> will not be affected by this rule */
+.MarkMateContent code:not(pre > code) {
+  padding: 2px 4px;
+  font-size: 90%;
+  color: #c7254e;
+  background-color: #f9f2f4;
+  border-radius: 4px;
+}
+
+/* for code blocks without language, add custom styles */
+/* code blocks with language will be marked with .MarkMateCodeBlocks class */
+/* so, using :not(.MarkMateCodeBlocks) to filter out the code blocks with language */
+.MarkMateContent pre:not(.MarkMateCodeBlocks)>code {
+  display: block;
+  padding: 9.5px;
+  margin: 0 0 10px;
+  font-size: 13px;
+  line-height: 1.42857143;
+  color: #333;
+  word-break: break-all;
+  word-wrap: break-word;
+  background-color: #f5f5f5;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.MarkMateContent hr {
+  margin-top: 20px;
+  margin-bottom: 20px;
 }
 
 button {

@@ -23,6 +23,9 @@ const StyledMarkdown: React.FC<{ children: string }> = ({ children }) => {
             // maxWidth: '600px',
             // width: '300px',
           }}
+          // 目前没办法区别内联的<code>与不带language的code blocks. 所以这里添加一个新的classname, 以便区分.
+          // 然后对于不带language的code blocks, 自己在css中实现样式.
+          class={"MarkMateCodeBlocks"}
           children={String(children).replace(/\n$/, '')} {...props} />
         : <code className={className} {...props}>{children}</code>
     }
@@ -31,7 +34,7 @@ const StyledMarkdown: React.FC<{ children: string }> = ({ children }) => {
   return (
     // using ReactMarkdown to parse markdown content
     // using 'break-all' to break the long words
-    <div className='w-full break-all'>
+    <div className='w-full break-all MarkMateContent'>
       <ReactMarkdown components={components}>{children}</ReactMarkdown>
     </div>
   );
