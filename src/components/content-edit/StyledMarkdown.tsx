@@ -19,8 +19,8 @@ const StyledMarkdown: React.FC<{ children: string }> = ({ children }) => {
           language={match[1]}
           customStyle={{
             overflowX: 'auto',
-            minWidth: '100px',
-            maxWidth: '600px',
+            // minWidth: '100px',
+            // maxWidth: '600px',
             // width: '300px',
           }}
           children={String(children).replace(/\n$/, '')} {...props} />
