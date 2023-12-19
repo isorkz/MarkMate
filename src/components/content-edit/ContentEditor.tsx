@@ -1,4 +1,5 @@
 import { Dispatch, SetStateAction } from 'react'
+import StyledMarkdown from './StyledMarkdown';
 
 interface ContentEditorProps {
   content: string;
@@ -10,9 +11,11 @@ const ContentEditor = ({
   setContent,
 }: ContentEditorProps) => {
   return (
-    <main className="relative top-0 left-0 flex flex-none flex-col h-full w-[18rem]">
-      <span className="flex-none px-4 py-2 text-lg font-medium">{content}</span>
-    </main>
+    <div className="flex h-full w-full overflow-y-auto overflow-x-hidden">
+      <div className="flex h-full w-full px-[10%] py-[5%] overflow-x-auto">
+        <StyledMarkdown>{content}</StyledMarkdown>
+      </div>
+    </div>
   )
 }
 

@@ -11,7 +11,7 @@ const MainPanel = ({
   setContent,
 }: MainPanelProps) => {
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col w-full h-full overflow-x-hidden">
       <ContentEditor content={content} setContent={setContent} />
     </div>
   )
