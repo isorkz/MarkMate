@@ -1,6 +1,7 @@
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import ReactMarkdown, { Components } from 'react-markdown';
+import remarkGfm from 'remark-gfm'
 
 const StyledMarkdown: React.FC<{ children: string }> = ({ children }) => {
   const components: Components = {
@@ -25,7 +26,7 @@ const StyledMarkdown: React.FC<{ children: string }> = ({ children }) => {
           }}
           // 目前没办法区别内联的<code>与不带language的code blocks. 所以这里添加一个新的classname, 以便区分.
           // 然后对于不带language的code blocks, 自己在css中实现样式.
-          class={"MarkMateCodeBlocks"}
+          className={"MarkMateCodeBlocks"}
           children={String(children).replace(/\n$/, '')} {...props} />
         : <code className={className} {...props}>{children}</code>
     }
@@ -35,7 +36,7 @@ const StyledMarkdown: React.FC<{ children: string }> = ({ children }) => {
     // using ReactMarkdown to parse markdown content
     // using 'break-all' to break the long words
     <div className='w-full break-all MarkMateContent'>
-      <ReactMarkdown components={components}>{children}</ReactMarkdown>
+      <ReactMarkdown components={components} remarkPlugins={[remarkGfm]}>{children}</ReactMarkdown>
     </div>
   );
 };
