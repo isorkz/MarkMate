@@ -34,10 +34,7 @@ const StyledMarkdown: React.FC<{ children: string }> = ({ children }) => {
 
   return (
     // using ReactMarkdown to parse markdown content
-    // using 'break-all' to break the long words
-    <div className='w-full break-all MarkMateContent'>
-      <ReactMarkdown components={components} remarkPlugins={[remarkGfm]}>{children}</ReactMarkdown>
-    </div>
+    <ReactMarkdown components={components} remarkPlugins={[remarkGfm]}>{children}</ReactMarkdown>
   );
 };
 
