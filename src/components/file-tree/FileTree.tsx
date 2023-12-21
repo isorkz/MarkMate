@@ -52,7 +52,7 @@ const TreeNode = ({
 };
 
 interface FileTreeProps {
-  dirPath: string;
+  dirPath: string | undefined;
   setContent: Dispatch<SetStateAction<string>>;
 }
 
@@ -63,6 +63,7 @@ const FileTree = ({
   const [data, setData] = useState<TreeNode | null>(null);
 
   useEffect(() => {
+    if (!dirPath) return;
     // window.api defined in preload.ts, and implemented in ipcHandler.ts
     window.api.readDirTree(dirPath).then(setData);
   }, [dirPath]);

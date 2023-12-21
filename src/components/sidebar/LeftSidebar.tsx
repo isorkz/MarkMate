@@ -2,7 +2,7 @@ import { Dispatch, SetStateAction } from 'react'
 import FileTree from '../file-tree/FileTree'
 import Settings from '../settings/Settings'
 
-const dirPath = "/my/path"
+const dirPath = import.meta.env.VITE_APP_PATH
 
 interface LeftSidebarProps {
   setContent: Dispatch<SetStateAction<string>>;
