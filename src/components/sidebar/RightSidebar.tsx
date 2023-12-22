@@ -1,5 +1,5 @@
 import React from 'react'
-import ContentToc from '../content-toc/ContentToc'
+import ContentToc from '../toc/ContentToc'
 
 const RightSidebar = () => {
   return (

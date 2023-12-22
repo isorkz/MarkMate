@@ -5,7 +5,7 @@ import LeftSidebar from './components/sidebar/LeftSidebar'
 import RightSidebar from './components/sidebar/RightSidebar'
 
 function App() {
-  const [content, setContent] = useState('');
+  const [mdSourceContent, setMdSourceContent] = useState('');
 
   return (
     // 'h-screen', 'w-screen' is to make the page full screen
@@ -15,10 +15,10 @@ function App() {
     <div className="grid grid-cols-3 h-screen w-screen bg-white overflow-x-hidden" style={{ gridTemplateColumns: "18rem auto 18rem" }}>
 
       {/* Left sidebar */}
-      <LeftSidebar setContent={setContent} />
+      <LeftSidebar setMdSourceContent={setMdSourceContent} />
 
       {/* Main panel */}
-      <MainPanel content={content} setContent={setContent} />
+      <MainPanel mdSourceContent={mdSourceContent} setMdSourceContent={setMdSourceContent} />
 
       {/* Right sidebar */}
       <RightSidebar />

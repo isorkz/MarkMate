@@ -11,14 +11,14 @@ interface TreeNodeProps {
   node: TreeNode;
   level?: number;
   isRoot?: boolean;
-  setContent: Dispatch<SetStateAction<string>>;
+  setMdSourceContent: Dispatch<SetStateAction<string>>;
 };
 
 const TreeNode = ({
   node,
   level = 0,
   isRoot = false,
-  setContent
+  setMdSourceContent
 }: TreeNodeProps) => {
   const [opened, setOpened] = useState(isRoot);
 
@@ -29,7 +29,7 @@ const TreeNode = ({
         if (err) {
           console.error(err);
         } else {
-          setContent(data);
+          setMdSourceContent(data);
         }
       })
     } else {
@@ -45,7 +45,7 @@ const TreeNode = ({
       </div>
 
       {opened && node.children && node.children.map((childNode) =>
-        <TreeNode node={childNode} level={level + 1} key={childNode.path} setContent={setContent} />
+        <TreeNode node={childNode} level={level + 1} key={childNode.path} setMdSourceContent={setMdSourceContent} />
       )}
     </div>
   );
@@ -53,12 +53,12 @@ const TreeNode = ({
 
 interface FileTreeProps {
   dirPath: string | undefined;
-  setContent: Dispatch<SetStateAction<string>>;
+  setMdSourceContent: Dispatch<SetStateAction<string>>;
 }
 
 const FileTree = ({
   dirPath,
-  setContent,
+  setMdSourceContent,
 }: FileTreeProps) => {
   const [data, setData] = useState<TreeNode | null>(null);
 
@@ -72,7 +72,7 @@ const FileTree = ({
     // flex-grow: allow a flex item to grow and shrink as needed, then it will push the settings to the bottom
     <div className="flex flex-col flex-grow w-full overflow-y-auto overflow-x-hidden m-2">
       <ul>
-        {data ? <TreeNode node={data} isRoot setContent={setContent} /> : <div className="p-5 text-center text-gray-500">Loading...</div>}
+        {data ? <TreeNode node={data} isRoot setMdSourceContent={setMdSourceContent} /> : <div className="p-5 text-center text-gray-500">Loading...</div>}
       </ul>
     </div>
   );

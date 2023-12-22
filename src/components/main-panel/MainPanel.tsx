@@ -1,18 +1,18 @@
 import { Dispatch, SetStateAction } from 'react'
-import ContentEditor from '../content-edit/ContentEditor'
+import ContentEditor from '../editor/ContentEditor'
 
 interface MainPanelProps {
-  content: string;
-  setContent: Dispatch<SetStateAction<string>>;
+  mdSourceContent: string;
+  setMdSourceContent: Dispatch<SetStateAction<string>>;
 }
 
 const MainPanel = ({
-  content,
-  setContent,
+  mdSourceContent,
+  setMdSourceContent,
 }: MainPanelProps) => {
   return (
     <div className="flex flex-col w-full h-full overflow-x-hidden">
-      <ContentEditor sourceContent={content} setSourceContent={setContent} />
+      <ContentEditor mdSourceContent={mdSourceContent} setMdSourceContent={setMdSourceContent} />
     </div>
   )
 }

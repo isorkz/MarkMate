@@ -10,8 +10,8 @@ import remarkParse from 'remark-parse'
 import remarkGfm from 'remark-gfm'
 
 interface ContentEditorProps {
-  sourceContent: string;
-  setSourceContent: Dispatch<SetStateAction<string>>;
+  mdSourceContent: string;
+  setMdSourceContent: Dispatch<SetStateAction<string>>;
 }
 
 // Slate wiki: https://docs.slatejs.org/walkthroughs/02-adding-event-handlers
@@ -46,18 +46,18 @@ const mdastToSlate = (mdastNodes: any[]) => {
   }
 
   let slateNodes: Descendant[] = []
-  for (let mdast of mdastNodes) {
-    console.log("mdast:", mdast)
-    switch (mdast.type) {
+  for (let node of mdastNodes) {
+    console.log("node:", node)
+    switch (node.type) {
       case 'text':
         slateNodes.push({
-          text: mdast.value,
+          text: node.value,
         })
         break;
       default:
         slateNodes.push({
           type: 'paragraph',
-          children: mdastToSlate(mdast.children),
+          children: mdastToSlate(node.children),
         })
     }
   }
@@ -66,8 +66,8 @@ const mdastToSlate = (mdastNodes: any[]) => {
 }
 
 const ContentEditor = ({
-  sourceContent,
-  setSourceContent,
+  mdSourceContent,
+  setMdSourceContent,
 }: ContentEditorProps) => {
   // Rich text editor: Slate, wiki: https://docs.slatejs.org/walkthroughs/02-adding-event-handlers
   const editor = useMemo(() => withReact(createEditor()), [])
@@ -89,14 +89,14 @@ const ContentEditor = ({
   }
 
   useEffect(() => {
-    if (sourceContent) {
-      const res = parseMarkdownToSlate(sourceContent)
+    if (mdSourceContent) {
+      const res = parseMarkdownToSlate(mdSourceContent)
       // Using Transforms to clean up the slate content first, then insert the new content.
       // Because setSlateContent is not working for slate.
       cleanupSlate();
       Transforms.insertNodes(editor, res, { at: [0] })
     }
-  }, [sourceContent])
+  }, [mdSourceContent])
 
   return (
     // using 'break-all' to break the long words
