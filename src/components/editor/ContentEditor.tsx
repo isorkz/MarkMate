@@ -57,7 +57,7 @@ declare module 'slate' {
 const parseMarkdownToSlate = (mdContent: string) => {
   const parser = unified().use(remarkParse).use(remarkGfm)
   const mdast = parser.parse(mdContent)
-  return mdastToSlate(mdast.children)
+  return markdownAstToSlate(mdast.children)
 }
 
 const parseLeafElement = (astNode: any, slateCustomText: CustomText) => {
@@ -99,35 +99,35 @@ const parseLeafElement = (astNode: any, slateCustomText: CustomText) => {
 // Parse markdown AST to Slate nodes.
 // For markdown AST, it's a tree.
 // For Slate, it's an array of nodes.
-const mdastToSlate = (mdastNodes: any[]) => {
+const markdownAstToSlate = (mdastNodes: any[]) => {
   let slateNodes: Descendant[] = []
   for (let node of mdastNodes) {
     switch (node.type) {
       case 'paragraph':
         slateNodes.push({
           type: 'paragraph',
-          children: mdastToSlate(node.children),
+          children: markdownAstToSlate(node.children),
         })
         break;
       case 'heading':
         slateNodes.push({
           type: 'head',
           level: node.depth,
-          children: mdastToSlate(node.children),
+          children: markdownAstToSlate(node.children),
         })
         break;
       case 'list':
         slateNodes.push({
           type: 'list',
           order: node.ordered,
-          children: mdastToSlate(node.children),
+          children: markdownAstToSlate(node.children),
         })
         break;
       case 'listItem':
         slateNodes.push({
           type: 'list-item',
           checked: node.checked,
-          children: mdastToSlate(node.children),
+          children: markdownAstToSlate(node.children),
         })
         break;
       case 'code':
@@ -154,7 +154,7 @@ const mdastToSlate = (mdastNodes: any[]) => {
       case 'blockquote':
         slateNodes.push({
           type: 'blockquote',
-          children: mdastToSlate(node.children),
+          children: markdownAstToSlate(node.children),
         })
         break;
       case 'table':
@@ -168,7 +168,7 @@ const mdastToSlate = (mdastNodes: any[]) => {
                   type: 'table-cell',
                   // Treat the first row as the table header.
                   isFirstRow: i === 0,
-                  children: mdastToSlate(cell.children),
+                  children: markdownAstToSlate(cell.children),
                 }
               }),
             }
@@ -178,13 +178,13 @@ const mdastToSlate = (mdastNodes: any[]) => {
       case 'tableRow':
         slateNodes.push({
           type: 'table-row',
-          children: mdastToSlate(node.children),
+          children: markdownAstToSlate(node.children),
         })
         break;
       case 'tableCell':
         slateNodes.push({
           type: 'table-cell',
-          children: mdastToSlate(node.children),
+          children: markdownAstToSlate(node.children),
         })
         break;
       case 'thematicBreak':
@@ -348,6 +348,11 @@ const ContentEditor = ({
     }
   }
 
+  const onChange = (value: Descendant[]) => {
+    setSlateContent(value)
+    console.log(value)
+  }
+
   useEffect(() => {
     if (mdSourceContent) {
       const slateNodes = parseMarkdownToSlate(mdSourceContent)
@@ -367,8 +372,11 @@ const ContentEditor = ({
     <div className="flex h-full w-full overflow-y-auto overflow-x-hidden">
       <div className="flex h-full w-full px-[10%] py-[5%] mb-[5%] overflow-x-auto">
         <div className='w-full break-all MarkMateContent'>
-          <Slate editor={editor} initialValue={slateContent} onChange={value => { setSlateContent(value) }} >
-            <Editable renderElement={renderElement} renderLeaf={renderLeaf} style={{ border: 'none', boxShadow: 'none', outline: 'none' }} />
+          <Slate editor={editor} initialValue={slateContent} onChange={onChange}>
+            <Editable
+              renderElement={renderElement}
+              renderLeaf={renderLeaf}
+              style={{ border: 'none', boxShadow: 'none', outline: 'none' }} />
           </Slate>
           {/* <CodeMirror value={content} extensions={[markdown({ base: markdownLanguage, codeLanguages: languages })]} onChange={onChange} /> */}
           {/* <StyledMarkdown>{mdSourceContent}</StyledMarkdown> */}
