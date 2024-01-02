@@ -1,8 +1,4 @@
-import { useState, useCallback, useMemo, Dispatch, SetStateAction, useEffect } from 'react'
-import CodeMirror from '@uiw/react-codemirror';
-import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
-import { languages } from '@codemirror/language-data';
-import StyledMarkdown from './StyledMarkdown';
+import { useState, useCallback, useMemo, Dispatch, SetStateAction, useEffect, MouseEventHandler } from 'react'
 import { BaseEditor, Descendant, Editor, Transforms, createEditor, Element as SlateElement, Text, Range, Point, Path } from 'slate'
 import { Slate, RenderElementProps, RenderLeafProps, Editable, ReactEditor, withReact } from 'slate-react'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
@@ -54,10 +50,10 @@ declare module 'slate' {
   }
 }
 
-const parseMarkdownToSlate = (mdContent: string) => {
+const markdownSourceToSlateNodes = (mdContent: string) => {
   const parser = unified().use(remarkParse).use(remarkGfm)
   const mdast = parser.parse(mdContent)
-  return markdownAstToSlate(mdast.children)
+  return markdownAstToSlateNodes(mdast.children)
 }
 
 const parseLeafElement = (astNode: any, slateCustomText: CustomText) => {
@@ -99,35 +95,35 @@ const parseLeafElement = (astNode: any, slateCustomText: CustomText) => {
 // Parse markdown AST to Slate nodes.
 // For markdown AST, it's a tree.
 // For Slate, it's an array of nodes.
-const markdownAstToSlate = (mdastNodes: any[]) => {
+const markdownAstToSlateNodes = (mdastNodes: any[]) => {
   let slateNodes: Descendant[] = []
   for (let node of mdastNodes) {
     switch (node.type) {
       case 'paragraph':
         slateNodes.push({
           type: 'paragraph',
-          children: markdownAstToSlate(node.children),
+          children: markdownAstToSlateNodes(node.children),
         })
         break;
       case 'heading':
         slateNodes.push({
           type: 'head',
           level: node.depth,
-          children: markdownAstToSlate(node.children),
+          children: markdownAstToSlateNodes(node.children),
         })
         break;
       case 'list':
         slateNodes.push({
           type: 'list',
           order: node.ordered,
-          children: markdownAstToSlate(node.children),
+          children: markdownAstToSlateNodes(node.children),
         })
         break;
       case 'listItem':
         slateNodes.push({
           type: 'list-item',
           checked: node.checked,
-          children: markdownAstToSlate(node.children),
+          children: markdownAstToSlateNodes(node.children),
         })
         break;
       case 'code':
@@ -154,7 +150,7 @@ const markdownAstToSlate = (mdastNodes: any[]) => {
       case 'blockquote':
         slateNodes.push({
           type: 'blockquote',
-          children: markdownAstToSlate(node.children),
+          children: markdownAstToSlateNodes(node.children),
         })
         break;
       case 'table':
@@ -168,7 +164,7 @@ const markdownAstToSlate = (mdastNodes: any[]) => {
                   type: 'table-cell',
                   // Treat the first row as the table header.
                   isFirstRow: i === 0,
-                  children: markdownAstToSlate(cell.children),
+                  children: markdownAstToSlateNodes(cell.children),
                 }
               }),
             }
@@ -178,13 +174,13 @@ const markdownAstToSlate = (mdastNodes: any[]) => {
       case 'tableRow':
         slateNodes.push({
           type: 'table-row',
-          children: markdownAstToSlate(node.children),
+          children: markdownAstToSlateNodes(node.children),
         })
         break;
       case 'tableCell':
         slateNodes.push({
           type: 'table-cell',
-          children: markdownAstToSlate(node.children),
+          children: markdownAstToSlateNodes(node.children),
         })
         break;
       case 'thematicBreak':
@@ -505,14 +501,12 @@ const ContentEditor = ({
 
   const onChange = (value: Descendant[]) => {
     setSlateContent(value)
-    console.log(value)
   }
 
   useEffect(() => {
     if (mdSourceContent) {
-      const slateNodes = parseMarkdownToSlate(mdSourceContent)
-      // Using Transforms to clean up the slate content first, then insert the new content.
-      // Because setSlateContent is not working for slate.
+      const slateNodes = markdownSourceToSlateNodes(mdSourceContent)
+      // Using Transforms to clean up the slate content first, then insert the new content. Because setSlateContent is not working for slate.
       cleanupSlate();
       Transforms.insertNodes(editor, slateNodes, { at: [0] })
     }
@@ -533,8 +527,6 @@ const ContentEditor = ({
               renderLeaf={renderLeaf}
               style={{ border: 'none', boxShadow: 'none', outline: 'none' }} />
           </Slate>
-          {/* <CodeMirror value={content} extensions={[markdown({ base: markdownLanguage, codeLanguages: languages })]} onChange={onChange} /> */}
-          {/* <StyledMarkdown>{mdSourceContent}</StyledMarkdown> */}
         </div>
       </div>
     </div>
