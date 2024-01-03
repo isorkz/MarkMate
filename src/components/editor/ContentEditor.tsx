@@ -17,7 +17,7 @@ interface ContentEditorProps {
 type ParagraphElement = { type: 'paragraph', children: Descendant[], checked?: boolean }
 type HeadElement = { type: 'head', children: Descendant[], level?: number }
 type ListElement = { type: 'list', children: Descendant[], order?: boolean }
-type ListItemElement = { type: 'list-item', children: Descendant[], checked?: boolean }
+type ListItemElement = { type: 'list-item', children: CustomText[], checked?: boolean }
 type CodeElement = { type: 'code', children: Descendant[], language?: string, render?: boolean }
 type CodeInlineElement = { type: 'code-line', children: Descendant[], num?: number }
 type ImageElement = { type: 'image', url: string, children: Descendant[] }
@@ -53,6 +53,7 @@ declare module 'slate' {
 const markdownSourceToSlateNodes = (mdContent: string) => {
   const parser = unified().use(remarkParse).use(remarkGfm)
   const mdast = parser.parse(mdContent)
+  console.log('mdast: ', mdast)
   return markdownAstToSlateNodes(mdast.children)
 }
 
@@ -92,6 +93,35 @@ const parseLeafElement = (astNode: any, slateCustomText: CustomText) => {
   return slateCustomText
 }
 
+// This function treats all types of nodes in the markdown AST as custom text nodes in Slate.
+// This is used when we don't want to format the markdown AST to Slate nodes, but just want to parse the markdown AST to a string.
+// For example, for markdown source '* # testhead', the markdown AST is: { type: 'listItem', children: [{ type: 'heading', children: [{ type: 'text', value: 'head1' }] }] }.
+// But in this case, we don't want the value '# testhead' to be treated as heading type.
+const markdownAstToSlateCustomTextNodes = (mdastNodes: any[], slateTextNodes: CustomText[]) => {
+  for (let node of mdastNodes) {
+    if (['strong', 'link', 'text', 'emphasis', 'delete', 'inlineCode'].includes(node.type)) {
+      let slateCustomText: CustomText = { text: '' }
+      slateTextNodes.push(parseLeafElement(node, slateCustomText))
+    } else if (node.type === 'break') {
+      slateTextNodes.push({ text: '\n' })
+    } else if (['footnoteReference', 'footnoteDefinition'].includes(node.type)) {
+      slateTextNodes.push({ text: node.label })
+    } else if (node.type === 'html') {
+      slateTextNodes.push({ text: node.value })
+    } else if (node.type === 'listItem') {
+      let slateCustomText: CustomText = { text: '* ' }
+      slateTextNodes.push(parseLeafElement(node, slateCustomText))
+    } else if (node.type === 'heading') {
+      slateTextNodes.push({ text: '#'.repeat(node.depth) + ' ' })
+      markdownAstToSlateCustomTextNodes(node.children, slateTextNodes)
+    } else if (['paragraph', 'heading', 'list', 'code', 'image', 'blockquote', 'table', 'tableRow', 'tableCell', 'thematicBreak'].includes(node.type)) {
+      markdownAstToSlateCustomTextNodes(node.children, slateTextNodes)
+    } else {
+      console.error(`Unknown node type in markdownAstToSlateCustomTextNodes: ${JSON.stringify(node)}`);
+    }
+  }
+}
+
 // Parse markdown AST to Slate nodes.
 // For markdown AST, it's a tree.
 // For Slate, it's an array of nodes.
@@ -120,11 +150,15 @@ const markdownAstToSlateNodes = (mdastNodes: any[]) => {
         })
         break;
       case 'listItem':
+        // In markdown AST, the structure of list is like this: list -> list item -> paragraph -> text.
+        // While in slate nodes, we don't need the paragraph node in list item, all the content within list item will be treated as text nodes, so change it to: list -> list item -> text.
+        let customTextNodes: CustomText[] = []
+        markdownAstToSlateCustomTextNodes(node.children, customTextNodes)
         slateNodes.push({
           type: 'list-item',
           checked: node.checked,
-          children: markdownAstToSlateNodes(node.children),
-        })
+          children: customTextNodes,
+        });
         break;
       case 'code':
         slateNodes.push({
@@ -222,7 +256,7 @@ const markdownAstToSlateNodes = (mdastNodes: any[]) => {
           let slateCustomText: CustomText = { text: '' }
           slateNodes.push(parseLeafElement(node, slateCustomText))
         } else {
-          console.error(`Unknown node type in mdastToSlate: ${JSON.stringify(node)}`);
+          console.error(`Unknown node type in markdownAstToSlateNodes: ${JSON.stringify(node)}`);
         }
     }
   }
@@ -506,6 +540,7 @@ const ContentEditor = ({
   useEffect(() => {
     if (mdSourceContent) {
       const slateNodes = markdownSourceToSlateNodes(mdSourceContent)
+      console.log('slateNodes: ', slateNodes)
       // Using Transforms to clean up the slate content first, then insert the new content. Because setSlateContent is not working for slate.
       cleanupSlate();
       Transforms.insertNodes(editor, slateNodes, { at: [0] })
