@@ -11,6 +11,9 @@ contextBridge.exposeInMainWorld('api', {
   },
   readDirTree: (path: string) => {
     return ipcRenderer.invoke('read-dir-tree', path);
+  },
+  saveFile: (path: string, content: string) => {
+    return ipcRenderer.invoke('save-file', path, content);
   }
 });
 

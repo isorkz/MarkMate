@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, Dispatch, SetStateAction, useEffect, MouseEventHandler } from 'react'
+import { useState, useCallback, useMemo, Dispatch, SetStateAction, useEffect, MouseEventHandler, useRef } from 'react'
 import { BaseEditor, Descendant, Editor, Transforms, createEditor, Element as SlateElement, Text, Range, Point, Path } from 'slate'
 import { Slate, RenderElementProps, RenderLeafProps, Editable, ReactEditor, withReact } from 'slate-react'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
@@ -508,6 +508,31 @@ const withMarkdownShortcuts = (editor: Editor) => {
   return editor
 }
 
+const slateNodesToMarkdownSource = (nodes: any[]) => {
+  let markdownSource = ''
+  for (let node of nodes) {
+    if (Text.isText(node)) {
+      markdownSource += node.text
+      continue
+    }
+    switch (node.type) {
+      case 'paragraph':
+        markdownSource += slateNodesToMarkdownSource(node.children) + '\n\n'
+        break;
+      case 'head':
+        markdownSource += '#'.repeat(node.level) + ' ' + slateNodesToMarkdownSource(node.children) + '\n\n'
+        break;
+      case 'list':
+        markdownSource += slateNodesToMarkdownSource(node.children) + '\n'
+        break;
+      case 'list-item':
+        markdownSource += '* ' + slateNodesToMarkdownSource(node.children) + '\n'
+        break;
+    }
+  }
+  return markdownSource
+}
+
 const ContentEditor = ({
   mdSourceContent,
   setMdSourceContent,
@@ -522,6 +547,7 @@ const ContentEditor = ({
       children: [{ text: 'A line of text in a paragraph.' }],
     },
   ])
+  const slateContentRef = useRef(slateContent);
 
   const cleanupSlate = () => {
     if (editor.children.length > 0) {
@@ -538,6 +564,33 @@ const ContentEditor = ({
     setSlateContent(value)
   }
 
+  const onMarkdownSource = () => {
+    const markdownSource = slateNodesToMarkdownSource(slateContent)
+    console.log('markdownSource: ', markdownSource)
+  }
+
+  const onSave = () => {
+    console.log('onSave slateContent: ', slateContentRef.current)
+    const markdownSource = slateNodesToMarkdownSource(slateContentRef.current)
+    console.log('saving markdownSource: ', markdownSource)
+    setMdSourceContent(markdownSource)
+    window.api.saveFile('test', markdownSource);
+  }
+
+  useEffect(() => {
+    // Add a listener to receive the 'save-doc' event from main process.
+    window.ipcRenderer.on('save-file', onSave)
+
+    // Specify how to clean up after this effect
+    return () => {
+      window.ipcRenderer.removeListener('save-file', onSave)
+    }
+  }, [])
+
+  useEffect(() => {
+    slateContentRef.current = slateContent;
+  }, [slateContent]);
+
   useEffect(() => {
     if (mdSourceContent) {
       const slateNodes = markdownSourceToSlateNodes(mdSourceContent)
@@ -545,6 +598,7 @@ const ContentEditor = ({
       // Using Transforms to clean up the slate content first, then insert the new content. Because setSlateContent is not working for slate.
       cleanupSlate();
       Transforms.insertNodes(editor, slateNodes, { at: [0] })
+      setSlateContent(slateNodes)
     }
   }, [mdSourceContent])
 
@@ -557,6 +611,8 @@ const ContentEditor = ({
     <div className="flex h-full w-full overflow-y-auto overflow-x-hidden">
       <div className="flex h-full w-full px-[10%] py-[5%] mb-[5%] overflow-x-auto">
         <div className='w-full break-all MarkMateContent'>
+          <button onClick={onMarkdownSource}>Markdown Source</button>
+          <button onClick={onSave}>Save</button>
           <Slate editor={editor} initialValue={slateContent} onChange={onChange}>
             <Editable
               renderElement={renderElement}

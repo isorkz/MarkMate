@@ -13,4 +13,9 @@ export const setupIpcHandlers = (): void => {
     // filter by md files
     return dirTree(path, { extensions: /\.md$/ });
   });
+
+  ipcMain.handle('save-file', async (event, path: string, content: string) => {
+    console.log('save-file: ', path);
+    console.log('save-file: ', content);
+  });
 };

@@ -1,6 +1,7 @@
 import { app, BrowserWindow } from 'electron'
 import path from 'node:path'
 import { setupIpcHandlers } from './ipcHandlers';
+import { globalShortcut } from 'electron'
 
 // The built directory structure
 //
@@ -68,3 +69,15 @@ app.whenReady().then(() => {
   createWindow();
   setupIpcHandlers(); // 设置 IPC 处理程序
 });
+
+// Register shortcuts when window is focused
+app.on('browser-window-focus', () => {
+  globalShortcut.register('CommandOrControl+S', () => {
+    BrowserWindow.getFocusedWindow()?.webContents.send('save-file')
+  })
+})
+
+// Unregister shortcuts when window is blurred
+app.on('browser-window-blur', () => {
+  globalShortcut.unregister('CommandOrControl+S')
+})
