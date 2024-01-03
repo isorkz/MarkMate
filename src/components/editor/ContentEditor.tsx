@@ -6,6 +6,7 @@ import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { unified } from 'unified'
 import remarkParse from 'remark-parse'
 import remarkGfm from 'remark-gfm'
+import { withHistory } from 'slate-history'
 
 interface ContentEditorProps {
   mdSourceContent: string;
@@ -513,7 +514,7 @@ const ContentEditor = ({
 }: ContentEditorProps) => {
   // Rich text editor: Slate, wiki: https://docs.slatejs.org/walkthroughs/02-adding-event-handlers
   // withMarkdownShortcuts: is a custom plugin to modify the editor's behavior. Example: https://github.com/ianstormtaylor/slate/blob/main/site/examples/markdown-shortcuts.tsx
-  const editor = useMemo(() => withMarkdownShortcuts(withReact(createEditor())), [])
+  const editor = useMemo(() => withMarkdownShortcuts(withReact(withHistory(createEditor()))), [])
   // Descendant类型在Slate中是一个广义的节点类型，它可以是一个元素节点，也可以是一个文本节点(即 Element | Text)。元素节点有type和children属性，文本节点有text属性。
   const [slateContent, setSlateContent] = useState<Descendant[]>([
     {
