@@ -8,7 +8,7 @@ const MainPanel = () => {
   return (
     <div className="flex w-full h-full overflow-x-hidden">
       {showMarkdownSourceEditor && (
-        <div className="flex w-full h-full">
+        <div className="flex w-1/2 h-full">
           <MarkdownSourceEditor />
           <div className="border-r-2 border-gray-200"></div>
         </div>
