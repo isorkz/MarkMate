@@ -1,12 +1,9 @@
-import { useState } from 'react';
 import './App.css'
 import MainPanel from './components/main-panel/MainPanel'
 import LeftSidebar from './components/sidebar/LeftSidebar'
 import RightSidebar from './components/sidebar/RightSidebar'
 
 function App() {
-  const [mdSourceContent, setMdSourceContent] = useState('');
-
   return (
     // 'h-screen', 'w-screen' is to make the page full screen
     // In CSS, it is same as 'height: 100vh; width: 100vw'
@@ -15,10 +12,10 @@ function App() {
     <div className="grid grid-cols-3 h-screen w-screen bg-white overflow-x-hidden" style={{ gridTemplateColumns: "18rem auto 18rem" }}>
 
       {/* Left sidebar */}
-      <LeftSidebar setMdSourceContent={setMdSourceContent} />
+      <LeftSidebar />
 
       {/* Main panel */}
-      <MainPanel mdSourceContent={mdSourceContent} setMdSourceContent={setMdSourceContent} />
+      <MainPanel />
 
       {/* Right sidebar */}
       <RightSidebar />

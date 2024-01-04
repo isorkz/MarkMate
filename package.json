@@ -23,7 +23,8 @@
     "slate": "^0.101.4",
     "slate-history": "^0.100.0",
     "slate-react": "^0.101.3",
-    "unified": "^11.0.4"
+    "unified": "^11.0.4",
+    "zustand": "^4.4.7"
   },
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.10",

@@ -15,7 +15,6 @@ export const setupIpcHandlers = (): void => {
   });
 
   ipcMain.handle('save-file', async (event, path: string, content: string) => {
-    console.log('save-file: ', path);
-    console.log('save-file: ', content);
+    fs.promises.writeFile(path, content, 'utf8');
   });
 };

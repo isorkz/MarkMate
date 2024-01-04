@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, Dispatch, SetStateAction, useEffect, MouseEventHandler, useRef } from 'react'
+import { useCallback, useMemo, useEffect, useRef } from 'react'
 import { BaseEditor, Descendant, Editor, Transforms, createEditor, Element as SlateElement, Text, Range, Point, Path } from 'slate'
 import { Slate, RenderElementProps, RenderLeafProps, Editable, ReactEditor, withReact } from 'slate-react'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
@@ -7,14 +7,11 @@ import { unified } from 'unified'
 import remarkParse from 'remark-parse'
 import remarkGfm from 'remark-gfm'
 import { withHistory } from 'slate-history'
-
-interface ContentEditorProps {
-  mdSourceContent: string;
-  setMdSourceContent: Dispatch<SetStateAction<string>>;
-}
+import useStore from '../../store/MStore'
 
 // Define my own types and properties for Slate nodes.
 // Slate wiki: https://docs.slatejs.org/walkthroughs/02-adding-event-handlers
+// Descendant类型在Slate中是一个广义的节点类型，它可以是一个元素节点，也可以是一个文本节点(即 Element | Text)。元素节点有type和children属性，文本节点有text属性。
 type ParagraphElement = { type: 'paragraph', children: Descendant[], checked?: boolean }
 type HeadElement = { type: 'head', children: Descendant[], level?: number }
 type ListElement = { type: 'list', children: Descendant[], order?: boolean }
@@ -533,21 +530,22 @@ const slateNodesToMarkdownSource = (nodes: any[]) => {
   return markdownSource
 }
 
-const ContentEditor = ({
-  mdSourceContent,
-  setMdSourceContent,
-}: ContentEditorProps) => {
+const ContentEditor = () => {
   // Rich text editor: Slate, wiki: https://docs.slatejs.org/walkthroughs/02-adding-event-handlers
   // withMarkdownShortcuts: is a custom plugin to modify the editor's behavior. Example: https://github.com/ianstormtaylor/slate/blob/main/site/examples/markdown-shortcuts.tsx
   const editor = useMemo(() => withMarkdownShortcuts(withReact(withHistory(createEditor()))), [])
-  // Descendant类型在Slate中是一个广义的节点类型，它可以是一个元素节点，也可以是一个文本节点(即 Element | Text)。元素节点有type和children属性，文本节点有text属性。
-  const [slateContent, setSlateContent] = useState<Descendant[]>([
-    {
-      type: 'paragraph',
-      children: [{ text: 'A line of text in a paragraph.' }],
-    },
-  ])
-  const slateContentRef = useRef(slateContent);
+
+  const currentDocument = useStore((state) => state.currentDocument);
+  const updateSourceContent = useStore((state) => state.updateSourceContent);
+  const updateSlateNodes = useStore((state) => state.updateSlateNodes);
+
+  // useRef: to get the current value of a variable, and it will not cause a re-render.
+  // Otherwise, for onSave() triggered by global shortcut, the currentDocumentRef will be the old value.
+  const currentDocumentRef = useRef(currentDocument);
+
+  useEffect(() => {
+    currentDocumentRef.current = currentDocument;
+  }, [currentDocument]);
 
   const cleanupSlate = () => {
     if (editor.children.length > 0) {
@@ -561,21 +559,25 @@ const ContentEditor = ({
   }
 
   const onChange = (value: Descendant[]) => {
-    setSlateContent(value)
+    updateSlateNodes(value)
   }
 
   const onMarkdownSource = () => {
-    const markdownSource = slateNodesToMarkdownSource(slateContent)
+    const markdownSource = slateNodesToMarkdownSource(currentDocument.slateNodes)
     console.log('markdownSource: ', markdownSource)
   }
 
-  const onSave = () => {
-    console.log('onSave slateContent: ', slateContentRef.current)
-    const markdownSource = slateNodesToMarkdownSource(slateContentRef.current)
-    console.log('saving markdownSource: ', markdownSource)
-    setMdSourceContent(markdownSource)
-    window.api.saveFile('test', markdownSource);
-  }
+  // useCallback: to memoize the function, so that it will not be re-created on every render.
+  const onSave = useCallback(() => {
+    console.log('save file: ', currentDocumentRef.current.slateNodes)
+    if (currentDocumentRef.current.filePath) {
+      const markdownSource = slateNodesToMarkdownSource(currentDocumentRef.current.slateNodes)
+      updateSourceContent(markdownSource)
+      window.api.saveFile(currentDocumentRef.current.filePath, markdownSource);
+    } else {
+      throw new Error('filePath is empty.')
+    }
+  }, [currentDocumentRef])
 
   useEffect(() => {
     // Add a listener to receive the 'save-doc' event from main process.
@@ -588,19 +590,15 @@ const ContentEditor = ({
   }, [])
 
   useEffect(() => {
-    slateContentRef.current = slateContent;
-  }, [slateContent]);
-
-  useEffect(() => {
-    if (mdSourceContent) {
-      const slateNodes = markdownSourceToSlateNodes(mdSourceContent)
-      console.log('slateNodes: ', slateNodes)
+    if (currentDocument.sourceContent) {
+      const slateNodes = markdownSourceToSlateNodes(currentDocument.sourceContent)
+      console.log('init slateNodes: ', slateNodes)
       // Using Transforms to clean up the slate content first, then insert the new content. Because setSlateContent is not working for slate.
       cleanupSlate();
       Transforms.insertNodes(editor, slateNodes, { at: [0] })
-      setSlateContent(slateNodes)
+      updateSlateNodes(slateNodes)
     }
-  }, [mdSourceContent])
+  }, [currentDocument.sourceContent])
 
   const renderElement = useCallback((props: RenderElementProps) => <Element {...props} />, [])
 
@@ -613,7 +611,7 @@ const ContentEditor = ({
         <div className='w-full break-all MarkMateContent'>
           <button onClick={onMarkdownSource}>Markdown Source</button>
           <button onClick={onSave}>Save</button>
-          <Slate editor={editor} initialValue={slateContent} onChange={onChange}>
+          <Slate editor={editor} initialValue={currentDocument.slateNodes} onChange={onChange}>
             <Editable
               renderElement={renderElement}
               renderLeaf={renderLeaf}
