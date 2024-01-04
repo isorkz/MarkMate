@@ -7,7 +7,7 @@ import { ReactEditor } from 'slate-react'
 export type ParagraphElement = { type: 'paragraph', children: Descendant[], checked?: boolean }
 export type HeadElement = { type: 'head', children: Descendant[], level?: number }
 export type ListElement = { type: 'list', children: Descendant[], order?: boolean }
-export type ListItemElement = { type: 'list-item', children: CustomText[], checked?: boolean }
+export type ListItemElement = { type: 'list-item', children: Descendant[], checked?: boolean }
 export type CodeElement = { type: 'code', children: Descendant[], language?: string, render?: boolean }
 export type CodeInlineElement = { type: 'code-line', children: Descendant[], num?: number }
 export type ImageElement = { type: 'image', url: string, children: Descendant[] }

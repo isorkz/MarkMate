@@ -38,14 +38,19 @@ const ContentEditor = () => {
 
   // useCallback: to memoize the function, so that it will not be re-created on every render.
   const onSave = useCallback(() => {
-    console.log('saving slateNodes: ', currentDocumentRef.current.slateNodes)
-    if (currentDocumentRef.current.filePath) {
-      const markdownSource = slateNodesToMarkdownSource(currentDocumentRef.current.slateNodes)
-      updateSourceContent(markdownSource)
-      window.api.saveFile(currentDocumentRef.current.filePath, markdownSource);
-      console.log('saved markdownSource: ', markdownSource)
-    } else {
-      throw new Error('filePath is empty.')
+    try {
+      console.log('saving slateNodes: ', currentDocumentRef.current.slateNodes)
+      if (currentDocumentRef.current.filePath) {
+        const markdownSource = slateNodesToMarkdownSource(currentDocumentRef.current.slateNodes)
+        updateSourceContent(markdownSource)
+        window.api.saveFile(currentDocumentRef.current.filePath, markdownSource);
+        console.log('saved markdownSource: ', markdownSource)
+      } else {
+        throw new Error('filePath is empty.')
+      }
+    }
+    catch (error) {
+      console.error('failed to save file: ', error)
     }
   }, [currentDocumentRef])
 
@@ -60,13 +65,18 @@ const ContentEditor = () => {
   }, [])
 
   useEffect(() => {
-    if (currentDocument.sourceContent) {
-      const slateNodes = markdownSourceToSlateNodes(currentDocument.sourceContent)
-      console.log('init slateNodes: ', slateNodes)
-      // Using Transforms to clean up the slate content first, then insert the new content. Because setSlateContent is not working for slate.
-      SlateEditorUtils.cleanupSlate(editor);
-      Transforms.insertNodes(editor, slateNodes, { at: [0] })
-      updateSlateNodes(slateNodes)
+    try {
+      if (currentDocument.sourceContent) {
+        const slateNodes = markdownSourceToSlateNodes(currentDocument.sourceContent)
+        console.log('init slateNodes: ', slateNodes)
+        // Using Transforms to clean up the slate content first, then insert the new content. Because setSlateContent is not working for slate.
+        SlateEditorUtils.cleanupSlate(editor);
+        Transforms.insertNodes(editor, slateNodes, { at: [0] })
+        updateSlateNodes(slateNodes)
+        currentDocumentRef.current.slateNodes = slateNodes;
+      }
+    } catch (error) {
+      console.error('error: ', error)
     }
   }, [currentDocument.sourceContent])
 

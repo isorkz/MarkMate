@@ -39,14 +39,10 @@ const markdownAstToSlateNodes = (mdastNodes: any[]) => {
         })
         break;
       case 'listItem':
-        // In markdown AST, the structure of list is like this: list -> list item -> paragraph -> text.
-        // While in slate nodes, we don't need the paragraph node in list item, all the content within list item will be treated as text nodes, so change it to: list -> list item -> text.
-        let customTextNodes: CustomText[] = []
-        markdownAstToSlateCustomTextNodes(node.children, customTextNodes)
         slateNodes.push({
           type: 'list-item',
           checked: node.checked,
-          children: customTextNodes,
+          children: markdownAstToSlateNodes(node.children),
         });
         break;
       case 'code':
@@ -189,6 +185,7 @@ const parseLeafElement = (astNode: any, slateCustomText: CustomText) => {
   return slateCustomText
 }
 
+// ! Deprecated !
 // This function treats all types of nodes in the markdown AST as custom text nodes in Slate.
 // This is used when we don't want to format the markdown AST to Slate nodes, but just want to parse the markdown AST to a string.
 // For example, for markdown source '* # testhead', the markdown AST is: { type: 'listItem', children: [{ type: 'heading', children: [{ type: 'text', value: 'head1' }] }] }.
