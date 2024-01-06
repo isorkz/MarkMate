@@ -62,6 +62,7 @@ const markdownAstToSlateNodes = (mdastNodes: any[]) => {
       case 'image':
         slateNodes.push({
           type: 'image',
+          alt: node.alt,
           url: decodeURIComponent(node.url),
           children: [{ text: '' }],
         })
@@ -75,6 +76,7 @@ const markdownAstToSlateNodes = (mdastNodes: any[]) => {
       case 'table':
         slateNodes.push({
           type: 'table',
+          align: node.align,
           children: node.children.map((row: any, i: number) => {
             return {
               type: 'table-row',
@@ -83,6 +85,7 @@ const markdownAstToSlateNodes = (mdastNodes: any[]) => {
                   type: 'table-cell',
                   // Treat the first row as the table header.
                   isFirstRow: i === 0,
+                  align: node.align[j],
                   children: markdownAstToSlateNodes(cell.children),
                 }
               }),

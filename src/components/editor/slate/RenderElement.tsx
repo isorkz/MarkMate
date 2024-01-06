@@ -13,7 +13,21 @@ export const RenderElement = ({ attributes, children, element }: RenderElementPr
       if (element.order) return <ol {...attributes}>{children}</ol>
       else return <ul {...attributes}>{children}</ul>
     case 'list-item':
-      return <li {...attributes}>{children}</li>
+      if (element.checked === undefined || element.checked === null) return <li {...attributes}>{children}</li>
+      return element.checked ? (
+        <li {...attributes}>
+          <div {...attributes}>
+            <input type="checkbox" checked />
+            {children}
+          </div>
+        </li>
+      ) : (
+        <li {...attributes}>
+          <div {...attributes}>
+            <input type="checkbox" />
+            {children}
+          </div>
+        </li>)
     case 'image':
       return <img src={element.url}></img>
     case 'code':
@@ -53,8 +67,8 @@ export const RenderElement = ({ attributes, children, element }: RenderElementPr
     case 'hr':
       return <hr />
     case 'table':
-      const head = children[0];  // 第一行作为表头
-      const body = children.slice(1);  // 其他行作为表体
+      const head = children[0];  // set the first row as table head
+      const body = children.slice(1); // set the rest rows as table body
       return (
         <table {...attributes}>
           <thead>{head}</thead>
@@ -64,8 +78,8 @@ export const RenderElement = ({ attributes, children, element }: RenderElementPr
     case 'table-row':
       return <tr {...attributes}>{children}</tr>
     case 'table-cell':
-      if (element.isFirstRow) return <th {...attributes}>{children}</th>
-      else return <td {...attributes}>{children}</td>
+      if (element.isFirstRow) return <th style={{ textAlign: element.align ? element.align : 'left' }} {...attributes}>{children}</th>
+      else return <td style={{ textAlign: element.align }} {...attributes}>{children}</td>
     default:
       return <div {...attributes}>{children}</div>
   }

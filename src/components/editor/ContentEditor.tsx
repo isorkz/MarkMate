@@ -32,6 +32,7 @@ const ContentEditor = () => {
   }
 
   const onMarkdownSource = () => {
+    console.log('slateNodes: ', currentDocument.slateNodes)
     const markdownSource = slateNodesToMarkdownSource(currentDocument.slateNodes)
     console.log('markdownSource: ', markdownSource)
   }
