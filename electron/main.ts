@@ -1,6 +1,7 @@
 import { app, BrowserWindow } from 'electron'
 import path from 'node:path'
-import { setupIpcHandlers } from './ipcHandlers';
+import { registerIpcHandlers } from './ipcHandlers';
+import { registerMenus } from './menus';
 import { globalShortcut } from 'electron'
 
 // The built directory structure
@@ -67,7 +68,8 @@ app.on('activate', () => {
 
 app.whenReady().then(() => {
   createWindow();
-  setupIpcHandlers(); // 设置 IPC 处理程序
+  registerIpcHandlers(); // 设置 IPC 处理程序
+  registerMenus();
 });
 
 // Register shortcuts when window is focused

@@ -41,9 +41,18 @@ const TreeNode = ({
     }
   };
 
+  const onContextMenu = (e: any) => {
+    e.preventDefault();
+    window.ipcRenderer.send('show-file-tree-menu', { filePath: node.path })
+  }
+
   return (
     <div>
-      <div className={`flex items-center hover:bg-neutral-700 ${node.path === currentDocument?.filePath && 'bg-neutral-600'}`} style={{ paddingLeft: `${level}em` }} onClick={handleClick}>
+      <div
+        className={`flex items-center hover:bg-neutral-700 ${node.path === currentDocument?.filePath && 'bg-neutral-600'}`} style={{ paddingLeft: `${level}em` }}
+        onClick={handleClick}
+        onContextMenu={onContextMenu}
+      >
         {node.children && (opened ? <ChevronDownIcon className="w-4 h-4 mr-1.5" /> : <ChevronRightIcon className="w-4 h-4 mr-1.5" />)}
         <span className="font-medium text-gray-300">{node.name}</span>
       </div>
@@ -79,6 +88,14 @@ const FileTree = () => {
     return false
   }
 
+  const renameFile = (event: any, params: { filePath: string }) => {
+    console.log('rename file: ', params.filePath)
+  }
+
+  const deleteFile = (event: any, params: { filePath: string }) => {
+    console.log('delete file: ', params.filePath)
+  }
+
   useEffect(() => {
     console.log('[FileTree] dirPath has changed: ', dirPath)
     if (dirPath) {
@@ -89,6 +106,11 @@ const FileTree = () => {
       });
     }
   }, [dirPath]);
+
+  useEffect(() => {
+    window.ipcRenderer.on('rename-file', renameFile);
+    window.ipcRenderer.on('delete-file', deleteFile);
+  }, []);
 
   return (
     // flex-grow: allow a flex item to grow and shrink as needed, then it will push the settings to the bottom
