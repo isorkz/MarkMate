@@ -56,7 +56,7 @@ const ContentEditor = () => {
   }, [currentDocumentRef])
 
   useEffect(() => {
-    // Add a listener to receive the 'save-doc' event from main process.
+    // Add a listener to receive the 'save-file' event from main process.
     window.ipcRenderer.on('save-file', onSave)
 
     // Specify how to clean up after this effect

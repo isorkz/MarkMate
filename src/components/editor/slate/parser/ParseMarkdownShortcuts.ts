@@ -29,8 +29,7 @@ export const withMarkdownShortcuts = (editor: Editor) => {
     // - 'offset' is the character offset at which the selection begins or ends in the current node.
     const { selection } = editor;
 
-    // If the user is typing the markdown shortcuts at the beginning of a block, autoformat it.
-    if (text.endsWith(' ') && selection && Range.isCollapsed(selection)) {
+    if (selection && Range.isCollapsed(selection)) {
       const { anchor } = selection
       // Get the ancestor block element of the current selection.
       const block = Editor.above(editor, {
@@ -39,35 +38,115 @@ export const withMarkdownShortcuts = (editor: Editor) => {
       const path = block ? block[1] : []
       const start = Editor.start(editor, path)
       const range = { anchor, focus: start }
-      const beforeText = Editor.string(editor, range) + text.slice(0, -1)
-      const element = SHORTCUTS[beforeText]
+      const rangeText = Editor.string(editor, range)
+      const beforeText = rangeText + text.slice(0, -1)
+      const lineText = rangeText + text
 
-      if (element) {
-        Transforms.select(editor, range)
-
-        if (!Range.isCollapsed(range)) {
-          Transforms.delete(editor)
-        }
-
-        Transforms.setNodes<SlateElement>(editor, element, {
-          match: n => SlateElement.isElement(n) && Editor.isBlock(editor, n),
-        })
-
-        if (element.type === 'list-item') {
-          // Also insert a new parent node to act as the list container
-          const list: ListElement = {
-            type: 'list',
-            children: [],
-          }
-          Transforms.wrapNodes(editor, list, {
-            match: n =>
-              !Editor.isEditor(n) &&
-              SlateElement.isElement(n) &&
-              n.type === 'list-item',
-          })
-        }
-
+      // Handle '---', '***', '==='
+      if (['---', '***', '==='].includes(lineText)) {
+        Editor.deleteBackward(editor, { unit: 'line' })
+        Transforms.insertNodes(editor, { type: 'hr', children: [{ text: '' }] }, { at: path })
         return
+      }
+      // Handle code block '```'
+      else if (lineText === '```') {
+        Editor.deleteBackward(editor, { unit: 'line' })
+        Transforms.insertNodes(editor, { type: 'code', children: [{ type: 'code-line', children: [{ text: ' ' }] }] }, { at: path })
+        return
+      }
+      // Handle bold '**'
+      else if (lineText.endsWith('**')) {
+        let boldText = lineText.slice(0, -2)
+        let index = boldText.lastIndexOf('**')
+        if (index != -1) {
+          boldText = boldText.slice(index + 2)
+          for (let i = 0; i < boldText.length + 3; i++) {
+            Editor.deleteBackward(editor, { unit: 'character' })
+          }
+          Transforms.insertNodes(editor, { text: boldText, bold: true })
+          Transforms.insertNodes(editor, { text: ' ', isInlineCode: false })
+          return
+        }
+      }
+      // Handle emphasis '*'
+      else if (lineText.endsWith('*')) {
+        let boldText = lineText.slice(0, -1)
+        let index = boldText.lastIndexOf('*')
+        if (index != -1 && !boldText.endsWith('*')) { // filter out bold '**'
+          boldText = boldText.slice(index + 1)
+          for (let i = 0; i < boldText.length + 1; i++) {
+            Editor.deleteBackward(editor, { unit: 'character' })
+          }
+          Transforms.insertNodes(editor, { text: boldText, emphasis: true })
+          Transforms.insertNodes(editor, { text: ' ', isInlineCode: false })
+          return
+        }
+      }
+      // Handle delete '~~'
+      else if (lineText.endsWith('~~')) {
+        let boldText = lineText.slice(0, -2)
+        let index = boldText.lastIndexOf('~~')
+        if (index != -1) {
+          boldText = boldText.slice(index + 2)
+          for (let i = 0; i < boldText.length + 3; i++) {
+            Editor.deleteBackward(editor, { unit: 'character' })
+          }
+          Transforms.insertNodes(editor, { text: boldText, delete: true })
+          Transforms.insertNodes(editor, { text: ' ', isInlineCode: false })
+          return
+        }
+      }
+      // Handle inline code
+      else if (text.endsWith('`')) {
+        let index = beforeText.lastIndexOf('`')
+        if (index != -1 && !beforeText.endsWith('`')) {  // filter out code block '```'
+          const inlineCodeText = beforeText.slice(index + 1)
+          // or using:
+          // Transforms.delete(editor, {
+          //   at: {
+          //     anchor: { path: anchor.path, offset: anchor.offset - inlineCodeText.length - 1 },
+          //     focus: anchor
+          //   }
+          // })
+          for (let i = 0; i < inlineCodeText.length + 1; i++) {
+            Editor.deleteBackward(editor, { unit: 'character' })
+          }
+          Transforms.insertNodes(editor, { text: inlineCodeText, isInlineCode: true })
+          Transforms.insertNodes(editor, { text: ' ', isInlineCode: false })
+          return
+        }
+      }
+      // If the user is typing the markdown shortcuts at the beginning of a block, autoformat it.
+      else if (text.endsWith(' ')) {
+        const element = SHORTCUTS[beforeText]
+
+        if (element) {
+          Transforms.select(editor, range)
+
+          if (!Range.isCollapsed(range)) {
+            Transforms.delete(editor)
+          }
+
+          Transforms.setNodes<SlateElement>(editor, element, {
+            match: n => SlateElement.isElement(n) && Editor.isBlock(editor, n),
+          })
+
+          if (element.type === 'list-item') {
+            // Also insert a new parent node to act as the list container
+            const list: ListElement = {
+              type: 'list',
+              children: [],
+            }
+            Transforms.wrapNodes(editor, list, {
+              match: n =>
+                !Editor.isEditor(n) &&
+                SlateElement.isElement(n) &&
+                n.type === 'list-item',
+            })
+          }
+
+          return
+        }
       }
     }
 

@@ -49,7 +49,6 @@ const markdownAstToSlateNodes = (mdastNodes: any[]) => {
         slateNodes.push({
           type: 'code',
           language: node.lang,
-          render: node.meta === 'render',
           children: node.value.split('\n').map((line: string, index: number) => {
             return {
               type: 'code-line',
