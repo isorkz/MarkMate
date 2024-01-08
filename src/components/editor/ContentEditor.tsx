@@ -32,6 +32,11 @@ const ContentEditor = () => {
   }
 
   const onMarkdownSource = () => {
+    const markdownSource = slateNodesToMarkdownSource(currentDocument.slateNodes)
+    updateSourceContent(markdownSource)
+  }
+
+  const onLogMarkdownSource = () => {
     console.log('slateNodes: ', currentDocument.slateNodes)
     const markdownSource = slateNodesToMarkdownSource(currentDocument.slateNodes)
     console.log('markdownSource: ', markdownSource)
@@ -90,8 +95,9 @@ const ContentEditor = () => {
     <div className="flex h-full w-full overflow-y-auto overflow-x-hidden">
       <div className="flex h-full w-full px-[10%] py-[5%] mb-[5%] overflow-x-auto">
         <div className='w-full break-all MarkMateContent'>
-          <button onClick={onMarkdownSource}>Markdown Source</button>
+          <button onClick={onLogMarkdownSource}>Log Markdown Source</button>
           <button onClick={onSave}>Save</button>
+          <button onClick={onMarkdownSource}>To Markdown</button>
           <Slate editor={editor} initialValue={currentDocument.slateNodes} onChange={onChange}>
             <Editable
               renderElement={renderElement}
