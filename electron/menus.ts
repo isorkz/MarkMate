@@ -8,13 +8,13 @@ export const registerMenus = (): void => {
       {
         label: 'Rename',
         click: () => {
-          e.sender.send('rename-file', { filePath: params.filePath })
+          e.sender.send('tree-command-rename', { filePath: params.filePath })
         }
       },
       {
         label: 'Delete',
         click: () => {
-          e.sender.send('delete-file', { filePath: params.filePath })
+          e.sender.send('tree-command-delete', { filePath: params.filePath })
         }
       }
     ])
