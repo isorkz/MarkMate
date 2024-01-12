@@ -1,41 +1,30 @@
-import { useEffect, useState, Dispatch, SetStateAction, useRef, MutableRefObject } from 'react';
+import { useEffect, useRef, MutableRefObject } from 'react';
 import { ChevronRightIcon, ChevronDownIcon } from '../icons'
 import useStore from '../../store/MStore'
-
-type TreeNode = {
-  name: string;
-  path: string;
-  children?: TreeNode[];
-  isOpened?: boolean;
-  isRenaming?: boolean;
-  newEditingName: string;
-};
+import useTreeStore from '../../store/TreeStore'
+import { TreeNode } from '../../models/FileTree'
 
 interface TreeNodeProps {
   node: TreeNode;
   level?: number;
-  editingNode: TreeNode | undefined;
-  setEditingNode: Dispatch<SetStateAction<TreeNode | undefined>>;
   editingNodeRef: MutableRefObject<TreeNode | undefined>;
-  tree: TreeNode | undefined;
-  setTree: Dispatch<SetStateAction<TreeNode | undefined>>;
 };
 
-const TreeNode = ({
+const TreeItem = ({
   node,
   level = 0,
-  editingNode,
-  setEditingNode,
   editingNodeRef,
-  tree,
-  setTree
 }: TreeNodeProps) => {
-  const [opened, setOpened] = useState(node.isOpened || false);
+  const fileTree = useTreeStore((state) => state.fileTree);
+  const setFileTree = useTreeStore((state) => state.setFileTree);
+  const editingNode = useTreeStore((state) => state.editingNode);
+  const setEditingNode = useTreeStore((state) => state.setEditingNode);
+
   const currentDocument = useStore((state) => state.currentDocument);
   const setCurrentDocument = useStore((state) => state.setCurrentDocument);
+
   // To focus the input element when renaming a file.
   const inputRef = useRef<HTMLInputElement>(null);
-
   useEffect(() => {
     if (editingNode && editingNode.isRenaming) {
       inputRef.current?.focus();
@@ -44,7 +33,7 @@ const TreeNode = ({
 
   const handleClick = () => {
     if (editingNode && editingNode.isRenaming) {
-      return
+      cancelRename()
     }
 
     if (!node.children) {
@@ -61,7 +50,9 @@ const TreeNode = ({
         }
       })
     } else {
-      setOpened(!opened);
+      node.isOpened = !node.isOpened;
+      const newTree = JSON.parse(JSON.stringify(fileTree));
+      setFileTree(newTree);
     }
   };
 
@@ -73,70 +64,77 @@ const TreeNode = ({
     window.ipcRenderer.send('show-file-tree-menu', { filePath: node.path });
   }
 
+  const cancelRename = () => {
+    setEditingNode(undefined);
+    editingNodeRef.current = undefined;
+    node.isRenaming = false;
+    const newTree = JSON.parse(JSON.stringify(fileTree));
+    setFileTree(newTree)
+  }
+
   const handleRename = () => {
-    if (editingNode && editingNode.isRenaming && editingNode.newEditingName && editingNode.path === node.path) {
+    if (editingNode && editingNode.isRenaming && editingNode.name && editingNode.path === node.path) {
       const dir = node.path.replace(/[^/]+$/, '');
-      const newFilePath = dir + editingNode.newEditingName;
-      window.api.renameFile(node.path, editingNode.newEditingName).then(() => {
+      const newFilePath = dir + editingNode.name;
+      window.api.renameFile(node.path, editingNode.name).then(() => {
         console.log('renamed file:', node.path, ' to ', newFilePath)
         // Re-render file tree
-        node.name = editingNode.newEditingName;
+        node.name = editingNode.name;
         node.path = newFilePath;
         node.isRenaming = false;
-        const newTree = JSON.parse(JSON.stringify(tree));
-        setTree(newTree);
+        const newTree = JSON.parse(JSON.stringify(fileTree));
+        setFileTree(newTree);
       }).catch((err: any) => {
         console.error('failed to rename file: ', node.path, ' to ', newFilePath, err)
       }).finally(() => {
-        setEditingNode(undefined);
-        editingNodeRef.current = undefined;
+        cancelRename()
       })
     }
   }
 
   return (
     <div>
-      <div
-        className={`flex items-center hover:bg-neutral-700 ${node.path === currentDocument?.filePath && 'bg-neutral-600'}`} style={{ paddingLeft: `${level}em` }}
+      <div className={`flex items-center hover:bg-neutral-700 ${node.path === currentDocument?.filePath && 'bg-neutral-600'}`} style={{ paddingLeft: `${level}em` }}
         onClick={handleClick}
         onContextMenu={onContextMenu}
       >
-        {node.children && (opened ? <ChevronDownIcon className="w-4 h-4 mr-1.5" /> : <ChevronRightIcon className="w-4 h-4 mr-1.5" />)}
-        {editingNode && editingNode.isRenaming && editingNode.path === node.path ? (
+        {node.children && (node.isOpened ? <ChevronDownIcon className="w-4 h-4 mr-1.5" /> : <ChevronRightIcon className="w-4 h-4 mr-1.5" />)}
+        {node.isRenaming && editingNode ? (
           <input type="text"
             className='bg-transparent border-b border-gray-300 focus:border-gray-300 focus:outline-none'
             ref={inputRef}
-            value={editingNode.newEditingName}
-            onChange={(e) => { setEditingNode({ ...editingNode, newEditingName: e.target.value }) }}
+            value={editingNode.name}
+            onChange={(e) => { setEditingNode({ ...editingNode, name: e.target.value }) }}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 handleRename();
               }
             }}
-            onBlur={() => {
-              setEditingNode(undefined);
-              editingNodeRef.current = undefined;
-            }} />
+            onBlur={() => cancelRename()} />
         ) : (
           <span className="font-medium text-gray-300">{node.name}</span>
         )}
       </div>
 
-      {opened && node.children && node.children.map((childNode) =>
-        <TreeNode node={childNode} level={level + 1} editingNode={editingNode} setEditingNode={setEditingNode} editingNodeRef={editingNodeRef} tree={tree} setTree={setTree} key={childNode.path} />
+      {node.isOpened && node.children && node.children.map((childNode) =>
+        <TreeItem node={childNode} level={level + 1} editingNodeRef={editingNodeRef} key={childNode.path} />
       )}
     </div>
   );
 };
 
 const FileTree = () => {
-  const [tree, setTree] = useState<TreeNode>();
-  // Define current editing node, such as rename, delete, etc.
-  const [editingNode, setEditingNode] = useState<TreeNode>();
-  // Using useRef to get the latest value for window.ipcRenderer.on function.
-  const editingNodeRef = useRef(editingNode);
+  const fileTree = useTreeStore((state) => state.fileTree);
+  const setFileTree = useTreeStore((state) => state.setFileTree);
+  const updateTreeNode = useTreeStore((state) => state.updateTreeNode);
+  const editingNode = useTreeStore((state) => state.editingNode);
+  const setEditingNode = useTreeStore((state) => state.setEditingNode);
+
   const dirPath = useStore((state) => state.dirPath);
   const currentDocument = useStore((state) => state.currentDocument);
+
+  // Using useRef to get the latest value for window.ipcRenderer.on function.
+  const editingNodeRef = useRef(editingNode);
 
   const openNodeAtPath = (node: TreeNode | undefined, openedFile: string | undefined): boolean => {
     if (node && openedFile) {
@@ -161,8 +159,9 @@ const FileTree = () => {
     // using editingNodeRef to get the latest editingNode
     if (editingNodeRef.current) {
       editingNodeRef.current.isRenaming = true;
-      editingNodeRef.current.newEditingName = editingNodeRef.current.name;
-      // Create a new object to update editingNode, to let the TreeNode component re-render.
+      // To re-render the tree
+      updateTreeNode(editingNodeRef.current);
+      // Create a new object to update editingNode
       setEditingNode({ ...editingNodeRef.current });
     }
   }
@@ -177,7 +176,7 @@ const FileTree = () => {
       // window.api defined in preload.ts, and implemented in ipcHandler.ts
       window.api.readDirTree(dirPath).then((treeData: any) => {
         openNodeAtPath(treeData, currentDocument?.filePath)
-        setTree(treeData);
+        setFileTree(treeData);
       });
     }
   }, [dirPath]);
@@ -196,7 +195,8 @@ const FileTree = () => {
     // flex-grow: allow a flex item to grow and shrink as needed, then it will push the settings to the bottom
     <div className="flex flex-col flex-grow w-full overflow-y-auto overflow-x-hidden m-2">
       <ul>
-        {tree?.isOpened ? <TreeNode node={tree} editingNode={editingNode} setEditingNode={setEditingNode} editingNodeRef={editingNodeRef} tree={tree} setTree={setTree} /> : <div className="p-5 text-center text-gray-500">Loading...</div>}
+        {fileTree?.isOpened ? <TreeItem node={fileTree} editingNodeRef={editingNodeRef} />
+          : <div className="p-5 text-center text-gray-500">Loading...</div>}
       </ul>
     </div>
   );
