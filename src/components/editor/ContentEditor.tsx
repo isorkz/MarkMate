@@ -85,6 +85,10 @@ const ContentEditor = () => {
         Transforms.insertNodes(editor, slateNodes, { at: [0] })
         updateSlateNodes(slateNodes)
         currentDocumentRef.current.slateNodes = slateNodes;
+      } else {
+        SlateEditorUtils.cleanupSlate(editor);
+        updateSlateNodes([])
+        currentDocumentRef.current.slateNodes = [];
       }
     } catch (error) {
       console.error('error: ', error)

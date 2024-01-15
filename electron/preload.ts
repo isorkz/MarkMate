@@ -17,6 +17,9 @@ contextBridge.exposeInMainWorld('api', {
   },
   renameFile: (filePath: string, newFileName: string) => {
     return ipcRenderer.invoke('rename-file', filePath, newFileName);
+  },
+  newFile: (filePath: string, newFileName: string) => {
+    return ipcRenderer.invoke('new-file', filePath, newFileName);
   }
 });
 

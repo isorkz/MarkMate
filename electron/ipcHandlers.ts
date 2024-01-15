@@ -1,5 +1,6 @@
 import { ipcMain } from 'electron';
 import fs from 'fs';
+import path from 'path';
 import dirTree from 'directory-tree';
 
 // 使用contextBridge和ipcMain/ipcRenderer来在主进程和渲染进程之间安全地传递数据。
@@ -19,16 +20,50 @@ export const registerIpcHandlers = (): void => {
   });
 
   ipcMain.handle('rename-file', async (event, filePath: string, newFileName: string) => {
-    fs.promises.stat(filePath).then(stats => {
-      if (stats.isFile()) {
-        const dir = filePath.replace(/[^/]+$/, '');
-        const newPath = dir + newFileName;
-        fs.promises.rename(filePath, newPath).catch(err => {
-          console.error(`Failed to rename from ${filePath} to ${newPath}:`, err);
-        });
+    const stats = await fs.promises.stat(filePath);
+    if (!stats.isFile()) {
+      throw new Error('filePath must be a file');
+    }
+
+    const dir = filePath.replace(/[^/]+$/, '');
+    const newFilePath = dir + newFileName;
+    try {
+      await fs.promises.rename(filePath, newFilePath);
+      return newFilePath;
+    } catch (err) {
+      console.error(`Failed to rename from ${filePath} to ${newFilePath}:`, err);
+      throw err;
+    }
+  });
+
+  ipcMain.handle('new-file', async (event, dirPath: string, newFileName: string) => {
+    if (!dirPath || !newFileName) {
+      throw new Error('Invalid dirPath or newFileName');
+    }
+
+    const stats = await fs.promises.stat(dirPath);
+    if (!stats.isDirectory()) {
+      throw new Error('dirPath must be a directory');
+    }
+
+    const newFilePath = path.join(dirPath, newFileName);
+    try {
+      // Check if the file already exists
+      await fs.promises.access(newFilePath);
+      throw new Error('File already exists: ' + newFilePath);
+    } catch (err) {
+      if (err.code !== 'ENOENT') {
+        // If the error is not 'ENOENT' (meaning the file does not exist), re-throw the error
+        throw err;
       }
-    }).catch(err => {
-      console.error('Failed to get stat of filePath:', filePath, err);
-    });
+    }
+
+    try {
+      await fs.promises.writeFile(newFilePath, '');
+      return newFilePath;
+    } catch (err) {
+      console.error('An error occurred while creating the file:', newFilePath, err);
+      throw err;
+    }
   });
 };
