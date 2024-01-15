@@ -4,9 +4,10 @@ import App from './App.tsx'
 import './index.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
+  // Use StrictMode to check potential problems, it will be removed in production.
+  // <React.StrictMode>
+  <App />
+  // </React.StrictMode>,
 )
 
 // Remove Preload scripts loading
