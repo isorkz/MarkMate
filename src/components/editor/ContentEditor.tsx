@@ -8,6 +8,7 @@ import { markdownSourceToSlateNodes } from './slate/parser/MarkdownSourceToSlate
 import { slateNodesToMarkdownSource } from './slate/parser/SlateNodesToMarkdownSource'
 import { withMarkdownShortcuts } from './slate/parser/ParseMarkdownShortcuts'
 import { SlateEditorUtils } from './slate/SlateEditorUtils'
+import toast from 'react-hot-toast';
 
 const ContentEditor = () => {
   // Rich text editor: Slate, wiki: https://docs.slatejs.org/walkthroughs/02-adding-event-handlers
@@ -60,6 +61,10 @@ const ContentEditor = () => {
     }
   }, [currentDocumentRef])
 
+  const onToast = () => {
+    toast.success('This is a success toast message.');
+  }
+
   useEffect(() => {
     // Add a listener to receive the 'save-file' event from main process.
     window.ipcRenderer.on('save-file', onSave)
@@ -98,6 +103,7 @@ const ContentEditor = () => {
           <button onClick={onLogMarkdownSource}>Log Markdown Source</button>
           <button onClick={onSave}>Save</button>
           <button onClick={onMarkdownSource}>To Markdown</button>
+          <button onClick={onToast}>Toast Test</button>
           <Slate editor={editor} initialValue={currentDocument.slateNodes} onChange={onChange}>
             <Editable
               renderElement={renderElement}
