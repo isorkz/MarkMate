@@ -51,7 +51,9 @@ export const withMarkdownShortcuts = (editor: Editor) => {
       // Handle code block '```'
       else if (lineText === '```') {
         Editor.deleteBackward(editor, { unit: 'line' })
-        Transforms.insertNodes(editor, { type: 'code', children: [{ type: 'code-line', children: [{ text: ' ' }] }] }, { at: path })
+        Transforms.insertNodes(editor, { type: 'code', children: [{ type: 'code-line', children: [{ text: '' }] }] }, { at: path })
+        // Set the cursor to the start of the code line
+        Transforms.select(editor, Editor.start(editor, path))
         return
       }
       // Handle bold '**'

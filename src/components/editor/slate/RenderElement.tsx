@@ -1,6 +1,7 @@
 import { RenderElementProps, RenderLeafProps } from 'slate-react'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { Highlight, themes } from "prism-react-renderer"
 
 export const RenderElement = ({ attributes, children, element }: RenderElementProps) => {
   try {
@@ -36,20 +37,21 @@ export const RenderElement = ({ attributes, children, element }: RenderElementPr
         if (element.language === 'c++') {
           language = 'cpp'
         }
+        let codeBlock = element.children.map((item: any) => item.children[0]?.text).join('\n');
         return (
-          <div style={{ position: 'relative' }}>
-            <SyntaxHighlighter
-              language={language}
-              style={vscDarkPlus}
-              customStyle={{
-                overflowX: 'auto',
-                borderRadius: '5px',
-                // minWidth: '100px',
-                // maxWidth: '600px',
-                // width: '300px',
-              }}
-              className={"MarkMateCodeBlocks"}
-              children={element.children.map((item: any) => item.children[0]?.text).join('\n')} />
+          <div style={{ position: 'relative' }} {...attributes}>
+            <Highlight theme={themes.vsDark} code={codeBlock} language={language}>
+              {({ className, style, tokens, getLineProps }) => (
+                // className = { "MarkMateCodeBlocks"}
+                <pre className={className} style={{ ...style, padding: '20px', overflowX: 'auto', borderRadius: '5px' }} {...attributes}>
+                  {tokens.map((line, i) => (
+                    <div {...getLineProps({ line, key: i })}>
+                      {children[i]}
+                    </div>
+                  ))}
+                </pre>
+              )}
+            </Highlight>
             {/* show the language name on the top right corner. */}
             <div style={{
               position: 'absolute',
@@ -61,8 +63,10 @@ export const RenderElement = ({ attributes, children, element }: RenderElementPr
             }}>
               {language}
             </div>
-          </div>
-        )
+          </div >
+        );
+      case 'code-line':
+        return <span {...attributes}>{children}</span>;
       case 'blockquote':
         return <blockquote {...attributes}>{children}</blockquote>
       case 'hr':
