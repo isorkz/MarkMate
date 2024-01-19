@@ -42,6 +42,13 @@ export const withMarkdownShortcuts = (editor: Editor) => {
       const beforeText = rangeText + text.slice(0, -1)
       const lineText = rangeText + text
 
+      const [parentNode] = Editor.parent(editor, path)
+      if (SlateElement.isElement(parentNode) && parentNode.type === 'code') {
+        // If user is typeing in code block, just insert the text as usual.
+        insertText(text)
+        return
+      }
+
       // Handle '---', '***', '==='
       if (['---', '***', '==='].includes(lineText)) {
         Editor.deleteBackward(editor, { unit: 'line' })

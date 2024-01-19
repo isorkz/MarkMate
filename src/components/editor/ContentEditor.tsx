@@ -61,8 +61,8 @@ const ContentEditor = () => {
     }
   }, [currentDocumentRef])
 
-  const onToast = () => {
-    toast.success('This is a success toast message.');
+  const ShowSlateNodes = () => {
+    console.log('slateNodes: ', currentDocument.slateNodes)
   }
 
   useEffect(() => {
@@ -107,7 +107,7 @@ const ContentEditor = () => {
           <button onClick={onLogMarkdownSource}>Log Markdown Source</button>
           <button onClick={onSave}>Save</button>
           <button onClick={onMarkdownSource}>To Markdown</button>
-          <button onClick={onToast}>Toast Test</button>
+          <button onClick={ShowSlateNodes}>Show Slate Nodes</button>
           <Slate editor={editor} initialValue={currentDocument.slateNodes} onChange={onChange}>
             <Editable
               renderElement={renderElement}
