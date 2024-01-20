@@ -1,6 +1,10 @@
-import { RenderElementProps, RenderLeafProps } from 'slate-react'
+import { Transforms } from 'slate'
+import { ReactEditor, RenderElementProps, RenderLeafProps, useSlateStatic } from 'slate-react'
+import { LanguageSelect } from './decorate/SetNodeToDecorations'
 
 export const RenderElement = ({ attributes, children, element }: RenderElementProps) => {
+  const editor = useSlateStatic()
+
   try {
     switch (element.type) {
       case 'paragraph':
@@ -30,27 +34,20 @@ export const RenderElement = ({ attributes, children, element }: RenderElementPr
       case 'image':
         return <img src={element.url}></img>
       case 'code':
-        let language = element.language || 'text'
-        if (element.language === 'c++') {
-          language = 'cpp'
+        const setLanguage = (language: string) => {
+          const path = ReactEditor.findPath(editor, element)
+          Transforms.setNodes(editor, { language }, { at: path })
         }
         return (
           <div className="MarkMateCodeBlocks" style={{ position: 'relative' }} {...attributes}>
             {/* caretColor: to set the cursor color */}
-            <pre spellCheck={false} style={{ padding: '20px', overflowX: 'auto', borderRadius: '5px', backgroundColor: '#2e3440ff', caretColor: '#5a9ff4' }} {...attributes}>
+            <pre spellCheck={false} style={{ padding: '20px', overflowX: 'auto', borderRadius: '5px', backgroundColor: '#2e3440ff', caretColor: '#5a9ff4', color: 'white' }} {...attributes}>
               {children}
             </pre>
-            {/* show the language name on the top right corner. */}
-            <div style={{
-              position: 'absolute',
-              top: '0',
-              right: '0',
-              padding: '5px',
-              color: '#aaa',
-              fontSize: '12px',
-            }}>
-              {language}
-            </div>
+            <LanguageSelect
+              value={element.language || 'text'}
+              onChange={e => setLanguage(e.target.value)}
+            />
           </div>
         );
       case 'code-line':

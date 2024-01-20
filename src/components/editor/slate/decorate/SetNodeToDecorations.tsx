@@ -2,11 +2,13 @@ import { useCallback } from 'react'
 import { Element as SlateElement, Editor, NodeEntry, Range, Node } from 'slate'
 import { useSlate } from 'slate-react'
 import { CodeElement } from '../Element'
-import { getHighlighter } from 'shikiji'
+import { getHighlighter, BundledLanguage } from 'shikiji'
+
+const supportedLanguages = ['javascript', 'cpp', 'c++', 'python', 'java', 'html',]
 
 const highlighter = await getHighlighter({
   themes: ['material-theme-palenight'],
-  langs: ['javascript', 'cpp'],
+  langs: supportedLanguages,
 })
 
 // Use decorate to highlight the code blocks.
@@ -63,10 +65,11 @@ const getChildNodeToDecorations = ([
 ]: NodeEntry<CodeElement>) => {
   const nodeToDecorations = new Map<SlateElement, Range[]>()
 
+  const language = block.language ? (supportedLanguages.includes(block.language) ? block.language as BundledLanguage : 'text') : 'text';
+  if (language === 'text') return nodeToDecorations
   const codeText = block.children.map(line => Node.string(line)).join('\n')
-  const language = block.language
   const themedTokens = highlighter.codeToThemedTokens(codeText, {
-    lang: 'cpp',
+    lang: language,
   })
   const blockChildren = block.children as SlateElement[]
 
@@ -99,4 +102,22 @@ const getChildNodeToDecorations = ([
   }
 
   return nodeToDecorations
+}
+
+export const LanguageSelect = (props: JSX.IntrinsicElements['select']) => {
+  return (
+    <select
+      data-test-id="language-select"
+      contentEditable={false}
+      className='absolute top-0 right-0 text-gray-400 text-xs p-1 z-10 bg-transparent'
+      {...props}
+    >
+      <option value="cpp">C++</option>
+      <option value="python">Python</option>
+      <option value="java">Java</option>
+      <option value="html">Html</option>
+      <option value="javascript">Javascript</option>
+      <option value="text">Text</option>
+    </select>
+  )
 }
