@@ -1,7 +1,4 @@
 import { RenderElementProps, RenderLeafProps } from 'slate-react'
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import { Highlight, themes } from "prism-react-renderer"
 
 export const RenderElement = ({ attributes, children, element }: RenderElementProps) => {
   try {
@@ -37,21 +34,12 @@ export const RenderElement = ({ attributes, children, element }: RenderElementPr
         if (element.language === 'c++') {
           language = 'cpp'
         }
-        let codeBlock = element.children.map((item: any) => item.children[0]?.text).join('\n');
         return (
-          <div style={{ position: 'relative' }} {...attributes}>
-            <Highlight theme={themes.vsDark} code={codeBlock} language={language}>
-              {({ className, style, tokens, getLineProps }) => (
-                // className = { "MarkMateCodeBlocks"}
-                <pre className={className} style={{ ...style, padding: '20px', overflowX: 'auto', borderRadius: '5px' }} {...attributes}>
-                  {tokens.map((line, i) => (
-                    <div {...getLineProps({ line, key: i })}>
-                      {children[i]}
-                    </div>
-                  ))}
-                </pre>
-              )}
-            </Highlight>
+          <div className="MarkMateCodeBlocks" style={{ position: 'relative' }} {...attributes}>
+            {/* caretColor: to set the cursor color */}
+            <pre spellCheck={false} style={{ padding: '20px', overflowX: 'auto', borderRadius: '5px', backgroundColor: '#2e3440ff', caretColor: '#5a9ff4' }} {...attributes}>
+              {children}
+            </pre>
             {/* show the language name on the top right corner. */}
             <div style={{
               position: 'absolute',
@@ -63,10 +51,10 @@ export const RenderElement = ({ attributes, children, element }: RenderElementPr
             }}>
               {language}
             </div>
-          </div >
+          </div>
         );
       case 'code-line':
-        return <span {...attributes}>{children}</span>;
+        return <div {...attributes}>{children}</div>;
       case 'blockquote':
         return <blockquote {...attributes}>{children}</blockquote>
       case 'hr':
@@ -111,5 +99,7 @@ export const RenderLeaf = (props: RenderLeafProps) => {
   if (props.leaf.isInlineCode) {
     children = <code>{children}</code>
   }
-  return <span {...props.attributes}>{children}</span>
+
+  const style = props.leaf.color ? { color: props.leaf.color } : undefined;
+  return <span {...props.attributes} style={style}>{children}</span>
 }

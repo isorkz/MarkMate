@@ -1,4 +1,4 @@
-import { BaseEditor, Descendant, } from 'slate'
+import { BaseEditor, Descendant, Element as SlateElement, Range } from 'slate'
 import { ReactEditor } from 'slate-react'
 
 // Define custom types and properties for Slate nodes.
@@ -29,11 +29,13 @@ export type CustomText = {
   emphasis?: boolean,
   delete?: boolean,
   html?: boolean,
+  // color is set by code block highlighter.
+  color?: string,
 }
 
 declare module 'slate' {
   interface CustomTypes {
-    Editor: BaseEditor & ReactEditor
+    Editor: BaseEditor & ReactEditor & { nodeToDecorations?: Map<SlateElement, Range[]> }
     Element: ParagraphElement | HeadElement | ListElement | ListItemElement | CodeElement | CodeLineElement | ImageElement
     | BlockQuoteElement | TableElement | TableRowElement | TableCellElement | HrElement | FootnoteReferenceElement | FootnoteDefinitionElement | HtmlElement
     Text: CustomText

@@ -8,7 +8,7 @@ import { markdownSourceToSlateNodes } from './slate/parser/MarkdownSourceToSlate
 import { slateNodesToMarkdownSource } from './slate/parser/SlateNodesToMarkdownSource'
 import { withMarkdownShortcuts } from './slate/parser/ParseMarkdownShortcuts'
 import { SlateEditorUtils } from './slate/SlateEditorUtils'
-import toast from 'react-hot-toast';
+import { SetNodeToDecorations, useDecorate } from './slate/decorate/SetNodeToDecorations'
 
 const ContentEditor = () => {
   // Rich text editor: Slate, wiki: https://docs.slatejs.org/walkthroughs/02-adding-event-handlers
@@ -27,6 +27,8 @@ const ContentEditor = () => {
   useEffect(() => {
     currentDocumentRef.current = currentDocument;
   }, [currentDocument]);
+
+  const decorate = useDecorate(editor)
 
   const onChange = (value: Descendant[]) => {
     updateSlateNodes(value)
@@ -109,7 +111,11 @@ const ContentEditor = () => {
           <button onClick={onMarkdownSource}>To Markdown</button>
           <button onClick={ShowSlateNodes}>Show Slate Nodes</button>
           <Slate editor={editor} initialValue={currentDocument.slateNodes} onChange={onChange}>
+            {/* decorate: to highlight code block */}
+            {/* Example: https://github.com/ianstormtaylor/slate/blob/8f2ad02db32f348eb9499e8db1e46d1b705d4d5d/site/examples/code-highlighting.tsx */}
+            <SetNodeToDecorations />
             <Editable
+              decorate={decorate}
               renderElement={renderElement}
               renderLeaf={renderLeaf}
               style={{ border: 'none', boxShadow: 'none', outline: 'none' }} />

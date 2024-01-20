@@ -215,7 +215,7 @@ export const withMarkdownShortcuts = (editor: Editor) => {
         if (
           !Editor.isEditor(block) &&
           SlateElement.isElement(block) &&
-          block.type !== 'paragraph' &&
+          block.type !== 'paragraph' && block.type != 'code-line' &&
           Point.equals(selection.anchor, start)
         ) {
           const newProperties: Partial<SlateElement> = {
