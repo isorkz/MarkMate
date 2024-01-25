@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useEffect, useRef } from 'react'
-import { Descendant, Transforms, createEditor } from 'slate'
+import { Descendant, Transforms, createEditor, Element as SlateElement } from 'slate'
 import { Editor } from 'slate'
 import { Slate, RenderElementProps, RenderLeafProps, Editable, withReact, ReactEditor } from 'slate-react'
 import { withHistory } from 'slate-history'
@@ -80,6 +80,22 @@ const ContentEditor = () => {
     }
   }, [currentDocumentRef])
 
+  const onKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === 'a' && (event.metaKey || event.ctrlKey)) {
+      event.preventDefault()
+      // If the cursor is inside the code block, cmd+a only select the code block.
+      const [codeBlockEntries] = Array.from(
+        Editor.nodes(editor, {
+          match: n => SlateElement.isElement(n) && n.type === 'code',
+          universal: true,
+        }))
+      if (codeBlockEntries) {
+        const [node, path] = codeBlockEntries;
+        Transforms.select(editor, path);
+      }
+    }
+  }
+
   const ShowSlateNodes = () => {
     console.log('slateNodes: ', currentDocument.slateNodes)
   }
@@ -136,6 +152,7 @@ const ContentEditor = () => {
                 decorate={decorate}
                 renderElement={renderElement}
                 renderLeaf={renderLeaf}
+                onKeyDown={onKeyDown}
                 style={{ border: 'none', boxShadow: 'none', outline: 'none' }} />
             </div>
           </Slate>
