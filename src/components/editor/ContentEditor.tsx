@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useEffect, useRef } from 'react'
 import { Descendant, Transforms, createEditor } from 'slate'
-import { Slate, RenderElementProps, RenderLeafProps, Editable, withReact } from 'slate-react'
+import { Editor } from 'slate'
+import { Slate, RenderElementProps, RenderLeafProps, Editable, withReact, ReactEditor } from 'slate-react'
 import { withHistory } from 'slate-history'
 import useStore from '../../store/MStore'
 import { RenderElement, RenderLeaf } from './slate/RenderElement'
@@ -20,6 +21,8 @@ const ContentEditor = () => {
   const updateSourceContent = useStore((state) => state.updateSourceContent);
   const updateSlateNodes = useStore((state) => state.updateSlateNodes);
 
+  const editorRef = useRef<HTMLDivElement>(null);
+
   // useRef: to get the current value of a variable, and it will not cause a re-render.
   // Otherwise, for onSave() triggered by global shortcut, the currentDocumentRef will be the old value.
   const currentDocumentRef = useRef(currentDocument);
@@ -32,6 +35,20 @@ const ContentEditor = () => {
 
   const onChange = (value: Descendant[]) => {
     updateSlateNodes(value)
+  }
+
+  const handleDivClick = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    // Check if the click target is the editor or a child of the editor
+    if (editorRef.current && (editorRef.current === event.target || editorRef.current.contains(event.target as Node))) {
+      return;
+    }
+
+    // Focus the editor
+    ReactEditor.focus(editor);
+
+    // Move the cursor to the end of the document
+    const end = Editor.end(editor, []);
+    Transforms.setSelection(editor, { anchor: end, focus: end });
   }
 
   const onMarkdownSource = () => {
@@ -105,20 +122,22 @@ const ContentEditor = () => {
     // using 'break-all' to break the long words
     <div className="flex h-full w-full overflow-y-auto overflow-x-hidden">
       <div className="flex h-full w-full px-[10%] py-[5%] mb-[5%] overflow-x-auto">
-        <div className='w-full break-all MarkMateContent'>
+        <div className='w-full break-all MarkMateContent' onClick={handleDivClick}>
           <button onClick={onLogMarkdownSource}>Log Markdown Source</button>
           <button onClick={onSave}>Save</button>
           <button onClick={onMarkdownSource}>To Markdown</button>
           <button onClick={ShowSlateNodes}>Show Slate Nodes</button>
           <Slate editor={editor} initialValue={currentDocument.slateNodes} onChange={onChange}>
-            {/* decorate: to highlight code block */}
-            {/* Example: https://github.com/ianstormtaylor/slate/blob/8f2ad02db32f348eb9499e8db1e46d1b705d4d5d/site/examples/code-highlighting.tsx */}
-            <SetNodeToDecorations />
-            <Editable
-              decorate={decorate}
-              renderElement={renderElement}
-              renderLeaf={renderLeaf}
-              style={{ border: 'none', boxShadow: 'none', outline: 'none' }} />
+            <div ref={editorRef}>
+              {/* decorate: to highlight code block */}
+              {/* Example: https://github.com/ianstormtaylor/slate/blob/8f2ad02db32f348eb9499e8db1e46d1b705d4d5d/site/examples/code-highlighting.tsx */}
+              <SetNodeToDecorations />
+              <Editable
+                decorate={decorate}
+                renderElement={renderElement}
+                renderLeaf={renderLeaf}
+                style={{ border: 'none', boxShadow: 'none', outline: 'none' }} />
+            </div>
           </Slate>
         </div>
       </div>
