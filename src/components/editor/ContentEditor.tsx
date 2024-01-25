@@ -7,7 +7,7 @@ import useStore from '../../store/MStore'
 import { RenderElement, RenderLeaf } from './slate/RenderElement'
 import { markdownSourceToSlateNodes } from './slate/parser/MarkdownSourceToSlateNodes'
 import { slateNodesToMarkdownSource } from './slate/parser/SlateNodesToMarkdownSource'
-import { withMarkdownShortcuts } from './slate/parser/ParseMarkdownShortcuts'
+import { withMarkdownShortcuts } from './slate/plugin/ParseMarkdownShortcuts'
 import { SlateEditorUtils } from './slate/SlateEditorUtils'
 import { SetNodeToDecorations, useDecorate } from './slate/decorate/SetNodeToDecorations'
 
