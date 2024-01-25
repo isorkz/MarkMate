@@ -4,7 +4,7 @@ import { useSlate } from 'slate-react'
 import { CodeElement } from '../Element'
 import { getHighlighter, BundledLanguage } from 'shikiji'
 
-const supportedLanguages = ['javascript', 'cpp', 'c++', 'python', 'java', 'html',]
+const supportedLanguages = ['javascript', 'cpp', 'c++', 'python', 'java', 'html', 'shell']
 
 const highlighter = await getHighlighter({
   themes: ['material-theme-palenight'],
@@ -115,6 +115,7 @@ export const LanguageSelect = (props: JSX.IntrinsicElements['select']) => {
       <option value="cpp">C++</option>
       <option value="python">Python</option>
       <option value="java">Java</option>
+      <option value="shell">Shell</option>
       <option value="html">Html</option>
       <option value="javascript">Javascript</option>
       <option value="text">Text</option>

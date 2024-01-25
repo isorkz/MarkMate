@@ -58,7 +58,13 @@ export const withMarkdownShortcuts = (editor: Editor) => {
       // Handle code block '```'
       else if (lineText === '```') {
         Editor.deleteBackward(editor, { unit: 'line' })
-        Transforms.insertNodes(editor, { type: 'code', children: [{ type: 'code-line', children: [{ text: '' }] }] }, { at: path })
+
+        // Get the language of the previous code block
+        const prevCodeBlockNode = Editor.previous(editor, { match: n => SlateElement.isElement(n) && n.type === 'code' })
+        const language = prevCodeBlockNode && 'language' in prevCodeBlockNode[0] ? prevCodeBlockNode[0].language : undefined;
+        // Set the language of the new code block to the same as the previous one
+        Transforms.insertNodes(editor, { type: 'code', language: language, children: [{ type: 'code-line', children: [{ text: '' }] }] }, { at: path })
+
         // Set the cursor to the start of the code line
         Transforms.select(editor, Editor.start(editor, path))
         return
