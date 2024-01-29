@@ -7,7 +7,7 @@ import { ReactEditor } from 'slate-react'
 type Align = 'left' | 'center' | 'right'
 export type ParagraphElement = { type: 'paragraph', children: Descendant[], checked?: boolean }
 export type HeadElement = { type: 'head', children: Descendant[], level?: number }
-export type ListElement = { type: 'list', children: Descendant[], order?: boolean }
+export type ListElement = { type: 'list', children: Descendant[], order?: boolean, start?: number }
 export type ListItemElement = { type: 'list-item', children: Descendant[], checked?: boolean }
 export type CodeElement = { type: 'code', children: Descendant[], language?: string }
 export type CodeLineElement = { type: 'code-line', children: Descendant[], num?: number }  // Represent each line in CodeElement

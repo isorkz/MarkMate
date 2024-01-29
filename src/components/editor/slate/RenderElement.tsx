@@ -13,7 +13,7 @@ export const RenderElement = ({ attributes, children, element }: RenderElementPr
         const Head = `h${element.level}`;
         return <Head {...attributes}>{children}</Head>
       case 'list':
-        if (element.order) return <ol {...attributes}>{children}</ol>
+        if (element.order) return <ol start={element.start} {...attributes}>{children}</ol>
         else return <ul {...attributes}>{children}</ul>
       case 'list-item':
         if (element.checked === undefined || element.checked === null) return <li {...attributes}>{children}</li>

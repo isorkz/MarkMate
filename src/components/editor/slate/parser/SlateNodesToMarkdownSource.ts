@@ -42,8 +42,9 @@ const parseSlateNodeToMarkdownSource = (node: any, preStr: string = '', ancestor
       return '#'.repeat(node.level) + ' ' + slateNodesToMarkdownSource(node.children, preStr, ancestor) + '\n\n'
     case 'list':
       if (node.order) {
+        const start = node.start ? node.start : 1
         for (let i = 0; i < node.children.length; i++) {
-          markdownSource += preStr + (i + 1) + '. ' + parseSlateNodeToMarkdownSource(node.children[i], preStr, ancestorNode)
+          markdownSource += preStr + (start + i) + '. ' + parseSlateNodeToMarkdownSource(node.children[i], preStr, ancestorNode)
         }
       } else {
         for (let listItem of node.children) {

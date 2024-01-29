@@ -35,6 +35,7 @@ const markdownAstToSlateNodes = (mdastNodes: any[]) => {
         slateNodes.push({
           type: 'list',
           order: node.ordered,
+          start: node.start,
           children: markdownAstToSlateNodes(node.children),
         })
         break;
