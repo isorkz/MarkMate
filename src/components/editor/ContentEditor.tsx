@@ -4,10 +4,10 @@ import { Editor } from 'slate'
 import { Slate, RenderElementProps, RenderLeafProps, Editable, withReact, ReactEditor } from 'slate-react'
 import { withHistory } from 'slate-history'
 import useStore from '../../store/MStore'
-import { RenderElement, RenderLeaf } from './slate/RenderElement'
-import { markdownSourceToSlateNodes } from './slate/parser/MarkdownSourceToSlateNodes'
-import { slateNodesToMarkdownSource } from './slate/parser/SlateNodesToMarkdownSource'
-import { withMarkdownShortcuts } from './slate/plugin/ParseMarkdownShortcuts'
+import { RenderElement, RenderLeaf } from './slate/render/RenderElement'
+import { markdownSourceToSlateNodes } from './slate/parser/ParseMarkdownSourceToSlateNodes'
+import { slateNodesToMarkdownSource } from './slate/parser/ParseSlateNodesToMarkdownSource'
+import { withMarkdownShortcuts } from './slate/plugin/WithMarkdownShortcuts'
 import { SlateEditorUtils } from './slate/SlateEditorUtils'
 import { SetNodeToDecorations, useDecorate } from './slate/decorate/SetNodeToDecorations'
 
@@ -62,8 +62,7 @@ const ContentEditor = () => {
     console.log('markdownSource: ', markdownSource)
   }
 
-  // useCallback: to memoize the function, so that it will not be re-created on every render.
-  const onSave = useCallback(() => {
+  const onSave = () => {
     try {
       console.log('saving slateNodes: ', currentDocumentRef.current.slateNodes)
       if (currentDocumentRef.current.filePath) {
@@ -78,7 +77,7 @@ const ContentEditor = () => {
     catch (error) {
       console.error('failed to save file: ', error)
     }
-  }, [currentDocumentRef])
+  }
 
   const onKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
     if (event.key === 'a' && (event.metaKey || event.ctrlKey)) {

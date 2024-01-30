@@ -1,6 +1,6 @@
 import { Transforms } from 'slate'
 import { ReactEditor, RenderElementProps, RenderLeafProps, useSlateStatic } from 'slate-react'
-import { LanguageSelect } from './decorate/SetNodeToDecorations'
+import { LanguageSelect } from '../decorate/SetNodeToDecorations'
 
 export const RenderElement = ({ attributes, children, element }: RenderElementProps) => {
   const editor = useSlateStatic()
