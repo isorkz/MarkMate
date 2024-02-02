@@ -23,11 +23,11 @@ const useStore = create<MStore>()(
 
       currentDocument: {
         filePath: undefined,
-        sourceContent: 'A line of text in a paragraph.',
+        sourceContent: '',
         slateNodes: [
           {
             type: 'paragraph',
-            children: [{ text: 'A line of text in a paragraph.' }],
+            children: [{ text: '' }],
           }
         ],
       },

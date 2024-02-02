@@ -115,12 +115,11 @@ const ContentEditor = () => {
         const slateNodes = markdownSourceToSlateNodes(currentDocument.sourceContent)
         console.log('init slateNodes: ', slateNodes)
         // Using Transforms to clean up the slate content first, then insert the new content. Because setSlateContent is not working for slate.
-        SlateEditorUtils.cleanupSlate(editor);
-        Transforms.insertNodes(editor, slateNodes, { at: [0] })
+        SlateEditorUtils.resetSlateNodes(editor, slateNodes);
         updateSlateNodes(slateNodes)
         currentDocumentRef.current.slateNodes = slateNodes;
       } else {
-        SlateEditorUtils.cleanupSlate(editor);
+        SlateEditorUtils.resetSlateNodes(editor);
         updateSlateNodes([])
         currentDocumentRef.current.slateNodes = [];
       }
