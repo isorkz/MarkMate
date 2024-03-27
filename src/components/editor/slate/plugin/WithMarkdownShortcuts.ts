@@ -1,4 +1,4 @@
-import { Editor, Transforms, Element as SlateElement, Text, Range, Point, Path } from 'slate'
+import { Editor, Transforms, Element as SlateElement, Text, Range, Point, Node, Path } from 'slate'
 import { ListElement } from '../Element'
 
 const SHORTCUTS = {
@@ -35,6 +35,7 @@ export const withMarkdownShortcuts = (editor: Editor) => {
       const block = Editor.above(editor, {
         match: n => SlateElement.isElement(n) && Editor.isBlock(editor, n),
       })
+
       const path = block ? block[1] : []
       const start = Editor.start(editor, path)
       const range = { anchor, focus: start }
@@ -43,6 +44,8 @@ export const withMarkdownShortcuts = (editor: Editor) => {
       const lineText = rangeText + text
 
       const [parentNode] = Editor.parent(editor, path)
+      console.log('insertText above() block', block)
+      console.log('insertText above() parent', parentNode)
       if (SlateElement.isElement(parentNode) && parentNode.type === 'code') {
         // If user is typeing in code block, just insert the text as usual.
         insertText(text)
@@ -210,41 +213,111 @@ export const withMarkdownShortcuts = (editor: Editor) => {
     const { selection } = editor
 
     if (selection && Range.isCollapsed(selection)) {
-      const match = Editor.above(editor, {
+      const block = Editor.above(editor, {
         match: n => SlateElement.isElement(n) && Editor.isBlock(editor, n),
       })
 
-      if (match) {
-        const [block, path] = match
-        const start = Editor.start(editor, path)
+      if (block) {
+        const blockNode = block[0] as SlateElement
+        const blockPath = block[1]
+        let [parentNode, parentPath] = Editor.parent(editor, blockPath)
 
-        if (
-          !Editor.isEditor(block) &&
-          SlateElement.isElement(block) &&
-          block.type !== 'paragraph' && block.type != 'code-line' &&
-          Point.equals(selection.anchor, start)
-        ) {
-          const newProperties: Partial<SlateElement> = {
-            type: 'paragraph',
+        const start = Editor.start(editor, blockPath)
+        const previous = Editor.previous(editor, {
+          match: n => SlateElement.isElement(n) && Editor.isBlock(editor, n),
+        })
+        const before = Editor.before(editor, blockPath)
+        console.log('deleteBackward selection', selection)
+        console.log('deleteBackward blockNode', blockNode)
+        console.log('deleteBackward blockPath', blockPath)
+        console.log('deleteBackward start', start)
+        console.log('deleteBackward selection.anchor',)
+        console.log('deleteBackward parentNode', parentNode)
+        console.log('deleteBackward parentPath', parentPath)
+        console.log('deleteBackward previous', previous)
+        console.log('deleteBackward before', before)
+
+        if (Point.equals(selection.anchor, start)) {
+          // If the user is deleting at the beginning of a head node, convert it to a paragraph.
+          if (blockNode.type === 'head') {
+            const newProperties: Partial<SlateElement> = {
+              type: 'paragraph',
+            }
+            Transforms.setNodes(editor, newProperties)
+            return;
+          } else if (blockNode.type === 'paragraph' && parentNode) {
+            parentNode = parentNode as SlateElement
+            // If the user is deleting at the beginning of a list-item node, convert it to a paragraph and lift it, and it won't belong to the list anymore.
+            if (parentNode.type === 'list-item') {
+              Transforms.unwrapNodes(editor, { at: parentPath });
+              Transforms.liftNodes(editor, { at: parentPath });
+              return;
+            }
+          } else if (blockNode.type === 'list-item') {
+            // If the user is deleting at the beginning of a list-item node, convert it to a paragraph and lift it, and it won't belong to the list anymore.
+            Transforms.unwrapNodes(editor, { at: blockPath });
+            Transforms.liftNodes(editor, { at: blockPath });
+            return;
           }
-          Transforms.setNodes(editor, newProperties)
+        }
 
-          if (block.type === 'list-item') {
-            Transforms.unwrapNodes(editor, {
-              match: n =>
-                !Editor.isEditor(n) &&
-                SlateElement.isElement(n) &&
-                n.type === 'list',
-              split: true,
-            })
+        if (Path.equals(blockPath, [0])) {
+          // If the user is deleting an empty paragraph node, remove it.
+          if (blockNode.type === 'paragraph') {
+            const leaf = Node.leaf(editor, selection.focus.path)
+            if (leaf.text?.length === 0) {
+              Transforms.delete(editor, { at: blockPath })
+              return
+            }
           }
-
-          return
+        } else {
+          parentNode = parentNode as SlateElement
+          // If the user is deleting an empty list item, remove it and the list.
+          // if (parentNode.type === 'list-item' && blockNode.children.length === 1 && Text.isText(blockNode.children[0]) && blockNode.children[0].text === '') {
+          //   Transforms.removeNodes(editor, {
+          //     at: block
+          //   }
         }
       }
+      // if (selection && Range.isCollapsed(selection)) {
+      //   const match = Editor.above(editor, {
+      //     match: n => SlateElement.isElement(n) && Editor.isBlock(editor, n),
+      //   })
 
-      deleteBackward(...args)
+      //   if (match) {
+      //     const [block, path] = match
+      //     const start = Editor.start(editor, path)
+
+      //     console.log('deleteBackward block', block)
+      //     console.log('path', path)
+      //     console.log('start', start)
+      //     if (
+      //       !Editor.isEditor(block) &&
+      //       SlateElement.isElement(block) &&
+      //       block.type !== 'paragraph' && block.type != 'code-line' &&
+      //       Point.equals(selection.anchor, start)
+      //     ) {
+      //       const newProperties: Partial<SlateElement> = {
+      //         type: 'paragraph',
+      //       }
+      //       Transforms.setNodes(editor, newProperties)
+
+      //       if (block.type === 'list-item') {
+      //         Transforms.unwrapNodes(editor, {
+      //           match: n =>
+      //             !Editor.isEditor(n) &&
+      //             SlateElement.isElement(n) &&
+      //             n.type === 'list',
+      //           split: true,
+      //         })
+      //       }
+
+      //       return
+      //     }
+      //   }
+      // }
     }
+    deleteBackward(...args)
   }
 
   return editor
