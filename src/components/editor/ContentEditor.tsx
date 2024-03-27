@@ -8,7 +8,7 @@ import { RenderElement, RenderLeaf } from './slate/render/RenderElement'
 import { markdownSourceToSlateNodes } from './slate/parser/ParseMarkdownSourceToSlateNodes'
 import { slateNodesToMarkdownSource } from './slate/parser/ParseSlateNodesToMarkdownSource'
 import { withMarkdownShortcuts } from './slate/plugin/WithMarkdownShortcuts'
-import { SlateEditorUtils } from './slate/SlateEditorUtils'
+import { DefaultEmptySlateNodes, SlateEditorUtils } from './slate/SlateEditorUtils'
 import { SetNodeToDecorations, useDecorate } from './slate/decorate/SetNodeToDecorations'
 
 const ContentEditor = () => {
@@ -112,7 +112,10 @@ const ContentEditor = () => {
   useEffect(() => {
     try {
       if (currentDocument.sourceContent) {
-        const slateNodes = markdownSourceToSlateNodes(currentDocument.sourceContent)
+        let slateNodes = markdownSourceToSlateNodes(currentDocument.sourceContent)
+        if (slateNodes.length === 0) {
+          slateNodes = DefaultEmptySlateNodes;
+        }
         console.log('init slateNodes: ', slateNodes)
         // Using Transforms to clean up the slate content first, then insert the new content. Because setSlateContent is not working for slate.
         SlateEditorUtils.resetSlateNodes(editor, slateNodes);
@@ -120,8 +123,8 @@ const ContentEditor = () => {
         currentDocumentRef.current.slateNodes = slateNodes;
       } else {
         SlateEditorUtils.resetSlateNodes(editor);
-        updateSlateNodes([])
-        currentDocumentRef.current.slateNodes = [];
+        updateSlateNodes(DefaultEmptySlateNodes)
+        currentDocumentRef.current.slateNodes = DefaultEmptySlateNodes;
       }
     } catch (error) {
       console.error('error: ', error)

@@ -1,5 +1,12 @@
 import { Editor, Transforms, Descendant } from 'slate'
 
+export const DefaultEmptySlateNodes: Descendant[] = [
+  {
+    type: 'paragraph',
+    children: [{ text: '' }],
+  }
+]
+
 export class SlateEditorUtils {
   static resetSlateNodes = (editor: Editor, slateNodes?: Descendant[]) => {
     if (editor.children.length > 0) {
@@ -15,12 +22,7 @@ export class SlateEditorUtils {
     if (slateNodes) {
       Transforms.insertNodes(editor, slateNodes, { at: [0] })
     } else {
-      Transforms.insertNodes(editor, [
-        {
-          type: 'paragraph',
-          children: [{ text: '' }],
-        }
-      ], { at: [0] })
+      Transforms.insertNodes(editor, DefaultEmptySlateNodes, { at: [0] })
     }
   }
 }
