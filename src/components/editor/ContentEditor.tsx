@@ -8,8 +8,9 @@ import { RenderElement, RenderLeaf } from './slate/render/RenderElement'
 import { markdownSourceToSlateNodes } from './slate/parser/ParseMarkdownSourceToSlateNodes'
 import { slateNodesToMarkdownSource } from './slate/parser/ParseSlateNodesToMarkdownSource'
 import { withMarkdownShortcuts } from './slate/plugin/WithMarkdownShortcuts'
-import { DefaultEmptySlateNodes, SlateEditorUtils } from './slate/SlateEditorUtils'
+import { SlateEditorUtils } from './slate/SlateEditorUtils'
 import { SetNodeToDecorations, useDecorate } from './slate/decorate/SetNodeToDecorations'
+import { DefaultEmptySlateNodes } from './slate/Element'
 
 const ContentEditor = () => {
   // Rich text editor: Slate, wiki: https://docs.slatejs.org/walkthroughs/02-adding-event-handlers

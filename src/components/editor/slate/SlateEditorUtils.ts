@@ -1,11 +1,5 @@
 import { Editor, Transforms, Descendant } from 'slate'
-
-export const DefaultEmptySlateNodes: Descendant[] = [
-  {
-    type: 'paragraph',
-    children: [{ text: '' }],
-  }
-]
+import { DefaultEmptySlateNodes } from './Element';
 
 export class SlateEditorUtils {
   static resetSlateNodes = (editor: Editor, slateNodes?: Descendant[]) => {

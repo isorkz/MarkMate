@@ -41,3 +41,18 @@ declare module 'slate' {
     Text: CustomText
   }
 }
+
+export const DefaultEmptySlateNodes: Descendant[] = [
+  {
+    type: 'paragraph',
+    children: [{ text: '' }],
+  }
+]
+
+export const DefaultEmptyListItemElement: ListItemElement = {
+  type: 'list-item',
+  children: [{
+    type: 'paragraph',
+    children: [{ text: '' }]
+  }]
+}

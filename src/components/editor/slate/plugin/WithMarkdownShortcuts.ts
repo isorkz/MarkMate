@@ -1,5 +1,7 @@
-import { Editor, Transforms, Element as SlateElement, Text, Range, Point, Path } from 'slate'
-import { ListElement } from '../Element'
+import { Editor, Transforms, Element as SlateElement, Range } from 'slate'
+import { assert } from '../../../../utils/assert';
+import { insertBreakForHead, insertBreakForListItem } from './insertBreak';
+import { deleteBackwardForHead, deleteBackwardForListItem, deleteBackwardForParagraph } from './deleteBackward';
 
 const SHORTCUTS = {
   '*': { type: 'list-item' },
@@ -43,6 +45,9 @@ export const withMarkdownShortcuts = (editor: Editor) => {
       const lineText = rangeText + text
 
       const [parentNode] = Editor.parent(editor, path)
+      console.log('[insertText] block: ', block)
+      console.log('[insertText] lineText: ', lineText)
+      console.log('[insertText] parentNode: ', parentNode)
       if (SlateElement.isElement(parentNode) && parentNode.type === 'code') {
         // If user is typeing in code block, just insert the text as usual.
         insertText(text)
@@ -142,21 +147,24 @@ export const withMarkdownShortcuts = (editor: Editor) => {
             Transforms.delete(editor)
           }
 
-          Transforms.setNodes<SlateElement>(editor, element, {
-            match: n => SlateElement.isElement(n) && Editor.isBlock(editor, n),
-          })
-
           if (element.type === 'list-item') {
-            // Also insert a new parent node to act as the list container
-            const list: ListElement = {
-              type: 'list',
-              children: [],
-            }
-            Transforms.wrapNodes(editor, list, {
-              match: n =>
-                !Editor.isEditor(n) &&
-                SlateElement.isElement(n) &&
-                n.type === 'list-item',
+            Transforms.wrapNodes(editor, { type: 'list-item', children: [] }, { at: path })
+            Transforms.wrapNodes(editor, { type: 'list', children: [] }, { at: path })
+            // // If the above and below blocks are not list items, wrap the current block with a new list
+            // const prevNode = Editor.previous(editor, { match: n => SlateElement.isElement(n) && n.type === 'list-item' })
+            // const nextNode = Editor.next(editor, { match: n => SlateElement.isElement(n) && n.type === 'list-item' })
+            // console.log('prevNode: ', prevNode)
+            // console.log('nextNode: ', nextNode)
+            // if (!prevNode && !nextNode) {
+            //   Transforms.wrapNodes(editor, { type: 'list-item', children: [] }, { at: path })
+            //   Transforms.wrapNodes(editor, { type: 'list', children: [] }, { at: path })
+            // } else {
+            //   // Transforms.insertNodes(editor, element)
+            // }
+          } else {
+            // set the type of the current block to the new element type
+            Transforms.setNodes<SlateElement>(editor, element, {
+              match: n => SlateElement.isElement(n) && Editor.isBlock(editor, n),
             })
           }
 
@@ -172,79 +180,71 @@ export const withMarkdownShortcuts = (editor: Editor) => {
   editor.insertBreak = () => {
     const { selection } = editor;
     if (selection) {
-      // Editor.nodes to get all the nodes in the current selection.
-      // [node] is to get the first node in the array. It's a tuple of [node, path], where 'node' is the node itself, and 'path' is the path of the node.
-      const [node] = Editor.nodes<SlateElement>(editor, {
-        match: n => SlateElement.isElement(n),
-        // mode: 'highest' will return the highest matching node, which is the parent node of the current selection.
-        // mode: 'lowest' will return the lowest matching node, which is the current selection itself.
-        mode: 'lowest'
+      // Get the ancestor block element of the current selection.
+      const block = Editor.above(editor, {
+        match: n => SlateElement.isElement(n) && Editor.isBlock(editor, n),
       })
+      // console.log('[insertBreak] block: ', block)
 
-      if (SlateElement.isElement(node[0])) {
-        switch (node[0].type) {
-          case 'head':
-            // Create a new paragraph after the current head. Otherwise, it will continue to be a head.
-            Transforms.insertNodes(editor, { type: 'paragraph', children: [{ text: '' }] });
+      if (block) {
+        const node = block[0]
+        const path = block[1]
+
+        if (SlateElement.isElement(node)) {
+          // If user is breaking in a head
+          if (node.type === 'head') {
+            insertBreakForHead(editor, selection, node, path)
             return;
-          case 'list-item':
-            // If the current list item is empty, remove it and insert a new paragraph after the list.
-            if (node[0].children.length === 1 && Text.isText(node[0].children[0]) && node[0].children[0].text === '') {
-              const path = node[1]
-              const [parentNode, parentPath] = Editor.parent(editor, path)
-              if (SlateElement.isElement(parentNode) && parentNode.type === 'list') {
-                Transforms.removeNodes(editor, { at: path })
-                Transforms.insertNodes(editor, { type: 'paragraph', children: [{ text: '' }] }, { at: Path.next(parentPath) })
-                // Set the cursor to the start of the new paragraph
-                Transforms.select(editor, Editor.start(editor, Path.next(parentPath)))
-                return;
-              }
-            }
+          }
+
+          const [parentNode, parentPath] = Editor.parent(editor, path)
+          // console.log('[insertBreak] parentNode: ', parentNode)
+
+          // If user is breaking in a list item
+          if (SlateElement.isElement(parentNode) && parentNode.type === 'list-item') {
+            assert(node.type === 'paragraph', 'Invalid node: ' + node)
+            insertBreakForListItem(editor, selection, node, path, parentNode, parentPath)
+            return;
+          }
         }
       }
     }
+
+    // insert a break as usual.
     insertBreak();
   };
 
   editor.deleteBackward = (...args) => {
     const { selection } = editor
-
     if (selection && Range.isCollapsed(selection)) {
-      const match = Editor.above(editor, {
+      // Get the ancestor block element of the current selection.
+      const block = Editor.above(editor, {
         match: n => SlateElement.isElement(n) && Editor.isBlock(editor, n),
       })
 
-      if (match) {
-        const [block, path] = match
-        const start = Editor.start(editor, path)
+      if (block) {
+        const node = block[0]
+        const path = block[1]
 
-        if (
-          !Editor.isEditor(block) &&
-          SlateElement.isElement(block) &&
-          block.type !== 'paragraph' && block.type != 'code-line' &&
-          Point.equals(selection.anchor, start)
-        ) {
-          const newProperties: Partial<SlateElement> = {
-            type: 'paragraph',
-          }
-          Transforms.setNodes(editor, newProperties)
-
-          if (block.type === 'list-item') {
-            Transforms.unwrapNodes(editor, {
-              match: n =>
-                !Editor.isEditor(n) &&
-                SlateElement.isElement(n) &&
-                n.type === 'list',
-              split: true,
-            })
+        if (SlateElement.isElement(node)) {
+          if (node.type === 'head' && deleteBackwardForHead(editor, selection, node, path)) {
+            return;
+          } else if (node.type === 'paragraph' && deleteBackwardForParagraph(editor, selection, node, path)) {
+            return;
           }
 
-          return
+          const [parentNode, parentPath] = Editor.parent(editor, path)
+          // If user is breaking in a list item
+          if (SlateElement.isElement(parentNode) && parentNode.type === 'list-item') {
+            assert(node.type === 'paragraph', 'Invalid node: ' + node)
+            if (deleteBackwardForListItem(editor, selection, node, path, parentNode, parentPath)) {
+              return;
+            }
+          }
         }
       }
-
-      deleteBackward(...args)
     }
+    deleteBackward(...args)
   }
 
   return editor
