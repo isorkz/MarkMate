@@ -2,7 +2,7 @@ import { Descendant } from 'slate'
 import { unified } from 'unified'
 import remarkParse from 'remark-parse'
 import remarkGfm from 'remark-gfm'
-import { CustomText } from '../Element'
+import { CustomText, DefaultEmptyListItemElement, DefaultParagraphElement } from '../Element'
 
 export const markdownSourceToSlateNodes = (mdContent: string) => {
   const parser = unified().use(remarkParse).use(remarkGfm)
@@ -21,14 +21,14 @@ const markdownAstToSlateNodes = (mdastNodes: any[]) => {
       case 'paragraph':
         slateNodes.push({
           type: 'paragraph',
-          children: markdownAstToSlateNodes(node.children),
+          children: node.children && node.children.length > 0 ? markdownAstToSlateNodes(node.children) : [{ text: '' }],
         })
         break;
       case 'heading':
         slateNodes.push({
           type: 'head',
           level: node.depth,
-          children: markdownAstToSlateNodes(node.children),
+          children: node.children && node.children.length > 0 ? markdownAstToSlateNodes(node.children) : [{ text: '' }],
         })
         break;
       case 'list':
@@ -36,14 +36,14 @@ const markdownAstToSlateNodes = (mdastNodes: any[]) => {
           type: 'list',
           order: node.ordered,
           start: node.start,
-          children: markdownAstToSlateNodes(node.children),
+          children: node.children && node.children.length > 0 ? markdownAstToSlateNodes(node.children) : [DefaultEmptyListItemElement],
         })
         break;
       case 'listItem':
         slateNodes.push({
           type: 'list-item',
           checked: node.checked,
-          children: markdownAstToSlateNodes(node.children),
+          children: node.children && node.children.length > 0 ? markdownAstToSlateNodes(node.children) : [DefaultParagraphElement],
         });
         break;
       case 'code':
