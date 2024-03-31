@@ -19,7 +19,7 @@ const SHORTCUTS = {
 // withMarkdownShortcuts: is a custom plugin to modify the editor's behavior. Example: https://github.com/ianstormtaylor/slate/blob/main/site/examples/markdown-shortcuts.tsx
 export const withMarkdownShortcuts = (editor: Editor) => {
   // insertText is a built-in function of Editor to insert text.
-  const { insertText, deleteBackward, insertBreak } = editor;
+  const { insertText, deleteBackward, insertBreak, deleteFragment } = editor;
 
   // Override the insertText method to handle our custom logic
   editor.insertText = (text) => {
@@ -45,9 +45,9 @@ export const withMarkdownShortcuts = (editor: Editor) => {
       const lineText = rangeText + text
 
       const [parentNode] = Editor.parent(editor, path)
-      console.log('[insertText] block: ', block)
-      console.log('[insertText] lineText: ', lineText)
-      console.log('[insertText] parentNode: ', parentNode)
+      // console.log('[insertText] block: ', block)
+      // console.log('[insertText] lineText: ', lineText)
+      // console.log('[insertText] parentNode: ', parentNode)
       if (SlateElement.isElement(parentNode) && parentNode.type === 'code') {
         // If user is typeing in code block, just insert the text as usual.
         insertText(text)
@@ -221,6 +221,7 @@ export const withMarkdownShortcuts = (editor: Editor) => {
       const block = Editor.above(editor, {
         match: n => SlateElement.isElement(n) && Editor.isBlock(editor, n),
       })
+      // console.log('[deleteBackward] block: ', block)
 
       if (block) {
         const node = block[0]
@@ -244,7 +245,32 @@ export const withMarkdownShortcuts = (editor: Editor) => {
         }
       }
     }
+
     deleteBackward(...args)
+  }
+
+  // Delete the selected fragment
+  editor.deleteFragment = (...args) => {
+    // const { selection } = editor
+    // if (selection) {
+    //   const [start, end] = Range.edges(selection)
+    //   const startBlock = Editor.above(editor, { at: start, match: n => SlateElement.isElement(n) && Editor.isBlock(editor, n) })
+    //   const endBlock = Editor.above(editor, { at: end, match: n => SlateElement.isElement(n) && Editor.isBlock(editor, n) })
+    //   console.log('[deleteFragment] startBlock: ', startBlock)
+    //   console.log('[deleteFragment] endBlock: ', endBlock)
+    //   // if (startBlock && endBlock && startBlock[0].type === 'list-item' && endBlock[0].type === 'list-item') {
+    //   //   // If the selection is across multiple list items, delete the list
+    //   //   const startPath = startBlock[1]
+    //   //   const endPath = endBlock[1]
+    //   //   const [startParent] = Editor.parent(editor, startPath)
+    //   //   const [endParent] = Editor.parent(editor, endPath)
+    //   //   if (startParent === endParent) {
+    //   //     Transforms.removeNodes(editor, { at: startPath })
+    //   //   }
+    //   // }
+    // }
+
+    deleteFragment(...args)
   }
 
   return editor

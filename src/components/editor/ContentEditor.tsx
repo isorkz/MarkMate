@@ -92,6 +92,13 @@ const ContentEditor = () => {
       if (codeBlockEntries) {
         const [node, path] = codeBlockEntries;
         Transforms.select(editor, path);
+      } else {
+        // If the cursor is not inside the code block, cmd+a select all the content.
+        const [start, end] = Editor.edges(editor, [])
+        Transforms.select(editor, {
+          anchor: start,
+          focus: end,
+        })
       }
     }
   }
