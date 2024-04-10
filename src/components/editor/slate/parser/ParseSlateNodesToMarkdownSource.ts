@@ -76,7 +76,7 @@ const parseSlateNodeToMarkdownSource = (node: any, preStr: string = '', ancestor
     case 'hr':
       return '---\n\n'
     case 'image':
-      return '![' + node.alt + '](' + node.url + ')\n\n'
+      return '![' + (node.alt ? node.alt : '') + '](' + node.url + ')\n\n'
     case 'table':
       return parseTable(node)
     default:

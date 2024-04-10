@@ -66,4 +66,45 @@ export const registerIpcHandlers = (): void => {
       throw err;
     }
   });
+
+  ipcMain.handle('save-image-file', async (event, rootDir: string, currentFilePath: string, dataUrlContent: string) => {
+    const match = dataUrlContent.match(/^data:(image\/\w+);base64,(.*)$/);
+    if (match === null) {
+      throw new Error('Invalid image dataUrlContent');
+    }
+
+    const imageType = match[1];
+    const imageData = match[2];
+    // decode the image data
+    const buffer = Buffer.from(imageData, 'base64');
+    const imageDir = path.join(rootDir, '.images');
+    const filePath = path.join(imageDir, `${Date.now()}.${imageType.split('/')[1]}`);
+    // console.log('Saving image file: ', filePath)
+    if (!fs.existsSync(imageDir)) {
+      fs.mkdirSync(path.join(rootDir, '.images'), { recursive: true });
+    }
+    await fs.promises.writeFile(filePath, buffer);
+
+    // return the relative path of the image file
+    const currentFileStats = await fs.promises.stat(currentFilePath);
+    const currentFileDir = currentFileStats.isDirectory() ? currentFilePath : path.dirname(currentFilePath);
+    return path.relative(currentFileDir, filePath);
+  });
+
+  // currentFilePath: the path of the current md document
+  // mediaFilePath: the path of the image file
+  ipcMain.on('get-file-url', (event, currentFilePath: string, mediaFilePath: string) => {
+    let fileUrl = '';
+    if (path.isAbsolute(mediaFilePath)) {
+      fileUrl = 'file://' + mediaFilePath;
+    } else {
+      // If it's a relative path, get the absolute path based on the currentFileDir
+      const currentFileStats = fs.statSync(currentFilePath);
+      const currentFileDir = currentFileStats.isDirectory() ? currentFilePath : path.dirname(currentFilePath);
+      fileUrl = 'file://' + path.join(currentFileDir, mediaFilePath);
+    }
+    console.log('fileUrl: ', fileUrl);
+    // Note: for ipcMain.on, use event.returnValue to return value synchronously, instead of returning the value directly.
+    event.returnValue = fileUrl;
+  });
 };

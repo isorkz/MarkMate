@@ -11,12 +11,10 @@ import { withMarkdownShortcuts } from './slate/plugin/WithMarkdownShortcuts'
 import { SlateEditorUtils } from './slate/SlateEditorUtils'
 import { SetNodeToDecorations, useDecorate } from './slate/decorate/SetNodeToDecorations'
 import { DefaultEmptySlateNodes } from './slate/Element'
+import { withImages } from './slate/plugin/withImages'
 
 const ContentEditor = () => {
-  // Rich text editor: Slate, wiki: https://docs.slatejs.org/walkthroughs/02-adding-event-handlers
-  // withMarkdownShortcuts: is a custom plugin to modify the editor's behavior.
-  // withHistory: to add undo/redo history to the editor.
-  const editor = useMemo(() => withMarkdownShortcuts(withReact(withHistory(createEditor()))), [])
+  const dirPath = useStore((state) => state.dirPath);
 
   const currentDocument = useStore((state) => state.currentDocument);
   const updateSourceContent = useStore((state) => state.updateSourceContent);
@@ -27,6 +25,11 @@ const ContentEditor = () => {
   // useRef: to get the current value of a variable, and it will not cause a re-render.
   // Otherwise, for onSave() triggered by global shortcut, the currentDocumentRef will be the old value.
   const currentDocumentRef = useRef(currentDocument);
+
+  // Rich text editor: Slate, wiki: https://docs.slatejs.org/walkthroughs/02-adding-event-handlers
+  // withMarkdownShortcuts: is a custom plugin to modify the editor's behavior.
+  // withHistory: to add undo/redo history to the editor.
+  const editor = useMemo(() => withImages(withMarkdownShortcuts(withReact(withHistory(createEditor()))), dirPath, currentDocumentRef.current.filePath), [dirPath])
 
   useEffect(() => {
     currentDocumentRef.current = currentDocument;

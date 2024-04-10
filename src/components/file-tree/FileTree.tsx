@@ -88,6 +88,9 @@ const FileTree = () => {
         initTreeType(treeData)
         console.log('[FileTree] tree: ', treeData)
         setFileTree(treeData);
+      }).catch((err: any) => {
+        console.error('Failed to read dir tree:', err);
+        toast.error('Failed to read dir tree: ' + err);
       });
     }
   }, [dirPath]);

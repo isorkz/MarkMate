@@ -31,6 +31,8 @@ function createWindow() {
       // nodeIntegration: true,
       // contextIsolation: false,
       preload: path.join(__dirname, 'preload.js'),
+      // disable webSecurity to allow loading local images
+      webSecurity: false
     },
   })
 

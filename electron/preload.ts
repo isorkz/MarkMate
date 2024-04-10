@@ -20,6 +20,14 @@ contextBridge.exposeInMainWorld('api', {
   },
   newFile: (filePath: string, newFileName: string) => {
     return ipcRenderer.invoke('new-file', filePath, newFileName);
+  },
+  // Save the image file to the path: rootDir/.images/
+  saveImageFile: (rootDir: string, currentFilePath: string, dataUrlContent: string) => {
+    return ipcRenderer.invoke('save-image-file', rootDir, currentFilePath, dataUrlContent);
+  },
+  getFileUrl: (currentFilePath: string, mediaFilePath: string) => {
+    // sendSync is to return value synchronously, and uses ipcMain.on() for listening
+    return ipcRenderer.sendSync('get-file-url', currentFilePath, mediaFilePath);
   }
 });
 
