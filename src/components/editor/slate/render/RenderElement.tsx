@@ -40,8 +40,12 @@ export const RenderElement = ({ attributes, children, element }: RenderElementPr
           const currentDocument = useStore((state) => state.currentDocument);
           url = window.api.getFileUrl(currentDocument.filePath, url)
         }
-        // encodeURI to handle the special characters in the url
-        return <img src={encodeURI(url)} {...attributes}></img>
+        return <div {...attributes}>
+          {children}
+          <div contentEditable={false} className="relative">
+            <img src={encodeURI(url)}></img>
+          </div>
+        </div>
       case 'code':
         const setLanguage = (language: string) => {
           const path = ReactEditor.findPath(editor, element)
