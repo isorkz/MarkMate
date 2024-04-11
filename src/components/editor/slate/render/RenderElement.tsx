@@ -1,8 +1,7 @@
 import { Transforms } from 'slate'
 import { ReactEditor, RenderElementProps, RenderLeafProps, useSlateStatic } from 'slate-react'
 import { LanguageSelect } from '../decorate/SetNodeToDecorations'
-import { isValidUrl } from '../../../../utils/utils'
-import useStore from '../../../../store/MStore'
+import { Image } from '../elements/Image'
 
 export const RenderElement = ({ attributes, children, element }: RenderElementProps) => {
   const editor = useSlateStatic()
@@ -34,18 +33,7 @@ export const RenderElement = ({ attributes, children, element }: RenderElementPr
             </div>
           </li>)
       case 'image':
-        let url = element.url
-        if (url && !isValidUrl(url)) {
-          // If it's local file, get the file url: file:///path/to/file
-          const currentDocument = useStore((state) => state.currentDocument);
-          url = window.api.getFileUrl(currentDocument.filePath, url)
-        }
-        return <div {...attributes}>
-          {children}
-          <div contentEditable={false} className="relative">
-            <img src={encodeURI(url)}></img>
-          </div>
-        </div>
+        return <Image attributes={attributes} children={children} element={element} />
       case 'code':
         const setLanguage = (language: string) => {
           const path = ReactEditor.findPath(editor, element)
