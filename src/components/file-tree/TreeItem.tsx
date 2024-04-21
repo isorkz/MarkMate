@@ -4,6 +4,7 @@ import useStore from '../../store/MStore'
 import useTreeStore from '../../store/TreeStore'
 import { TreeNode } from '../../models/FileTree'
 import toast from 'react-hot-toast';
+import { SlateEditorUtils } from '../editor/slate/SlateEditorUtils';
 
 interface TreeNodeProps {
   node: TreeNode;
@@ -23,8 +24,13 @@ const TreeItem = ({
   const editingMode = useTreeStore((state) => state.editingMode);
   const reset = useTreeStore((state) => state.reset);
 
-  const currentDocument = useStore((state) => state.currentDocument);
-  const setCurrentDocument = useStore((state) => state.setCurrentDocument);
+  const setActiveTabIndex = useStore((state) => state.setActiveTabIndex);
+  const activeTabIndex = useStore((state) => state.activeTabIndex);
+  const activeTab = useStore((state) => state.activeTab);
+  const setActiveTab = useStore((state) => state.setActiveTab);
+  const removeTab = useStore((state) => state.removeTab);
+  const tabs = useStore((state) => state.tabs);
+  const newTab = useStore((state) => state.newTab);
 
   // To focus the input element when renaming a file.
   const inputRef = useRef<HTMLInputElement>(null);
@@ -48,11 +54,19 @@ const TreeItem = ({
         if (err) {
           console.error(err);
         } else {
-          setCurrentDocument({
-            ...currentDocument,
-            filePath: node.path,
-            sourceContent: data,
-          });
+          // If the file is already opened in the tabs, only activate the tab.
+          const index = tabs.findIndex((tab) => tab.filePath === node.path);
+          if (index >= 0) {
+            setActiveTabIndex(index)
+          } else {
+            if (activeTab().changed) {
+              newTab(node.path, data)
+            } else {
+              setActiveTab(node.path, data)
+              // Reset the slate nodes when switching to another tab, and clear the history.
+              SlateEditorUtils.resetSlateNodes(activeTab().editor, activeTab().slateNodes, true);
+            }
+          }
         }
       })
     } else {
@@ -135,7 +149,7 @@ const TreeItem = ({
 
   return (
     <div>
-      <div className={`flex items-center hover:bg-neutral-700 ${node.path === currentDocument?.filePath && 'bg-neutral-600'}`} style={{ paddingLeft: `${level}em` }}
+      <div className={`flex items-center hover:bg-neutral-700 ${node.path === tabs[activeTabIndex].filePath && 'bg-neutral-600'}`} style={{ paddingLeft: `${level}em` }}
         onClick={handleClick}
         onContextMenu={onContextMenu}
       >

@@ -2,9 +2,22 @@ import { Descendant } from 'slate'
 import { unified } from 'unified'
 import remarkParse from 'remark-parse'
 import remarkGfm from 'remark-gfm'
-import { CustomText, DefaultEmptyListItemElement, DefaultParagraphElement } from '../Element'
+import { CustomText, DefaultEmptyListItemElement, DefaultEmptySlateNodes, DefaultParagraphElement } from '../Element'
 
-export const markdownSourceToSlateNodes = (mdContent: string) => {
+export const markdownSourceToMEditorNodes = (mdContent: string) => {
+  if (!mdContent || mdContent === '') {
+    return DefaultEmptySlateNodes
+  }
+
+  let slateNodes = markdownSourceToSlateNodes(mdContent)
+  if (slateNodes.length === 0) {
+    slateNodes = DefaultEmptySlateNodes;
+  }
+  console.log('init slateNodes: ', slateNodes)
+  return slateNodes;
+}
+
+const markdownSourceToSlateNodes = (mdContent: string) => {
   const parser = unified().use(remarkParse).use(remarkGfm)
   const mdast = parser.parse(mdContent)
   console.log('mdast: ', mdast)

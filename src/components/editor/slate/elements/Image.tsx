@@ -1,10 +1,10 @@
 import { ReactEditor, RenderElementProps, useFocused, useSelected, useSlateStatic } from 'slate-react'
 import { isValidUrl } from '../../../../utils/utils'
-import useStore from '../../../../store/MStore'
 import { ImageElement } from '../Element'
+import { useMEditor } from '../../../../models/MEditor'
 
 export const Image = ({ attributes, children, element }: RenderElementProps) => {
-  const editor = useSlateStatic()
+  // const editor = useSlateStatic()
   // const path = ReactEditor.findPath(editor, element)
 
   const selected = useSelected()
@@ -14,8 +14,8 @@ export const Image = ({ attributes, children, element }: RenderElementProps) => 
   let url = element.url
   if (url && !isValidUrl(url)) {
     // If it's local file, get the file url: file:///path/to/file
-    const currentDocument = useStore((state) => state.currentDocument);
-    url = window.api.getFileUrl(currentDocument.filePath, url)
+    const activeEditor = useMEditor()
+    url = window.api.getFileUrl(activeEditor.filePath, url)
   }
 
   return (

@@ -1,4 +1,5 @@
 import { BaseEditor, Descendant, Element as SlateElement, Range } from 'slate'
+import { HistoryEditor } from 'slate-history'
 import { ReactEditor } from 'slate-react'
 
 // Define custom types and properties for Slate nodes.
@@ -35,7 +36,7 @@ export type CustomText = {
 
 declare module 'slate' {
   interface CustomTypes {
-    Editor: BaseEditor & ReactEditor & { nodeToDecorations?: Map<SlateElement, Range[]> }
+    Editor: BaseEditor & ReactEditor & HistoryEditor & { nodeToDecorations?: Map<SlateElement, Range[]> }
     Element: ParagraphElement | HeadElement | ListElement | ListItemElement | CodeElement | CodeLineElement | ImageElement
     | BlockQuoteElement | TableElement | TableRowElement | TableCellElement | HrElement | FootnoteReferenceElement | FootnoteDefinitionElement | HtmlElement
     Text: CustomText

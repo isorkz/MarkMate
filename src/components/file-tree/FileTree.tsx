@@ -13,8 +13,8 @@ const FileTree = () => {
   const pushTreeNode = useTreeStore((state) => state.pushTreeNode);
   const setEditingMode = useTreeStore((state) => state.setEditingMode);
 
-  const dirPath = useStore((state) => state.dirPath);
-  const currentDocument = useStore((state) => state.currentDocument);
+  const rootDir = useStore((state) => state.rootDir);
+  const activeFilePath = useStore((state) => state.activeFilePath);
 
   // Using useRef to get the latest value for window.ipcRenderer.on function.
   const editingNodeRef = useRef(editingNode);
@@ -80,11 +80,11 @@ const FileTree = () => {
   }
 
   useEffect(() => {
-    console.log('[FileTree] dirPath has changed: ', dirPath)
-    if (dirPath) {
+    console.log('[FileTree] rootDir has changed: ', rootDir)
+    if (rootDir) {
       // window.api defined in preload.ts, and implemented in ipcHandler.ts
-      window.api.readDirTree(dirPath).then((treeData: any) => {
-        initTreeIsOpened(treeData, currentDocument?.filePath)
+      window.api.readDirTree(rootDir).then((treeData: any) => {
+        initTreeIsOpened(treeData, activeFilePath())
         initTreeType(treeData)
         console.log('[FileTree] tree: ', treeData)
         setFileTree(treeData);
@@ -93,7 +93,7 @@ const FileTree = () => {
         toast.error('Failed to read dir tree: ' + err);
       });
     }
-  }, [dirPath]);
+  }, [rootDir]);
 
   useEffect(() => {
     window.ipcRenderer.on('tree-command-rename', renameFile);

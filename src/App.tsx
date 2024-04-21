@@ -1,10 +1,28 @@
+import { useEffect } from 'react';
 import './App.css'
 import MainPanel from './components/main-panel/MainPanel'
 import LeftSidebar from './components/sidebar/LeftSidebar'
 import RightSidebar from './components/sidebar/RightSidebar'
 import { Toaster } from 'react-hot-toast';
+import useStore from './store/MStore';
 
 function App() {
+  const newEmptyTab = useStore((state) => state.newEmptyTab);
+
+  const onNewTab = () => {
+    newEmptyTab();
+  }
+
+  useEffect(() => {
+    // Add a listener to receive the 'new-tab' event from main process.
+    window.ipcRenderer.on('new-tab', onNewTab)
+
+    // Specify how to clean up after this effect
+    return () => {
+      window.ipcRenderer.removeListener('new-tab', onNewTab)
+    }
+  }, [])
+
   return (
     // 'h-screen', 'w-screen' is to make the page full screen
     // In CSS, it is same as 'height: 100vh; width: 100vw'

@@ -1,19 +1,24 @@
-import { useState } from 'react'
-import ContentEditor from '../editor/ContentEditor'
-import MarkdownSourceEditor from '../editor/markdown-source-editor/MarkdownSourceEditor';
+import TabsNav from '../tabs/TabsNav';
+import { EditorPanel } from '../editor/EditorPanel';
+import useStore from '../../store/MStore';
 
 const MainPanel = () => {
-  const [showMarkdownSourceEditor, setShowMarkdownSourceEditor] = useState<boolean>(true);
+  const tabs = useStore((state) => state.tabs);
+  const activeTabIndex = useStore((state) => state.activeTabIndex);
 
   return (
-    <div className="flex w-full h-full overflow-x-hidden">
-      {showMarkdownSourceEditor && (
-        <div className="flex w-1/2 h-full">
-          <MarkdownSourceEditor />
-          <div className="border-r-2 border-gray-200"></div>
-        </div>
-      )}
-      <ContentEditor />
+    <div className='flex flex-col w-full h-full overflow-x-hidden'>
+      <TabsNav />
+
+      <>
+        {tabs.map((tab, index) => (
+          <div key={index} className={`flex w-full h-full overflow-x-hidden ${activeTabIndex === index ? '' : 'hidden'}`}>
+            {/* NOTE: must use the 'key' prop to make sure the component is re-rendered when the tab is changed. 
+            Otherwise, the content of the tab will be mixed up. */}
+            <EditorPanel tab={tab} tabIndex={index} key={index} />
+          </div>
+        ))}
+      </>
     </div>
   )
 }

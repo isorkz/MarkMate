@@ -2,7 +2,7 @@ import { Editor, Transforms, Descendant } from 'slate'
 import { DefaultEmptySlateNodes } from './Element';
 
 export class SlateEditorUtils {
-  static resetSlateNodes = (editor: Editor, slateNodes?: Descendant[]) => {
+  static resetSlateNodes = (editor: Editor, slateNodes?: Descendant[], cleanupHistory: boolean = false) => {
     if (editor.children.length > 0) {
       Transforms.delete(editor, {
         at: {
@@ -17,6 +17,11 @@ export class SlateEditorUtils {
       Transforms.insertNodes(editor, slateNodes, { at: [0] })
     } else {
       Transforms.insertNodes(editor, DefaultEmptySlateNodes, { at: [0] })
+    }
+
+    if (cleanupHistory) {
+      editor.history = { redos: [], undos: [] }
+      editor.operations = []
     }
   }
 }

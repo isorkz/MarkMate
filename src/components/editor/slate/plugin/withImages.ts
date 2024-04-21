@@ -1,8 +1,8 @@
-import { Editor, Transforms, Element as SlateElement, Range } from 'slate'
-import { ReactEditor } from 'slate-react';
+import { Editor, Transforms } from 'slate'
 import { ImageElement } from '../Element';
 
-export const withImages = (editor: ReactEditor, dirPath: string | undefined, currentFilePath: string | undefined) => {
+// TODO: handle if rootDir / currentFilePath is undefined
+export const withImages = (editor: Editor, rootDir: string | undefined, currentFilePath: string | undefined) => {
   const { insertData, isVoid } = editor
 
   editor.isVoid = element => {
@@ -30,11 +30,11 @@ export const withImages = (editor: ReactEditor, dirPath: string | undefined, cur
           reader.addEventListener('load', () => {
             const url = reader.result
             console.log('[insertData] url: ', url)
-            if (url && dirPath && currentFilePath) {
+            if (url && rootDir && currentFilePath) {
               // window.api defined in preload.ts, and implemented in ipcHandler.ts
-              console.log('[insertData] dirPath: ', dirPath)
+              console.log('[insertData] rootDir: ', rootDir)
               console.log('[insertData] currentFilePath: ', currentFilePath)
-              window.api.saveImageFile(dirPath, currentFilePath, url).then((imageFile: any) => {
+              window.api.saveImageFile(rootDir, currentFilePath, url).then((imageFile: any) => {
                 console.log('[insertData] saved image file: ', imageFile)
                 insertImage(editor, imageFile)
               }).catch((err: any) => {
@@ -60,7 +60,7 @@ export const withImages = (editor: ReactEditor, dirPath: string | undefined, cur
   return editor
 }
 
-const insertImage = (editor: ReactEditor, url: string) => {
+const insertImage = (editor: Editor, url: string) => {
   const image: ImageElement = { type: 'image', url: url, children: [{ text: '' }] }
   Transforms.insertNodes(editor, image)
   Transforms.insertNodes(editor, {

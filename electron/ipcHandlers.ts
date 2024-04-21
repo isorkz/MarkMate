@@ -103,7 +103,7 @@ export const registerIpcHandlers = (): void => {
       const currentFileDir = currentFileStats.isDirectory() ? currentFilePath : path.dirname(currentFilePath);
       fileUrl = 'file://' + path.join(currentFileDir, mediaFilePath);
     }
-    console.log('fileUrl: ', fileUrl);
+    // console.log('fileUrl: ', fileUrl);
     // Note: for ipcMain.on, use event.returnValue to return value synchronously, instead of returning the value directly.
     event.returnValue = fileUrl;
   });

@@ -79,9 +79,13 @@ app.on('browser-window-focus', () => {
   globalShortcut.register('CommandOrControl+S', () => {
     BrowserWindow.getFocusedWindow()?.webContents.send('save-file')
   })
+  globalShortcut.register('CommandOrControl+N', () => {
+    BrowserWindow.getFocusedWindow()?.webContents.send('new-tab')
+  })
 })
 
 // Unregister shortcuts when window is blurred
 app.on('browser-window-blur', () => {
   globalShortcut.unregister('CommandOrControl+S')
+  globalShortcut.unregister('CommandOrControl+N')
 })
