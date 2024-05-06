@@ -28,7 +28,8 @@ const useTreeStore = create<TreeStore>()(
 
     updateTreeNode: (updateNode: TreeNode) =>
       set((state) => {
-        if (!state.fileTree) return state;
+        // return {} means nothing needs to re-render
+        if (!state.fileTree) return {};
 
         const dfs = (node: TreeNode) => {
           if (node.path === updateNode.path) {
@@ -45,7 +46,8 @@ const useTreeStore = create<TreeStore>()(
 
     pushTreeNode: (path: string, newNode: TreeNode) =>
       set((state) => {
-        if (!state.fileTree) return state;
+        // return {} means nothing needs to re-render
+        if (!state.fileTree) return {};
 
         const dfs = (node: TreeNode) => {
           if (node.path === path) {
@@ -69,7 +71,8 @@ const useTreeStore = create<TreeStore>()(
 
     reset: () =>
       set((state) => {
-        if (!state.fileTree) return state;
+        // return {} means nothing needs to re-render
+        if (!state.fileTree) return {};
 
         const dfs = (node: TreeNode) => {
           if (node.children) {

@@ -32,9 +32,16 @@ export type CustomText = {
   html?: boolean,
   // color is set by code block highlighter.
   color?: string,
+  highlight?: boolean,  // Highlight the text, e.g., search result.
+  isCurrentHighlight?: boolean,  // Whether the text is the current search result.
 }
 
 declare module 'slate' {
+  interface BaseRange {
+    highlight?: boolean // Highlight the text, e.g., search result.
+    isCurrentHighlight?: boolean,  // Whether the text is the current search result.
+  }
+
   interface CustomTypes {
     Editor: BaseEditor & ReactEditor & HistoryEditor & { nodeToDecorations?: Map<SlateElement, Range[]> }
     Element: ParagraphElement | HeadElement | ListElement | ListItemElement | CodeElement | CodeLineElement | ImageElement

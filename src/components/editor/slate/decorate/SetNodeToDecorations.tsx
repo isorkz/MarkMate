@@ -3,6 +3,7 @@ import { Element as SlateElement, Editor, NodeEntry, Range, Node } from 'slate'
 import { useSlate } from 'slate-react'
 import { CodeElement } from '../Element'
 import { getHighlighter, BundledLanguage } from 'shikiji'
+import useSearchStore from '../../../../store/SearchStore'
 
 const supportedLanguages = ['javascript', 'cpp', 'c++', 'python', 'java', 'html', 'shell']
 
@@ -11,18 +12,24 @@ const highlighter = await getHighlighter({
   langs: supportedLanguages,
 })
 
-// Use decorate to highlight the code blocks.
+// Use decorate to
+// 1. highlight the code blocks: https://github.com/ianstormtaylor/slate/blob/main/site/examples/code-highlighting.tsx
+// 2. highlight the search results: https://github.com/ianstormtaylor/slate/blob/main/site/examples/search-highlighting.tsx
 export const useDecorate = (editor: Editor): (([node, path]: NodeEntry) => Range[]) => {
+  const searchResult = useSearchStore((state) => state.searchResult);
+
   return useCallback(
     ([node, path]) => {
+      let ranges: Range[] = searchResult?.nodeToRangesMap.get(node) || []
       if (SlateElement.isElement(node) && node.type === 'code-line') {
-        const ranges = editor.nodeToDecorations?.get(node) || []
+        const rangesForCodeBlock = editor.nodeToDecorations?.get(node) || []
+        ranges.push(...rangesForCodeBlock)
         return ranges
       }
 
-      return []
+      return ranges
     },
-    [editor.nodeToDecorations]
+    [editor.nodeToDecorations, searchResult]
   )
 }
 

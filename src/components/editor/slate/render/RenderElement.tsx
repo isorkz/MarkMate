@@ -5,7 +5,6 @@ import { Image } from '../elements/Image'
 
 export const RenderElement = ({ attributes, children, element }: RenderElementProps) => {
   const editor = useSlateStatic()
-
   try {
     switch (element.type) {
       case 'paragraph':
@@ -96,6 +95,13 @@ export const RenderLeaf = (props: RenderLeafProps) => {
   }
   if (props.leaf.isInlineCode) {
     children = <code>{children}</code>
+  }
+  if (props.leaf.highlight) {
+    if (props.leaf.isCurrentHighlight) {
+      children = <mark style={{ backgroundColor: 'orange' }}>{children}</mark>
+    } else {
+      children = <mark>{children}</mark>
+    }
   }
 
   const style = props.leaf.color ? { color: props.leaf.color } : undefined;

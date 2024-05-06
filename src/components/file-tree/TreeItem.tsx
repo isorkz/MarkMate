@@ -5,6 +5,7 @@ import useTreeStore from '../../store/TreeStore'
 import { TreeNode } from '../../models/FileTree'
 import toast from 'react-hot-toast';
 import { SlateEditorUtils } from '../editor/slate/SlateEditorUtils';
+import useSearchStore from '../../store/SearchStore';
 
 interface TreeNodeProps {
   node: TreeNode;
@@ -32,6 +33,8 @@ const TreeItem = ({
   const tabs = useStore((state) => state.tabs);
   const newTab = useStore((state) => state.newTab);
 
+  const setShowSearch = useSearchStore((state) => state.setShowSearch);
+
   // To focus the input element when renaming a file.
   const inputRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
@@ -47,6 +50,8 @@ const TreeItem = ({
       }
       cancelEdit()
     }
+
+    setShowSearch(false)
 
     if (!node.children) {
       // window.api defined in preload.ts, and implemented in ipcHandler.ts

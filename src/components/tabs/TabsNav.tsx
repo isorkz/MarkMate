@@ -1,4 +1,5 @@
 import useStore from '../../store/MStore';
+import useSearchStore from '../../store/SearchStore';
 import { CloseIcon } from '../icons';
 
 interface TabButtonProps {
@@ -15,8 +16,11 @@ const TabButton = ({
   const setActiveTabIndex = useStore((state) => state.setActiveTabIndex);
   const removeTab = useStore((state) => state.removeTab);
 
+  const setShowSearch = useSearchStore((state) => state.setShowSearch);
+
   const onClickTab = () => {
     setActiveTabIndex(index)
+    setShowSearch(false)
   }
 
   const onCloseTab = () => {

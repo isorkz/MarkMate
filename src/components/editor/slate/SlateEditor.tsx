@@ -35,7 +35,7 @@ const SlateEditor = ({ tabIndex }: SlateEditorProps) => {
     activeEditorRef.current = activeEditor;
   }, [activeEditor]);
 
-  // use the custom decorate function to highlight the code block
+  // use the custom decorate function to highlight the code block and search results.
   const decorate = useDecorate(activeEditor.editor)
 
   const onChange = (value: Descendant[]) => {
