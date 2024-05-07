@@ -29,7 +29,6 @@ const TreeItem = ({
   const activeTabIndex = useStore((state) => state.activeTabIndex);
   const activeTab = useStore((state) => state.activeTab);
   const setActiveTab = useStore((state) => state.setActiveTab);
-  const removeTab = useStore((state) => state.removeTab);
   const tabs = useStore((state) => state.tabs);
   const newTab = useStore((state) => state.newTab);
 
@@ -54,15 +53,15 @@ const TreeItem = ({
     setShowSearch(false)
 
     if (!node.children) {
-      // window.api defined in preload.ts, and implemented in ipcHandler.ts
-      window.api.readFile(node.path, (err: any, data: any) => {
-        if (err) {
-          console.error(err);
-        } else {
-          // If the file is already opened in the tabs, only activate the tab.
-          const index = tabs.findIndex((tab) => tab.filePath === node.path);
-          if (index >= 0) {
-            setActiveTabIndex(index)
+      // If the file is already opened in the tabs, only activate the tab.
+      const index = tabs.findIndex((tab) => tab.filePath === node.path);
+      if (index >= 0) {
+        setActiveTabIndex(index)
+      } else {
+        // window.api defined in preload.ts, and implemented in ipcHandler.ts
+        window.api.readFile(node.path, (err: any, data: any) => {
+          if (err) {
+            console.error(err);
           } else {
             if (activeTab().changed) {
               newTab(node.path, data)
@@ -72,8 +71,8 @@ const TreeItem = ({
               SlateEditorUtils.resetSlateNodes(activeTab().editor, activeTab().slateNodes, true);
             }
           }
-        }
-      })
+        })
+      }
     } else {
       node.isOpened = !node.isOpened;
       const newTree = JSON.parse(JSON.stringify(fileTree));

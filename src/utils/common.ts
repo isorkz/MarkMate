@@ -12,3 +12,20 @@ export function isValidUrl(str: string) {
     return false;
   }
 }
+
+export function getFileName(path: string): string {
+  let fileName = path.split('/').pop() || '';
+  if (fileName.includes('.')) {
+    // remove file extension
+    fileName = fileName.split('.').slice(0, -1).join('.');
+  }
+  return fileName;
+}
+
+export function getFolderPath(rootDir: string, filePath: string): string {
+  // rootDir: /path/md
+  // filePath: /path/md/Work/test/1.md
+  // return: Work/test
+  const fileName = filePath.split('/').pop() || '';
+  return filePath.replace(rootDir, '').replace(fileName, '').replace(/^\//, '').replace(/\/$/, '');
+}

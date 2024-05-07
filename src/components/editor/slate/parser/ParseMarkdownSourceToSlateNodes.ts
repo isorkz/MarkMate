@@ -20,7 +20,7 @@ export const markdownSourceToMEditorNodes = (mdContent: string) => {
 const markdownSourceToSlateNodes = (mdContent: string) => {
   const parser = unified().use(remarkParse).use(remarkGfm)
   const mdast = parser.parse(mdContent)
-  console.log('mdast: ', mdast)
+  // console.log('mdast: ', mdast)
   return markdownAstToSlateNodes(mdast.children)
 }
 

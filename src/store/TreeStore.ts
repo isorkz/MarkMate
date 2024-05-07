@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { TreeNode } from "../models/FileTree";
+import { Descendant } from "slate";
 
 type EditingMode = 'rename' | 'newfile' | undefined
 
@@ -13,6 +14,9 @@ interface TreeStore {
 
   reset: () => void;
 
+  // key: file path, value: slate nodes
+  slateNodesCache: Map<string, Descendant[]>;
+
   // The current editing node, such as rename, delete, etc.
   editingNode: TreeNode | undefined;
   setEditingNode: (node: TreeNode | undefined) => void;
@@ -25,6 +29,8 @@ const useTreeStore = create<TreeStore>()(
   (set) => ({
     fileTree: undefined,
     setFileTree: (fileTree: TreeNode | undefined) => set({ fileTree: fileTree }),
+
+    slateNodesCache: new Map(),
 
     updateTreeNode: (updateNode: TreeNode) =>
       set((state) => {

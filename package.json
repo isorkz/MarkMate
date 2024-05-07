@@ -11,6 +11,9 @@
   "dependencies": {
     "@codemirror/lang-markdown": "^6.2.3",
     "@codemirror/language-data": "^6.3.1",
+    "@emotion/react": "^11.11.4",
+    "@emotion/styled": "^11.11.5",
+    "@mui/material": "^5.15.16",
     "@uiw/react-codemirror": "^4.21.21",
     "directory-tree": "^3.5.1",
     "fs-extra": "^11.2.0",

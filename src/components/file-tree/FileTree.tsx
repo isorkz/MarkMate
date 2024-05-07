@@ -12,6 +12,7 @@ const FileTree = () => {
   const setEditingNode = useTreeStore((state) => state.setEditingNode);
   const pushTreeNode = useTreeStore((state) => state.pushTreeNode);
   const setEditingMode = useTreeStore((state) => state.setEditingMode);
+  const slateNodesCache = useTreeStore((state) => state.slateNodesCache);
 
   const rootDir = useStore((state) => state.rootDir);
   const activeFilePath = useStore((state) => state.activeFilePath);
@@ -82,6 +83,8 @@ const FileTree = () => {
   useEffect(() => {
     console.log('[FileTree] rootDir has changed: ', rootDir)
     if (rootDir) {
+      slateNodesCache.clear()
+
       // window.api defined in preload.ts, and implemented in ipcHandler.ts
       window.api.readDirTree(rootDir).then((treeData: any) => {
         initTreeIsOpened(treeData, activeFilePath())

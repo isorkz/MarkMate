@@ -7,6 +7,7 @@ import { RenderElement, RenderLeaf } from '../slate/render/RenderElement'
 import { slateNodesToMarkdownSource } from '../slate/parser/ParseSlateNodesToMarkdownSource'
 import { SetNodeToDecorations, useDecorate } from '../slate/decorate/SetNodeToDecorations'
 import { useMEditor } from '../../../models/MEditor'
+import useTreeStore from '../../../store/TreeStore'
 
 interface SlateEditorProps {
   tabIndex: number;
@@ -19,6 +20,8 @@ const SlateEditor = ({ tabIndex }: SlateEditorProps) => {
   const updateSourceContent = useStore((state) => state.updateSourceContent);
   const updateSlateNodes = useStore((state) => state.updateSlateNodes);
   const saveTab = useStore((state) => state.saveTab);
+
+  const slateNodesCache = useTreeStore((state) => state.slateNodesCache);
 
   const htmlDivSlateEitorRef = useRef<HTMLDivElement>(null);
 
@@ -39,6 +42,11 @@ const SlateEditor = ({ tabIndex }: SlateEditorProps) => {
   const decorate = useDecorate(activeEditor.editor)
 
   const onChange = (value: Descendant[]) => {
+    // update the cache
+    if (activeEditor.filePath) {
+      slateNodesCache.set(activeEditor.filePath, value)
+    }
+
     // Only select, do nothing.
     if (activeEditor.editor.operations.length === 0 || (activeEditor.editor.operations.length === 1 && activeEditor.editor.operations[0].type === 'set_selection')) {
       return;
