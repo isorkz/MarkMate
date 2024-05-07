@@ -25,18 +25,19 @@ const searchFile = (filePath: string, slateNodes: Descendant[], searchText: stri
     node: Descendant;
     content: string;
   }[] = []
-  let searchKeyWords = searchText.toLowerCase().trim()
+  const searchKeyWords = searchText.toLowerCase().trim()
   const title = getFileName(filePath)
   let matchCount = 0
   let matchScore = computeMatchScoreByTitle(title, searchKeyWords)
   slateNodes.forEach(node => {
     if (SlateElement.isElement(node) && searchTypes.includes(node.type)) {
-      let text = Node.string(node).toLowerCase()
+      const text = Node.string(node).toLowerCase()
       if (text.includes(searchKeyWords)) {
         matchCount += 1
         matchContents.push({
           node: node,
-          content: text,
+          // $&: The matched substring.
+          content: text.replaceAll(searchKeyWords, '<span class="text-sky-500">$&</span>'),
         })
       }
     }

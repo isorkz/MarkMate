@@ -124,12 +124,21 @@ const FullSearch = ({ setShowFullSearch }: FullSearchProps) => {
                     {rootDir && <span className='mx-4 text-sm font-medium text-gray-400'>{getFolderPath(rootDir, result.filePath)}</span>}
                   </div>
 
-                  {result.matchContents.slice(0, 5).map((matchResult, j) => (
+                  {/* only show the first 3 match contents */}
+                  {result.matchContents.slice(0, 3).map((matchResult, j) => (
                     <div key={j} className='flex px-4 py-[0.4rem] items-center hover:bg-gray-100'>
                       <ArrowReturnRightIcon className="w-3 h-3 mr-2" />
-                      <span>{matchResult.content}</span>
+                      <span dangerouslySetInnerHTML={{ __html: matchResult.content }} />
                     </div>
                   ))}
+
+                  {/* if more than 3 match contents, show '...' */}
+                  {result.matchContents.length > 3 && (
+                    <div key={result.matchContents.length} className='flex px-4 py-[0.4rem] items-center hover:bg-gray-100'>
+                      <ArrowReturnRightIcon className="w-3 h-3 mr-2" />
+                      <span >...</span>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
