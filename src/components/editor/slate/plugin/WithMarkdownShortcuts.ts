@@ -1,5 +1,5 @@
 import { Editor, Transforms, Element as SlateElement, Range } from 'slate'
-import { assert } from '../../../../utils/assert';
+import { assert } from '../../../../utils/common';
 import { insertBreakForHead, insertBreakForListItem } from './insertBreak';
 import { deleteBackwardForHead, deleteBackwardForListItem, deleteBackwardForParagraph } from './deleteBackward';
 

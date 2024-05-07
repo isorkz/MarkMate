@@ -1,5 +1,5 @@
 import { ReactEditor, RenderElementProps, useFocused, useSelected, useSlateStatic } from 'slate-react'
-import { isValidUrl } from '../../../../utils/utils'
+import { isValidUrl } from '../../../../utils/common'
 import { ImageElement } from '../Element'
 import { useMEditor } from '../../../../models/MEditor'
 
