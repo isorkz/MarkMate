@@ -4,14 +4,14 @@ import useStore from '../../store/MStore';
 import useSearchStore from '../../store/SearchStore';
 import Search from '../search/Search';
 import { useEffect, useRef, useState } from 'react';
-import FullSearch from '../search/FullSearch';
+import FullSearchModal from '../search/FullSearchModal';
 
 const MainPanel = () => {
-  const [showFullSearch, setShowFullSearch] = useState<boolean>(false);
+  const [showFullSearchModal, setShowFullSearchModal] = useState<boolean>(false);
 
   // When set up the event listeners in useEffect, the value of showFullSearch in onShowFullSearch is fixed and will not change due to the feature of closure.
   // To solve this problem, use useRef to get the latest value of showFullSearch.
-  const showFullSearchRef = useRef(showFullSearch);
+  const showFullSearchModalRef = useRef(showFullSearchModal);
 
   const tabs = useStore((state) => state.tabs);
   const activeTabIndex = useStore((state) => state.activeTabIndex);
@@ -23,14 +23,13 @@ const MainPanel = () => {
   }
 
   const onShowFullSearch = () => {
-    console.log("onShowFullSearch: ", showFullSearchRef.current)
-    showFullSearchRef.current = !showFullSearchRef.current
-    setShowFullSearch(showFullSearchRef.current);
+    showFullSearchModalRef.current = !showFullSearchModalRef.current
+    setShowFullSearchModal(showFullSearchModalRef.current);
   }
 
   useEffect(() => {
-    showFullSearchRef.current = showFullSearch;
-  }, [showFullSearch]);
+    showFullSearchModalRef.current = showFullSearchModal;
+  }, [showFullSearchModal]);
 
   // Register listerners in parent component and maintain a single instance of the listener at a higher level.
   useEffect(() => {
@@ -51,7 +50,7 @@ const MainPanel = () => {
     <div className='flex flex-col relative w-full h-full overflow-x-hidden'>
       <TabsNav />
 
-      {showFullSearch && <FullSearch setShowFullSearch={setShowFullSearch} />}
+      {showFullSearchModal && <FullSearchModal showFullSearchModal={showFullSearchModal} setShowFullSearchModal={setShowFullSearchModal} />}
 
       {showSearch && <Search activeEditor={tabs[activeTabIndex]} />}
 

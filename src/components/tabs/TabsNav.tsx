@@ -29,7 +29,7 @@ const TabButton = ({
 
   return (
     // relative: to make the close button be absolute to the parent
-    <div className={`relative flex flex-row w-full justify-between items-center`}>
+    <div className={`relative z-10 flex flex-row w-full justify-between items-center`}>
       <button
         onClick={onClickTab}
         className={`w-full rounded-none border-x border-y-0 border-gray-200/70 ${activeTabIndex == index ? 'bg-white' : 'bg-gray-100'}`}>
