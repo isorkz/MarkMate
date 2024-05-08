@@ -7,7 +7,7 @@ import { ReactEditor } from 'slate-react'
 // Descendant类型在Slate中是一个广义的节点类型，它可以是一个元素节点，也可以是一个文本节点(即 Element | Text)。元素节点有type和children属性，文本节点有text属性。
 type Align = 'left' | 'center' | 'right'
 export type ParagraphElement = { type: 'paragraph', children: Descendant[], checked?: boolean }
-export type HeadElement = { type: 'head', children: Descendant[], level?: number }
+export type HeadElement = { type: 'head', children: Descendant[], level: number }
 export type ListElement = { type: 'list', children: Descendant[], order?: boolean, start?: number }
 export type ListItemElement = { type: 'list-item', children: Descendant[], checked?: boolean }
 export type CodeElement = { type: 'code', children: Descendant[], language?: string }

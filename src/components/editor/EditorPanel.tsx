@@ -27,7 +27,7 @@ export const EditorPanel = ({ tabIndex, tab }: EditorPanelProps) => {
 
         <SlateEditor tabIndex={tabIndex} />
 
-        <TocView />
+        <TocView tabIndex={tabIndex} />
       </div>
     </EditorContext.Provider>
   )
