@@ -48,7 +48,7 @@ const Search = ({ activeEditor }: SearchProps) => {
   }
 
   return (
-    <div className='flex flex-row absolute z-10 right-0 justify-center items-center bg-white shadow-lg shadow-gray-300 rounded-md'>
+    <div className='flex flex-row absolute z-10 right-6 justify-center items-center bg-white shadow-lg shadow-gray-300 rounded-md'>
       <input
         type="text"
         // focus:outline-none: remove the border when clicked

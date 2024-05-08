@@ -63,14 +63,16 @@ const MainPanel = () => {
   }, [])
 
   return (
-    <div className='flex flex-col relative w-full h-full overflow-x-hidden'>
+    <div className='flex flex-col w-full h-full overflow-x-hidden'>
       <MainPanelTopBar title={getTopbarTitle()} />
 
-      <TabsNav />
+      <div className='relative'>
+        <TabsNav />
+
+        {showSearch && <Search activeEditor={tabs[activeTabIndex]} />}
+      </div>
 
       {showFullSearchModal && <FullSearchModal showFullSearchModal={showFullSearchModal} setShowFullSearchModal={setShowFullSearchModal} />}
-
-      {showSearch && <Search activeEditor={tabs[activeTabIndex]} />}
 
       <>
         {tabs.map((tab, index) => (
