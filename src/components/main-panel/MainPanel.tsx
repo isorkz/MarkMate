@@ -3,8 +3,10 @@ import { EditorPanel } from '../editor/EditorPanel';
 import useStore from '../../store/MStore';
 import useSearchStore from '../../store/SearchStore';
 import Search from '../search/Search';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import FullSearchModal from '../search/FullSearchModal';
+import MainPanelTopBar from './MainPanelTopBar';
+import { getTopBarTitle } from '../../utils/common';
 
 const MainPanel = () => {
   const [showFullSearchModal, setShowFullSearchModal] = useState<boolean>(false);
@@ -13,6 +15,7 @@ const MainPanel = () => {
   // To solve this problem, use useRef to get the latest value of showFullSearch.
   const showFullSearchModalRef = useRef(showFullSearchModal);
 
+  const rootDir = useStore((state) => state.rootDir);
   const tabs = useStore((state) => state.tabs);
   const activeTabIndex = useStore((state) => state.activeTabIndex);
   const showSearch = useSearchStore((state) => state.showSearch);
@@ -46,8 +49,23 @@ const MainPanel = () => {
     };
   }, []);
 
+  const getTopbarTitle = useCallback((): string => {
+    if (rootDir && tabs.length > 0) {
+      const filePath = tabs[activeTabIndex].filePath;
+      if (filePath) {
+        return getTopBarTitle(rootDir, filePath);
+      }
+      else {
+        return 'Untitled'
+      }
+    }
+    return ''
+  }, [])
+
   return (
     <div className='flex flex-col relative w-full h-full overflow-x-hidden'>
+      <MainPanelTopBar title={getTopbarTitle()} />
+
       <TabsNav />
 
       {showFullSearchModal && <FullSearchModal showFullSearchModal={showFullSearchModal} setShowFullSearchModal={setShowFullSearchModal} />}

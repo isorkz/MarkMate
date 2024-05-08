@@ -29,18 +29,18 @@ const TabButton = ({
 
   return (
     // relative: to make the close button be absolute to the parent
-    <div className={`relative z-10 flex flex-row w-full justify-between items-center`}>
-      <button
+    <div className={'relative z-10 flex flex-row w-full items-center select-none'}>
+      <div
         onClick={onClickTab}
-        className={`w-full rounded-none border-x border-y-0 border-gray-200/70 ${activeTabIndex == index ? 'bg-white' : 'bg-gray-100'}`}>
+        className={`flex w-full h-8 justify-center items-center rounded-none border-r border-gray-200/80 ${activeTabIndex == index ? 'bg-white' : 'bg-gray-50'}`}>
         <span>{title} {tabs[index].changed && '*'}</span>
-      </button>
+      </div>
 
       {/* Close tab button */}
       <div className='flex absolute right-1'>
         <button
           onClick={onCloseTab}
-          className={`rounded-md px-1 py-1 mx-[0.5] my-2 text-neutral-400  dark:text-white hover:bg-neutral-200 dark:hover:bg-neutral-600 ${activeTabIndex == index ? 'bg-white' : 'bg-gray-100'}`} role="menuitem">
+          className={`rounded-md p-[2px] mx-[0.5] my-2 text-neutral-400 border-none dark:text-white hover:bg-neutral-200 dark:hover:bg-neutral-600 ${activeTabIndex == index ? 'bg-white' : 'bg-gray-50'}`}>
           <CloseIcon className='w-5 h-5' />
         </button>
       </div>

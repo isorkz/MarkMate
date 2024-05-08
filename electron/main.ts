@@ -26,6 +26,7 @@ function createWindow() {
     width: 1000,
     height: 600,
     icon: path.join(process.env.VITE_PUBLIC, 'electron-vite.svg'),
+    titleBarStyle: 'hiddenInset', // hidden title bar
     webPreferences: {
       // using contextBridge to expose API to the Renderer-process, instead of `nodeIntegration: true`
       // nodeIntegration: true,

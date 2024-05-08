@@ -25,7 +25,14 @@ export function getFileName(path: string): string {
 export function getFolderPath(rootDir: string, filePath: string): string {
   // rootDir: /path/md
   // filePath: /path/md/Work/test/1.md
-  // return: Work/test
+  // return: Work / test
   const fileName = filePath.split('/').pop() || '';
-  return filePath.replace(rootDir, '').replace(fileName, '').replace(/^\//, '').replace(/\/$/, '');
+  return filePath.replace(rootDir, '').replace(fileName, '').replace(/\.md$/, '').replace(/\//g, ' / ');
+}
+
+export function getTopBarTitle(rootDir: string, filePath: string): string {
+  // rootDir: /path/md
+  // filePath: /path/md/Work/test/1.md
+  // return: Work / test / 1
+  return filePath.replace(rootDir, '').replace(/^\//, '').replace(/\.md$/, '').replace(/\//g, ' / ');
 }

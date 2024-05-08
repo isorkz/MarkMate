@@ -65,12 +65,12 @@ const Search = ({ activeEditor }: SearchProps) => {
       <span className='w-20 text-sm text-gray-400 text-center'>{searchResult && searchResult.ranges.length > 0 ? (currentSearchIndex + 1) + ' / ' + searchResult.ranges.length : 'No results'}</span>
       <button
         onClick={onGoPrev}
-        className={`rounded-md px-1 py-1 mx-[0.5] my-2 text-neutral-400  dark:text-white bg-white border-none hover:bg-black/5 dark:hover:bg-neutral-600`} role="menuitem">
+        className={`rounded-md px-1 py-1 mx-[0.5] my-2 text-neutral-400 focus:outline-none dark:text-white bg-white border-none hover:bg-black/5 dark:hover:bg-neutral-600`} role="menuitem">
         <ArrowUpIcon className='w-4 h-4' />
       </button>
       <button
         onClick={onGoNext}
-        className={`rounded-md px-1 py-1 mx-[0.5] my-2 text-neutral-400  dark:text-white bg-white border-none hover:bg-black/5 dark:hover:bg-neutral-600`} role="menuitem">
+        className={`rounded-md px-1 py-1 mx-[0.5] my-2 text-neutral-400 focus:outline-none dark:text-white bg-white border-none hover:bg-black/5 dark:hover:bg-neutral-600`} role="menuitem">
         <ArrowDownIcon className='w-4 h-4' />
       </button>
       <button

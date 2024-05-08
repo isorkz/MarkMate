@@ -112,7 +112,7 @@ const FileTree = () => {
 
   return (
     // flex-grow: allow a flex item to grow and shrink as needed, then it will push the settings to the bottom
-    <div className="flex flex-col flex-grow w-full overflow-y-auto overflow-x-hidden m-2">
+    <div className="flex flex-col flex-grow w-full overflow-y-auto overflow-x-hidden m-2 mt-10">
       <ul>
         {fileTree ? <TreeItem node={fileTree} editingNodeRef={editingNodeRef} />
           : <div className="p-5 text-center text-gray-500">Loading...</div>}
