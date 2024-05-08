@@ -3,7 +3,7 @@ import { EditorPanel } from '../editor/EditorPanel';
 import useStore from '../../store/MStore';
 import useSearchStore from '../../store/SearchStore';
 import Search from '../search/Search';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import FullSearchModal from '../search/FullSearchModal';
 import MainPanelTopBar from './MainPanelTopBar';
 import { getTopBarTitle } from '../../utils/common';
@@ -76,10 +76,10 @@ const MainPanel = () => {
 
       <>
         {tabs.map((tab, index) => (
-          <div key={index} className={`flex w-full h-full overflow-x-hidden ${activeTabIndex === index ? '' : 'hidden'}`}>
+          <div key={tab.id} className={`flex w-full h-full overflow-x-hidden ${activeTabIndex === index ? '' : 'hidden'}`}>
             {/* NOTE: must use the 'key' prop to make sure the component is re-rendered when the tab is changed. 
-            Otherwise, the content of the tab will be mixed up. */}
-            <EditorPanel tab={tab} tabIndex={index} key={index} />
+            And do NOT use index as key! Otherwise, when remove a tab, the content of the tab will be mixed up. */}
+            <EditorPanel tab={tab} tabIndex={index} key={tab.id} />
           </div>
         ))}
       </>

@@ -5,6 +5,7 @@ import { withMarkdownShortcuts } from "../components/editor/slate/plugin/WithMar
 import { withImages } from "../components/editor/slate/plugin/withImages";
 import { markdownSourceToMEditorNodes } from '../components/editor/slate/parser/ParseMarkdownSourceToSlateNodes';
 import { createContext, useContext } from 'react';
+import { nanoid } from 'nanoid'
 
 export const EditorContext = createContext<MEditor | undefined>(undefined)
 export const useMEditor = () => {
@@ -27,6 +28,9 @@ export class MEditor {
   sourceContent: string;
   slateNodes: any[];
   changed: boolean = false;
+  // This id is used to identify the tab in the tabs array, and the key for tab components.
+  // It must have for remove tab scenarios, otherwise, the tab content could be redenred unexpectedly.
+  id: string;
 
   constructor(rootDir: string | undefined, filePath: string | undefined = undefined, sourceContent: string = '', slateNodes: any[] = []) {
     this.rootDir = rootDir;
@@ -38,6 +42,7 @@ export class MEditor {
     // 2. For a opened document: filePath != undefined
     //   - if it's a new opened doc: slateNodes=[]. -> need to parse sourceContent to slateNodes.
     //   - if it's a editing doc: slateNodes=[...].
+    this.id = nanoid();
     this.filePath = filePath;
     this.sourceContent = sourceContent;
     this.slateNodes = slateNodes && slateNodes.length > 0 ? slateNodes : markdownSourceToMEditorNodes(sourceContent);

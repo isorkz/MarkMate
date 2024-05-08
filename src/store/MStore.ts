@@ -48,7 +48,7 @@ const customStorage: PersistStorage<MStore> = {
     const tabs = state.state.tabs;
     // Recreate the editor
     if (tabs) {
-      const newTabs: MEditor[] = tabs.map((tab: any) => new MEditor(rootDir, tab.filePath, tab.sourceContent, tab.slateNodes));
+      const newTabs: MEditor[] = tabs.map((tab: any) => new MEditor(tab.id, rootDir, tab.filePath, tab.sourceContent, tab.slateNodes));
       state.state.tabs = newTabs;
     }
     return state;

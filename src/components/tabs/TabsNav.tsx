@@ -40,7 +40,7 @@ const TabButton = ({
       <div className='flex absolute right-1'>
         <button
           onClick={onCloseTab}
-          className={`rounded-md p-[2px] mx-[0.5] my-2 text-neutral-400 border-none dark:text-white hover:bg-neutral-200 dark:hover:bg-neutral-600 ${activeTabIndex == index ? 'bg-white' : 'bg-gray-50'}`}>
+          className={`rounded-md p-[2px] mx-[0.5] my-2 text-neutral-400 focus:outline-none border-none dark:text-white hover:bg-neutral-200 dark:hover:bg-neutral-600 ${activeTabIndex == index ? 'bg-white' : 'bg-gray-50'}`}>
           <CloseIcon className='w-5 h-5' />
         </button>
       </div>
@@ -63,7 +63,7 @@ const TabsNav = () => {
     tabs.length > 1 && (
       <div className="flex h-8 justify-center items-center border border-gray-200 bg-gray-50">
         {tabs.map((tab, index) => (
-          <TabButton key={index} title={getFileName(tab.filePath)} index={index} />
+          <TabButton key={tab.id} title={getFileName(tab.filePath)} index={index} />
         ))}
       </div>
     )

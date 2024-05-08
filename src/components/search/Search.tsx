@@ -75,7 +75,7 @@ const Search = ({ activeEditor }: SearchProps) => {
       </button>
       <button
         onClick={onClose}
-        className={`rounded-md px-[3px] py-[3px] mx-[0.5] my-2 text-neutral-400  dark:text-white bg-white border-none hover:bg-black/5 dark:hover:bg-neutral-600`} role="menuitem">
+        className={`rounded-md px-[3px] py-[3px] mx-[0.5] my-2 text-neutral-400 focus:outline-none dark:text-white bg-white border-none hover:bg-black/5 dark:hover:bg-neutral-600`} role="menuitem">
         <CloseIcon className='w-5 h-5' />
       </button>
     </div>

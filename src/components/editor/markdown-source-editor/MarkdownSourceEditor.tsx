@@ -5,11 +5,15 @@ import useStore from '../../../store/MStore'
 import { useMEditor } from '../../../models/MEditor';
 import { markdownSourceToMEditorNodes } from '../slate/parser/ParseMarkdownSourceToSlateNodes';
 import { SlateEditorUtils } from '../slate/SlateEditorUtils';
+import useTreeStore from '../../../store/TreeStore';
 
 const MarkdownSourceEditor = () => {
   const activeEditor = useMEditor();
+
   const updateSourceContent = useStore((state) => state.updateSourceContent);
   const updateSlateNodes = useStore((state) => state.updateSlateNodes);
+
+  const slateNodesCache = useTreeStore((state) => state.slateNodesCache);
 
   const onChange = (value: string, viewUpdate: ViewUpdate) => {
     updateSourceContent(value)
@@ -17,6 +21,11 @@ const MarkdownSourceEditor = () => {
     const slateNodes = markdownSourceToMEditorNodes(value)
     SlateEditorUtils.resetSlateNodes(activeEditor.editor, slateNodes);
     updateSlateNodes(slateNodes)
+
+    // update the cache
+    if (activeEditor.filePath) {
+      slateNodesCache.set(activeEditor.filePath, slateNodes)
+    }
   }
 
   return (

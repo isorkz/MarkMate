@@ -96,7 +96,6 @@ const FullSearch = ({ showFullSearchModal, setShowFullSearchModal }: FullSearchM
           <div className='flex flex-row w-1/2 justify-center items-center bg-white shadow-2xl shadow-black/20 rounded-md'>
             <input
               type="text"
-              // focus:outline-none: remove the border when clicked
               className="w-full mx-3 my-2 px-4 py-[5px] rounded-md text-gray-800"
               placeholder="Search..."
               value={searchText}
@@ -109,7 +108,7 @@ const FullSearch = ({ showFullSearchModal, setShowFullSearchModal }: FullSearchM
               onChange={e => setSearchText(e.target.value)} />
             <button
               onClick={onClose}
-              className={`rounded-md px-[3px] py-[3px] mr-3 my-2 text-neutral-400 dark:text-white bg-white border-none hover:bg-black/5 dark:hover:bg-neutral-600`}>
+              className={`rounded-md px-[3px] py-[3px] mr-3 my-2 text-neutral-400 focus:outline-none dark:text-white bg-white border-none hover:bg-black/5 dark:hover:bg-neutral-600`}>
               <CloseIcon className='w-5 h-5' />
             </button>
           </div>
