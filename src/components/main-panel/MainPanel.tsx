@@ -49,7 +49,7 @@ const MainPanel = () => {
     };
   }, []);
 
-  const getTopbarTitle = useCallback((): string => {
+  const getTopbarTitle = (): string => {
     if (rootDir && tabs.length > 0) {
       const filePath = tabs[activeTabIndex].filePath;
       if (filePath) {
@@ -60,7 +60,7 @@ const MainPanel = () => {
       }
     }
     return ''
-  }, [])
+  }
 
   return (
     <div className='flex flex-col w-full h-full overflow-x-hidden'>
