@@ -24,6 +24,12 @@ interface MStore {
 
   saveTab: () => void;
   saveTabs: () => void;
+
+  showLeftSidebar: boolean;
+  toggleLeftSidebar: () => void;
+
+  showRightSidebar: boolean;
+  toggleRightSidebar: () => void;
 }
 
 // Note: Because the ReactEditor in slate is not serializable, we need to customize the storage to do not persist the editor, and recreate it when loading the state.
@@ -172,6 +178,26 @@ const useStore = create<MStore>()(
           return {
             ...state,
             tabs: newTabs
+          };
+        }),
+
+      showLeftSidebar: true,
+
+      toggleLeftSidebar: () =>
+        set((state) => {
+          return {
+            ...state,
+            showLeftSidebar: !state.showLeftSidebar
+          };
+        }),
+
+      showRightSidebar: false,
+
+      toggleRightSidebar: () =>
+        set((state) => {
+          return {
+            ...state,
+            showRightSidebar: !state.showRightSidebar
           };
         }),
     }),
