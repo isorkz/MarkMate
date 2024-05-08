@@ -28,8 +28,8 @@ interface MStore {
   showLeftSidebar: boolean;
   toggleLeftSidebar: () => void;
 
-  showRightSidebar: boolean;
-  toggleRightSidebar: () => void;
+  showTocPanel: boolean;
+  toggleTocPanel: () => void;
 }
 
 // Note: Because the ReactEditor in slate is not serializable, we need to customize the storage to do not persist the editor, and recreate it when loading the state.
@@ -191,13 +191,13 @@ const useStore = create<MStore>()(
           };
         }),
 
-      showRightSidebar: false,
+      showTocPanel: true,
 
-      toggleRightSidebar: () =>
+      toggleTocPanel: () =>
         set((state) => {
           return {
             ...state,
-            showRightSidebar: !state.showRightSidebar
+            showTocPanel: !state.showTocPanel
           };
         }),
     }),

@@ -2,6 +2,8 @@ import { useState } from 'react'
 import MarkdownSourceEditor from './markdown-source-editor/MarkdownSourceEditor';
 import SlateEditor from './slate/SlateEditor';
 import { EditorContext, MEditor } from '../../models/MEditor';
+import TocView from './toc/TocView';
+import { Divider } from '@mui/material';
 
 interface EditorPanelProps {
   tabIndex: number;
@@ -19,12 +21,13 @@ export const EditorPanel = ({ tabIndex, tab }: EditorPanelProps) => {
         {showMarkdownSourceEditor && (
           <div className="flex w-1/2 h-full">
             <MarkdownSourceEditor />
-            <div className="border-r-2 border-gray-200"></div>
+            <Divider orientation="vertical" flexItem />
           </div>
         )}
 
         <SlateEditor tabIndex={tabIndex} />
 
+        <TocView />
       </div>
     </EditorContext.Provider>
   )

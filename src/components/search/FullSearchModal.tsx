@@ -109,7 +109,7 @@ const FullSearch = ({ showFullSearchModal, setShowFullSearchModal }: FullSearchM
               onChange={e => setSearchText(e.target.value)} />
             <button
               onClick={onClose}
-              className={`rounded-md px-[3px] py-[3px] mr-3 my-2 text-neutral-400  dark:text-white bg-white border-none hover:bg-black/5 dark:hover:bg-neutral-600`}>
+              className={`rounded-md px-[3px] py-[3px] mr-3 my-2 text-neutral-400 dark:text-white bg-white border-none hover:bg-black/5 dark:hover:bg-neutral-600`}>
               <CloseIcon className='w-5 h-5' />
             </button>
           </div>
