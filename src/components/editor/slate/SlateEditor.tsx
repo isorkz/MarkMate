@@ -20,6 +20,7 @@ const SlateEditor = ({ tabIndex }: SlateEditorProps) => {
   const updateSourceContent = useStore((state) => state.updateSourceContent);
   const updateSlateNodes = useStore((state) => state.updateSlateNodes);
   const saveTab = useStore((state) => state.saveTab);
+  const showMarkdownSourceEditor = useStore((state) => state.showMarkdownSourceEditor);
 
   const slateNodesCache = useTreeStore((state) => state.slateNodesCache);
 
@@ -150,7 +151,7 @@ const SlateEditor = ({ tabIndex }: SlateEditorProps) => {
   return (
     // using 'break-all' to break the long words
     <div className="flex h-full w-full overflow-y-auto overflow-x-hidden">
-      <div className="flex h-full w-full px-[10%] py-[5%] mb-[5%] overflow-x-auto">
+      <div className={`flex h-full w-full ${showMarkdownSourceEditor ? 'px-[10%]' : 'px-[15%]'} py-[5%] mb-[5%] overflow-x-auto`}>
         <div className='w-full break-all MarkMateContent' onClick={handleDivClick}>
           <button onClick={onLogMarkdownSource}>Log Markdown Source</button>
           <button onClick={onSave}>Save</button>

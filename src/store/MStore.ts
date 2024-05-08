@@ -30,6 +30,9 @@ interface MStore {
 
   showTocPanel: boolean;
   toggleTocPanel: () => void;
+
+  showMarkdownSourceEditor: boolean;
+  toggleMarkdownSourceEditor: () => void;
 }
 
 // Note: Because the ReactEditor in slate is not serializable, we need to customize the storage to do not persist the editor, and recreate it when loading the state.
@@ -198,6 +201,16 @@ const useStore = create<MStore>()(
           return {
             ...state,
             showTocPanel: !state.showTocPanel
+          };
+        }),
+
+      showMarkdownSourceEditor: false,
+
+      toggleMarkdownSourceEditor: () =>
+        set((state) => {
+          return {
+            ...state,
+            showMarkdownSourceEditor: !state.showMarkdownSourceEditor
           };
         }),
     }),

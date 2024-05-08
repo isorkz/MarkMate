@@ -1,5 +1,5 @@
 import useStore from "../../store/MStore";
-import { TocIcon } from "../icons";
+import { LayoutSplitIcon, TocIcon } from "../icons";
 
 interface TopBarProps {
   title: string;
@@ -8,6 +8,7 @@ interface TopBarProps {
 const MainPanelTopBar = ({ title }: TopBarProps) => {
   const showLeftSidebar = useStore((state) => state.showLeftSidebar);
   const toggleTocPanel = useStore((state) => state.toggleTocPanel);
+  const toggleMarkdownSourceEditor = useStore((state) => state.toggleMarkdownSourceEditor);
 
   return (
     <div className={`relative flex w-full z-10 h-10 bg-gray-50 items-center px-4 border-b border-gray-200/80 select-none`}>
@@ -16,15 +17,25 @@ const MainPanelTopBar = ({ title }: TopBarProps) => {
       <div className={`${showLeftSidebar ? 'w-0' : 'w-32'} transition-all duration-300`}>
       </div>
 
-      {/* WebkitAppRegion: 'drag' -> to make the top bar draggable */}
-      <div className='w-full' style={{ WebkitAppRegion: 'drag' } as any}>
-        <div className='text-gray-500 text-sm font-medium'>{title}</div>
-      </div>
+      <div className='flex w-full justify-between'>
+        {/* draggable part */}
+        {/* flex-grow: grow to take the remaining space */}
+        <div className='flex flex-grow items-center' style={{ WebkitAppRegion: 'drag' } as any}>
+          <div className='text-gray-500 text-sm font-medium'>
+            {title}
+          </div>
+        </div>
 
-      <div className='flex w-10'>
-        <button onClick={toggleTocPanel} className='absolute top-0 h-9 p-2 bg-transparent border-none hover:bg-gray-200 focus:outline-none'>
-          <TocIcon className="w-4 h-4" />
-        </button>
+        {/* menu items part */}
+        <div className='flex'>
+          <button onClick={toggleMarkdownSourceEditor} className='p-2 mx-1 bg-transparent border-none hover:bg-gray-200 focus:outline-none'>
+            <LayoutSplitIcon className="w-4 h-4" />
+          </button>
+
+          <button onClick={toggleTocPanel} className='p-2 mx-1 bg-transparent border-none hover:bg-gray-200 focus:outline-none'>
+            <TocIcon className="w-4 h-4" />
+          </button>
+        </div>
       </div>
     </div>
   )

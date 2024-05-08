@@ -1,9 +1,9 @@
-import { useState } from 'react'
 import MarkdownSourceEditor from './markdown-source-editor/MarkdownSourceEditor';
 import SlateEditor from './slate/SlateEditor';
 import { EditorContext, MEditor } from '../../models/MEditor';
 import TocView from './toc/TocView';
 import { Divider } from '@mui/material';
+import useStore from '../../store/MStore';
 
 interface EditorPanelProps {
   tabIndex: number;
@@ -11,7 +11,8 @@ interface EditorPanelProps {
 };
 
 export const EditorPanel = ({ tabIndex, tab }: EditorPanelProps) => {
-  const [showMarkdownSourceEditor, setShowMarkdownSourceEditor] = useState<boolean>(true);
+  const showTocPanel = useStore((state) => state.showTocPanel);
+  const showMarkdownSourceEditor = useStore((state) => state.showMarkdownSourceEditor);
 
   return (
     // EditorContext.Provider is used to pass the MEditor object to the children components.
@@ -19,7 +20,8 @@ export const EditorPanel = ({ tabIndex, tab }: EditorPanelProps) => {
     <EditorContext.Provider value={tab}>
       <div className="flex w-full h-full overflow-x-hidden">
         {showMarkdownSourceEditor && (
-          <div className="flex w-1/2 h-full">
+          // 18rem: is the width of TOC view
+          <div className='flex flex-none h-full' style={{ width: showTocPanel ? 'calc((100% - 18rem)/2)' : '50%' }}>
             <MarkdownSourceEditor />
             <Divider orientation="vertical" flexItem />
           </div>
