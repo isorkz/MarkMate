@@ -33,7 +33,7 @@ const MarkdownSourceEditor = () => {
     // using 'break-all' to break the long words
     <div className="flex h-full w-full overflow-y-auto overflow-x-hidden">
       <div className="flex h-full w-full px-[10%] py-[5%] mb-[5%] overflow-x-auto">
-        <div className='w-full break-all MarkMateContent'>
+        <div className='w-full break-all MarkMateSourceContent'>
           <CodeMirror value={activeEditor.sourceContent} extensions={[markdown({ base: markdownLanguage, codeLanguages: languages })]} onChange={onChange} />
         </div>
       </div>

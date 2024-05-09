@@ -10,12 +10,7 @@ import { useMEditor } from '../../../models/MEditor'
 import useTreeStore from '../../../store/TreeStore'
 import { toast } from 'react-hot-toast';
 
-interface SlateEditorProps {
-  tabIndex: number;
-  tabId: string;
-};
-
-const SlateEditor = ({ tabIndex, tabId }: SlateEditorProps) => {
+const SlateEditor = () => {
   const activeEditor = useMEditor()
 
   const updateSourceContent = useStore((state) => state.updateSourceContent);

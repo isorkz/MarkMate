@@ -3,9 +3,19 @@
 @tailwind utilities;
 
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: ui-sans-serif,
+    -apple-system,
+    BlinkMacSystemFont,
+    Segoe UI,
+    Helvetica,
+    Apple Color Emoji,
+    Arial,
+    sans-serif,
+    Segoe UI Emoji,
+    Segoe UI Symbol;
   line-height: 1.5;
-  font-weight: 400;
+  font-size: 16px;
+  /* font-weight: 400; */
 
   color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87);
@@ -13,13 +23,13 @@
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
+  /* -webkit-font-smoothing: antialiased; */
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
 }
 
 a {
-  font-weight: 500;
+  /* font-weight: 500; */
   color: #646cff;
 }
 
@@ -76,7 +86,7 @@ body {
 }
 
 .MarkMateContent a {
-  font-weight: 500;
+  /* font-weight: 500; */
   color: #5a9ff4;
   text-decoration: underline;
 }
@@ -123,9 +133,24 @@ body {
   border-radius: 4px;
 }
 
+.MarkMateContent .MarkMateCodeBlocks pre {
+  display: block;
+  padding: 20px;
+  margin: 0 0 10px;
+  font-size: 14px;
+  line-height: 1.42857143;
+  color: white;
+  /* cursor color */
+  caret-color: #5a9ff4;
+  background-color: #2e3440ff;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  overflow-x: auto;
+}
+
 /* for code blocks without language, add custom styles */
 /* code blocks with language will be marked with .MarkMateCodeBlocks class */
-/* so, using :not(.MarkMateCodeBlocks) to filter out the code blocks with language */
+/* so, using :not(.MarkMateCodeBlocks) to filter out the code blocks without language */
 .MarkMateContent pre:not(.MarkMateCodeBlocks)>code {
   display: block;
   padding: 9.5px;
@@ -173,7 +198,7 @@ button {
   border: 1px solid transparent;
   padding: 0.6em 1.2em;
   font-size: 1em;
-  font-weight: 500;
+  /* font-weight: 500; */
   font-family: inherit;
   background-color: #1a1a1a;
   cursor: pointer;
@@ -189,11 +214,14 @@ button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
+.MarkMateSourceContent {
+  font-size: 14px;
+}
+
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;
     background-color: #ffffff;
-
   }
 
   a:hover {

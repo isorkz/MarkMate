@@ -1,7 +1,12 @@
 import { Transforms } from 'slate'
 import { ReactEditor, RenderElementProps, RenderLeafProps, useSlateStatic } from 'slate-react'
-import { LanguageSelect } from '../decorate/SetNodeToDecorations'
+import { LanguageSelect, LanguageSelectMap } from '../decorate/SetNodeToDecorations'
 import { Image } from '../elements/Image'
+
+const getLanguage = (lang: string | undefined) => {
+  if (lang === undefined) return 'text'
+  return LanguageSelectMap[lang] || 'text'
+}
 
 export const RenderElement = ({ attributes, children, element }: RenderElementProps) => {
   const editor = useSlateStatic()
@@ -41,11 +46,12 @@ export const RenderElement = ({ attributes, children, element }: RenderElementPr
         return (
           <div className="MarkMateCodeBlocks" style={{ position: 'relative' }} {...attributes}>
             {/* caretColor: to set the cursor color */}
-            <pre spellCheck={false} style={{ padding: '20px', overflowX: 'auto', borderRadius: '5px', backgroundColor: '#2e3440ff', caretColor: '#5a9ff4', color: 'white' }} {...attributes}>
+            {/* <pre spellCheck={false} style={{ padding: '20px', overflowX: 'auto', borderRadius: '5px', backgroundColor: '#2e3440ff', caretColor: '#5a9ff4', color: 'white' }} {...attributes}> */}
+            <pre spellCheck={false}  {...attributes}>
               {children}
             </pre>
             <LanguageSelect
-              value={element.language || 'text'}
+              value={getLanguage(element.language)}
               onChange={e => setLanguage(e.target.value)}
             />
           </div>

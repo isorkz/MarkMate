@@ -5,7 +5,18 @@ import { CodeElement } from '../Element'
 import { getHighlighter, BundledLanguage } from 'shikiji'
 import useSearchStore from '../../../../store/SearchStore'
 
-const supportedLanguages = ['javascript', 'cpp', 'c++', 'python', 'java', 'html', 'shell']
+const supportedLanguages = ['javascript', 'cpp', 'c++', 'python', 'java', 'html', 'shell', 'bash']
+
+export const LanguageSelectMap = {
+  'javascript': 'javascript',
+  'cpp': 'cpp',
+  'c++': 'cpp',
+  'python': 'python',
+  'java': 'java',
+  'html': 'html',
+  'bash': 'shell',
+  'shell': 'shell',
+}
 
 const highlighter = await getHighlighter({
   themes: ['material-theme-palenight'],
