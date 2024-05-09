@@ -38,19 +38,22 @@ const SlateEditor = ({ tabIndex, tabId }: SlateEditorProps) => {
   // use the custom decorate function to highlight the code block and search results.
   const decorate = useDecorate(activeEditor.editor)
 
-  const onChange = (value: Descendant[]) => {
-    // update the cache
-    if (activeEditor.filePath) {
-      slateNodesCache.set(activeEditor.filePath, value)
-    }
-
+  const onValueChange = (value: Descendant[]) => {
     // Only select, do nothing.
     if (activeEditor.editor.operations.length === 0 || (activeEditor.editor.operations.length === 1 && activeEditor.editor.operations[0].type === 'set_selection')) {
       return;
     }
+
     updateSlateNodes(value)
+
+    // update the source content
     const markdownSource = slateNodesToMarkdownSource(activeEditor.slateNodes)
     updateSourceContent(markdownSource)
+
+    // update the cache
+    if (activeEditor.filePath) {
+      slateNodesCache.set(activeEditor.filePath, value)
+    }
   }
 
   const handleDivClick = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
@@ -153,7 +156,8 @@ const SlateEditor = ({ tabIndex, tabId }: SlateEditorProps) => {
           <button onClick={onSave}>Save</button>
           <button onClick={onMarkdownSource}>To Markdown</button>
           <button onClick={ShowSlateNodes}>Show Slate Nodes</button>
-          <Slate editor={activeEditor.editor} initialValue={activeEditor.slateNodes} onChange={onChange}>
+          {/* use onValueChange instead of onChange */}
+          <Slate editor={activeEditor.editor} initialValue={activeEditor.slateNodes} onValueChange={onValueChange}>
             <div ref={htmlDivSlateEitorRef}>
               {/* decorate: to highlight code block */}
               {/* Example: https://github.com/ianstormtaylor/slate/blob/8f2ad02db32f348eb9499e8db1e46d1b705d4d5d/site/examples/code-highlighting.tsx */}
