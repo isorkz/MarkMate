@@ -119,10 +119,11 @@ const SlateEditor = () => {
   const renderLeaf = useCallback((props: RenderLeafProps) => <RenderLeaf {...props} />, [])
 
   return (
+    // Do not use 'flex' to layout, and let the 'MarkMateContent' div to fill the parent container.
     // using 'break-all' to break the long words
-    <div className="flex h-full w-full overflow-y-auto overflow-x-hidden">
-      <div className={`flex h-full w-full ${showMarkdownSourceEditor ? 'px-[10%]' : 'px-[15%]'} py-[5%] mb-[5%] overflow-x-auto`}>
-        <div className='w-full break-all MarkMateContent' onClick={handleDivClick}>
+    <div className="w-full overflow-y-auto overflow-x-hidden">
+      <div className={`w-full ${showMarkdownSourceEditor ? 'px-[10%]' : 'px-[15%]'}`}>
+        <div className='w-full break-all MarkMateContent pt-5 pb-[20%]' onClick={handleDivClick}>
           <button onClick={onLogMarkdownSource}>Log Markdown Source</button>
           <button onClick={onSave}>Save</button>
           <button onClick={onMarkdownSource}>To Markdown</button>
