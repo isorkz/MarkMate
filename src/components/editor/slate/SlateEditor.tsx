@@ -8,6 +8,7 @@ import { slateNodesToMarkdownSource } from '../slate/parser/ParseSlateNodesToMar
 import { SetNodeToDecorations, useDecorate } from '../slate/decorate/SetNodeToDecorations'
 import { useMEditor } from '../../../models/MEditor'
 import useTreeStore from '../../../store/TreeStore'
+import { toast } from 'react-hot-toast';
 
 interface SlateEditorProps {
   tabIndex: number;
@@ -93,7 +94,6 @@ const SlateEditor = ({ tabIndex, tabId }: SlateEditorProps) => {
         updateSourceContent(markdownSource)
         window.api.saveFile(activeEditorRef.current.filePath, markdownSource).then(() => {
           saveTab();
-          console.log('saved markdownSource: ', markdownSource)
         })
       } else {
         throw new Error('filePath is empty.')
@@ -101,6 +101,7 @@ const SlateEditor = ({ tabIndex, tabId }: SlateEditorProps) => {
     }
     catch (error) {
       console.error('failed to save file: ', error)
+      toast.error(`Failed to save file ${activeEditorRef.current.filePath}. ${error}`);
     }
   }
 
