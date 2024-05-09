@@ -3,9 +3,10 @@ import { LayoutSplitIcon, TocIcon } from "../icons";
 
 interface TopBarProps {
   title: string;
+  changed: boolean;
 };
 
-const MainPanelTopBar = ({ title }: TopBarProps) => {
+const MainPanelTopBar = ({ title, changed }: TopBarProps) => {
   const showLeftSidebar = useStore((state) => state.showLeftSidebar);
   const toggleTocPanel = useStore((state) => state.toggleTocPanel);
   const toggleMarkdownSourceEditor = useStore((state) => state.toggleMarkdownSourceEditor);
@@ -22,7 +23,7 @@ const MainPanelTopBar = ({ title }: TopBarProps) => {
         {/* flex-grow: grow to take the remaining space */}
         <div className='flex flex-grow items-center' style={{ WebkitAppRegion: 'drag' } as any}>
           <div className='text-gray-500 text-sm font-medium'>
-            {title}
+            {title} {changed && '*'}
           </div>
         </div>
 
