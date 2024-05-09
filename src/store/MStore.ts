@@ -21,7 +21,7 @@ interface MStore {
 
   newTab: (filePath: string, content: string) => void;
   newEmptyTab: () => void;
-  removeTab: (tabId: string) => void;
+  removeTabByIndex: (tabIndex: number) => void;
 
   updateSourceContent: (sourceContent: string) => void;
   updateSlateNodes: (slateNodes: any[]) => void;
@@ -119,10 +119,9 @@ const useStore = create<MStore>()(
           };
         }),
 
-      removeTab: (tabId: string) =>
+      removeTabByIndex: (tabIndex: number) =>
         set((state) => {
-          const tabIndex = state.tabs.findIndex((item) => item.id === tabId);
-          const newTabs = state.tabs.filter((item) => item.id !== tabId);
+          const newTabs = state.tabs.filter((_, index) => index !== tabIndex);
           let newActiveTabIndex = state.activeTabIndex;
           if (state.activeTabIndex === tabIndex) {
             newActiveTabIndex = 0;

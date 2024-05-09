@@ -23,8 +23,8 @@ const VITE_DEV_SERVER_URL = process.env['VITE_DEV_SERVER_URL']
 
 function createWindow() {
   win = new BrowserWindow({
-    width: 1000,
-    height: 600,
+    width: 1200,
+    height: 800,
     icon: path.join(process.env.VITE_PUBLIC, 'electron-vite.svg'),
     titleBarStyle: 'hiddenInset', // hidden title bar
     webPreferences: {

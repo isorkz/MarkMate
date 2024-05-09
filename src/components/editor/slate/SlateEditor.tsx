@@ -84,11 +84,12 @@ const SlateEditor = ({ tabIndex, tabId }: SlateEditorProps) => {
 
   const onSave = () => {
     // For the 'save-file' event triggered by global shortcut, needs to use the ref to get the current value.
-    if (tabId !== activeEditor.id) {
+    if (tabId !== activeEditorRef.current.id) {
       return;
     }
 
     try {
+      console.log('save file: ', activeEditorRef.current.filePath)
       if (activeEditorRef.current.filePath) {
         const markdownSource = slateNodesToMarkdownSource(activeEditorRef.current.slateNodes)
         updateSourceContent(markdownSource)
