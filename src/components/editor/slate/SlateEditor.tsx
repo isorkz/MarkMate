@@ -18,7 +18,6 @@ interface SlateEditorProps {
 const SlateEditor = ({ tabIndex, tabId }: SlateEditorProps) => {
   const activeEditor = useMEditor()
 
-  const activeTabIndex = useStore((state) => state.activeTabIndex);
   const updateSourceContent = useStore((state) => state.updateSourceContent);
   const updateSlateNodes = useStore((state) => state.updateSlateNodes);
   const saveTab = useStore((state) => state.saveTab);
@@ -27,14 +26,6 @@ const SlateEditor = ({ tabIndex, tabId }: SlateEditorProps) => {
   const slateNodesCache = useTreeStore((state) => state.slateNodesCache);
 
   const htmlDivSlateEitorRef = useRef<HTMLDivElement>(null);
-
-  // useRef: to get the current value of a variable, and it will not cause a re-render.
-  // Otherwise, in onSave() triggered by the 'save-file' event, all values are the same as the initial values, they are not updated.
-  const activeEditorRef = useRef(activeEditor);
-
-  useEffect(() => {
-    activeEditorRef.current = activeEditor;
-  }, [activeEditor]);
 
   // use the custom decorate function to highlight the code block and search results.
   const decorate = useDecorate(activeEditor.editor)
@@ -83,17 +74,12 @@ const SlateEditor = ({ tabIndex, tabId }: SlateEditorProps) => {
   }
 
   const onSave = () => {
-    // For the 'save-file' event triggered by global shortcut, needs to use the ref to get the current value.
-    if (tabId !== activeEditorRef.current.id) {
-      return;
-    }
-
     try {
-      console.log('save file: ', activeEditorRef.current.filePath)
-      if (activeEditorRef.current.filePath) {
-        const markdownSource = slateNodesToMarkdownSource(activeEditorRef.current.slateNodes)
+      console.log('save file: ', activeEditor.filePath)
+      if (activeEditor.filePath) {
+        const markdownSource = slateNodesToMarkdownSource(activeEditor.slateNodes)
         updateSourceContent(markdownSource)
-        window.api.saveFile(activeEditorRef.current.filePath, markdownSource).then(() => {
+        window.api.saveFile(activeEditor.filePath, markdownSource).then(() => {
           saveTab();
         })
       } else {
@@ -102,7 +88,7 @@ const SlateEditor = ({ tabIndex, tabId }: SlateEditorProps) => {
     }
     catch (error) {
       console.error('failed to save file: ', error)
-      toast.error(`Failed to save file ${activeEditorRef.current.filePath}. ${error}`);
+      toast.error(`Failed to save file ${activeEditor.filePath}. ${error}`);
     }
   }
 
@@ -132,18 +118,6 @@ const SlateEditor = ({ tabIndex, tabId }: SlateEditorProps) => {
   const ShowSlateNodes = () => {
     console.log('slateNodes: ', activeEditor.slateNodes)
   }
-
-  useEffect(() => {
-    // Add a listener to receive the 'save-file' event from main process.
-    window.ipcRenderer.on('save-file', onSave)
-    console.log("register onSave listener activeTabIndex=", activeTabIndex, ', tabId=', tabId)
-
-    // Specify how to clean up after this effect
-    return () => {
-      window.ipcRenderer.removeListener('save-file', onSave)
-      console.log("remove onSave listener activeTabIndex=", activeTabIndex, ', tabId=', tabId)
-    }
-  }, [])
 
   const renderElement = useCallback((props: RenderElementProps) => <RenderElement {...props} />, [])
 
