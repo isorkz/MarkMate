@@ -1,8 +1,8 @@
 import { Dispatch, MouseEvent, SetStateAction, useCallback, useEffect, useState } from 'react'
 import { ArrowReturnRightIcon, CloseIcon, DocumentIcon } from '../icons';
 import useTreeStore from '../../store/TreeStore';
-import { FullSearchResult } from '../../models/Search';
 import { FullSearchUtils } from '../../utils/search/FullSearchUtils';
+import { FullSearchResult } from '../../models/Search';
 import { getFolderPath } from '../../utils/common';
 import useStore from '../../store/MStore';
 import { SlateEditorUtils } from '../editor/slate/SlateEditorUtils';
@@ -24,8 +24,8 @@ const FullSearch = ({ showFullSearchModal, setShowFullSearchModal }: FullSearchM
   const fileTree = useTreeStore((state) => state.fileTree);
 
   const rootDir = useStore((state) => state.rootDir);
-  const setActiveTabIndex = useStore((state) => state.setActiveTabIndex);
-  const activeTab = useStore((state) => state.activeTab);
+  const setActiveTabId = useStore((state) => state.setActiveTabId);
+  const getActiveTab = useStore((state) => state.getActiveTab);
   const setActiveTab = useStore((state) => state.setActiveTab);
   const tabs = useStore((state) => state.tabs);
   const newTab = useStore((state) => state.newTab);
@@ -64,18 +64,18 @@ const FullSearch = ({ showFullSearchModal, setShowFullSearchModal }: FullSearchM
     // If the file is already opened in the tabs, only activate the tab.
     const index = tabs.findIndex((tab) => tab.filePath === filePath);
     if (index >= 0) {
-      setActiveTabIndex(index)
+      setActiveTabId(tabs[index].id)
     } else {
       window.api.readFile(filePath, (err: any, data: any) => {
         if (err) {
           console.error(err);
         } else {
-          if (activeTab().changed) {
+          if (getActiveTab().changed) {
             newTab(filePath, data)
           } else {
             setActiveTab(filePath, data)
             // Reset the slate nodes when switching to another tab, and clear the history.
-            SlateEditorUtils.resetSlateNodes(activeTab().editor, activeTab().slateNodes, true);
+            SlateEditorUtils.resetSlateNodes(getActiveTab().editor, getActiveTab().slateNodes, true);
             setShowFullSearchModal(false);
             setSearchResults([]);
             setSearchText('');

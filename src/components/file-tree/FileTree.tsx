@@ -4,6 +4,7 @@ import useTreeStore from '../../store/TreeStore'
 import { TreeNode } from '../../models/FileTree'
 import TreeItem from './TreeItem';
 import { toast } from 'react-hot-toast';
+import { nanoid } from 'nanoid'
 
 const FileTree = () => {
   const fileTree = useTreeStore((state) => state.fileTree);
@@ -15,7 +16,7 @@ const FileTree = () => {
   const slateNodesCache = useTreeStore((state) => state.slateNodesCache);
 
   const rootDir = useStore((state) => state.rootDir);
-  const activeFilePath = useStore((state) => state.activeFilePath);
+  const getActiveFilePath = useStore((state) => state.getActiveFilePath);
 
   // Using useRef to get the latest value for window.ipcRenderer.on function.
   const editingNodeRef = useRef(editingNode);
@@ -39,15 +40,16 @@ const FileTree = () => {
     return false
   }
 
-  const initTreeType = (node: TreeNode | undefined) => {
+  const initTreeTypeAndId = (node: TreeNode | undefined) => {
     if (!node) {
       return
     }
 
+    node.id = nanoid()
     if (node.children) {
       node.type = 'folder'
       for (const child of node.children) {
-        initTreeType(child)
+        initTreeTypeAndId(child)
       }
     } else {
       node.type = 'file'
@@ -61,6 +63,7 @@ const FileTree = () => {
   const newFile = (event: any, params: { dirPath: string }) => {
     if (editingNodeRef.current) {
       const newNode: TreeNode = {
+        id: nanoid(),
         name: '',
         path: editingNodeRef.current.path,
         type: 'file',
@@ -87,8 +90,8 @@ const FileTree = () => {
 
       // window.api defined in preload.ts, and implemented in ipcHandler.ts
       window.api.readDirTree(rootDir).then((treeData: any) => {
-        initTreeIsOpened(treeData, activeFilePath())
-        initTreeType(treeData)
+        initTreeIsOpened(treeData, getActiveFilePath())
+        initTreeTypeAndId(treeData)
         console.log('[FileTree] tree: ', treeData)
         setFileTree(treeData);
       }).catch((err: any) => {

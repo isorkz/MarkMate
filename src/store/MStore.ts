@@ -2,6 +2,9 @@ import { create } from "zustand";
 import { persist, createJSONStorage, PersistStorage } from 'zustand/middleware'
 import { MEditor } from "../models/MEditor";
 import { markdownSourceToMEditorNodes } from "../components/editor/slate/parser/ParseMarkdownSourceToSlateNodes";
+import { nanoid } from 'nanoid'
+
+const InitTabId = 'default_id_0';
 
 interface MStore {
   rootDir: string | undefined;
@@ -9,15 +12,16 @@ interface MStore {
 
   tabs: MEditor[];
   activeTabIndex: number;
-  setActiveTabIndex: (tabIndex: number) => void;
+  activeTabId: string | undefined;
+  setActiveTabId: (id: string) => void;
 
-  activeTab: () => MEditor;
   setActiveTab: (filePath: string, content: string) => void;
-  activeFilePath: () => string | undefined;
+  getActiveTab: () => MEditor;
+  getActiveFilePath: () => string | undefined;
 
   newTab: (filePath: string, content: string) => void;
   newEmptyTab: () => void;
-  removeTab: (tabIndex: number) => void;
+  removeTab: (tabId: string) => void;
 
   updateSourceContent: (sourceContent: string) => void;
   updateSlateNodes: (slateNodes: any[]) => void;
@@ -68,11 +72,12 @@ const useStore = create<MStore>()(
       rootDir: import.meta.env.VITE_APP_PATH,
       setRootDir: (rootDir: string | undefined) => set({ rootDir: rootDir }),
 
-      tabs: [new MEditor(import.meta.env.VITE_APP_PATH)],
+      tabs: [new MEditor(InitTabId, import.meta.env.VITE_APP_PATH)],
 
       activeTabIndex: 0,
+      activeTabId: InitTabId,
 
-      activeTab: () => {
+      getActiveTab: () => {
         return get().tabs[get().activeTabIndex]
       },
 
@@ -92,28 +97,32 @@ const useStore = create<MStore>()(
 
       newTab: (filePath: string, content: string) =>
         set((state) => {
-          const newTab = new MEditor(state.rootDir, filePath, content);
+          const newTab = new MEditor(nanoid(), state.rootDir, filePath, content);
           const newTabs = [...state.tabs, newTab];
           return {
             ...state,
             tabs: newTabs,
+            activeTabId: newTab.id,
             activeTabIndex: newTabs.length - 1
           };
         }),
 
       newEmptyTab: () =>
         set((state) => {
-          const newTabs = [...state.tabs, new MEditor(state.rootDir)];
+          const newTab = new MEditor(nanoid(), state.rootDir);
+          const newTabs = [...state.tabs, newTab];
           return {
             ...state,
             tabs: newTabs,
+            activeTabId: newTab.id,
             activeTabIndex: newTabs.length - 1
           };
         }),
 
-      removeTab: (tabIndex: number) =>
+      removeTab: (tabId: string) =>
         set((state) => {
-          const newTabs = state.tabs.filter((_, index) => index !== tabIndex);
+          const tabIndex = state.tabs.findIndex((item) => item.id === tabId);
+          const newTabs = state.tabs.filter((item) => item.id !== tabId);
           let newActiveTabIndex = state.activeTabIndex;
           if (state.activeTabIndex === tabIndex) {
             newActiveTabIndex = 0;
@@ -125,19 +134,25 @@ const useStore = create<MStore>()(
           return {
             ...state,
             tabs: newTabs,
+            activeTabId: newTabs[newActiveTabIndex].id,
             activeTabIndex: newActiveTabIndex
           };
         }),
 
-      setActiveTabIndex: (tabIndex: number) =>
+      setActiveTabId: (id: string) =>
         set((state) => {
-          return {
-            ...state,
-            activeTabIndex: tabIndex
-          };
+          const newTabIndex = state.tabs.findIndex((item) => item.id === id);
+          if (newTabIndex >= 0) {
+            return {
+              ...state,
+              activeTabId: id,
+              activeTabIndex: newTabIndex,
+            };
+          }
+          return {}
         }),
 
-      activeFilePath: () =>
+      getActiveFilePath: () =>
         get().tabs[get().activeTabIndex].filePath,
 
       updateSourceContent: (sourceContent: string) =>

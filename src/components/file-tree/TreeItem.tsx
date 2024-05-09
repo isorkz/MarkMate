@@ -25,9 +25,9 @@ const TreeItem = ({
   const editingMode = useTreeStore((state) => state.editingMode);
   const reset = useTreeStore((state) => state.reset);
 
-  const setActiveTabIndex = useStore((state) => state.setActiveTabIndex);
+  const setActiveTabId = useStore((state) => state.setActiveTabId);
   const activeTabIndex = useStore((state) => state.activeTabIndex);
-  const activeTab = useStore((state) => state.activeTab);
+  const getActiveTab = useStore((state) => state.getActiveTab);
   const setActiveTab = useStore((state) => state.setActiveTab);
   const tabs = useStore((state) => state.tabs);
   const newTab = useStore((state) => state.newTab);
@@ -56,19 +56,19 @@ const TreeItem = ({
       // If the file is already opened in the tabs, only activate the tab.
       const index = tabs.findIndex((tab) => tab.filePath === node.path);
       if (index >= 0) {
-        setActiveTabIndex(index)
+        setActiveTabId(tabs[index].id)
       } else {
         // window.api defined in preload.ts, and implemented in ipcHandler.ts
         window.api.readFile(node.path, (err: any, data: any) => {
           if (err) {
             console.error(err);
           } else {
-            if (activeTab().changed) {
+            if (getActiveTab().changed) {
               newTab(node.path, data)
             } else {
               setActiveTab(node.path, data)
               // Reset the slate nodes when switching to another tab, and clear the history.
-              SlateEditorUtils.resetSlateNodes(activeTab().editor, activeTab().slateNodes, true);
+              SlateEditorUtils.resetSlateNodes(getActiveTab().editor, getActiveTab().slateNodes, true);
             }
           }
         })
@@ -176,7 +176,7 @@ const TreeItem = ({
       </div>
 
       {node.isOpened && node.children && node.children.map((childNode) =>
-        <TreeItem node={childNode} level={level + 1} editingNodeRef={editingNodeRef} key={childNode.path} />
+        <TreeItem node={childNode} level={level + 1} editingNodeRef={editingNodeRef} key={childNode.id} />
       )}
     </div>
   );

@@ -11,9 +11,10 @@ import useTreeStore from '../../../store/TreeStore'
 
 interface SlateEditorProps {
   tabIndex: number;
+  tabId: string;
 };
 
-const SlateEditor = ({ tabIndex }: SlateEditorProps) => {
+const SlateEditor = ({ tabIndex, tabId }: SlateEditorProps) => {
   const activeEditor = useMEditor()
 
   const activeTabIndex = useStore((state) => state.activeTabIndex);
@@ -28,12 +29,7 @@ const SlateEditor = ({ tabIndex }: SlateEditorProps) => {
 
   // useRef: to get the current value of a variable, and it will not cause a re-render.
   // Otherwise, in onSave() triggered by the 'save-file' event, all values are the same as the initial values, they are not updated.
-  const activeTabIndexRef = useRef(activeTabIndex);
   const activeEditorRef = useRef(activeEditor);
-
-  useEffect(() => {
-    activeTabIndexRef.current = activeTabIndex;
-  }, [activeTabIndex]);
 
   useEffect(() => {
     activeEditorRef.current = activeEditor;
@@ -84,7 +80,7 @@ const SlateEditor = ({ tabIndex }: SlateEditorProps) => {
 
   const onSave = () => {
     // For the 'save-file' event triggered by global shortcut, needs to use the ref to get the current value.
-    if (tabIndex !== activeTabIndexRef.current) {
+    if (tabId !== activeEditor.id) {
       return;
     }
 
@@ -135,12 +131,12 @@ const SlateEditor = ({ tabIndex }: SlateEditorProps) => {
   useEffect(() => {
     // Add a listener to receive the 'save-file' event from main process.
     window.ipcRenderer.on('save-file', onSave)
-    console.log("register onSave listener activeTabIndex=", activeTabIndex)
+    console.log("register onSave listener activeTabIndex=", activeTabIndex, ', tabId=', tabId)
 
     // Specify how to clean up after this effect
     return () => {
       window.ipcRenderer.removeListener('save-file', onSave)
-      console.log("remove onSave listener activeTabIndex=", activeTabIndex)
+      console.log("remove onSave listener activeTabIndex=", activeTabIndex, ', tabId=', tabId)
     }
   }, [])
 

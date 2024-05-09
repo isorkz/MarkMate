@@ -12,6 +12,7 @@ interface TocItem {
 
 interface TocViewProps {
   tabIndex: number;
+  tabId: string;
 };
 
 const levelClassMap = new Map([
@@ -23,16 +24,15 @@ const levelClassMap = new Map([
   [6, 'pl-12']
 ])
 
-const TocView = ({ tabIndex }: TocViewProps) => {
+const TocView = ({ tabIndex, tabId }: TocViewProps) => {
   const [toc, setToc] = useState<TocItem[]>([]);
 
-  const activeTabIndex = useStore((state) => state.activeTabIndex);
   const showTocPanel = useStore((state) => state.showTocPanel);
 
   const activeEditor = useMEditor()
 
   useEffect(() => {
-    if (tabIndex !== activeTabIndex) {
+    if (tabId !== activeEditor.id) {
       return;
     }
 

@@ -1,8 +1,8 @@
 import { Descendant, Node, Element as SlateElement } from "slate"
 import { TreeNode } from "../../models/FileTree"
 import { markdownSourceToMEditorNodes } from "../../components/editor/slate/parser/ParseMarkdownSourceToSlateNodes"
-import { FullSearchResult } from "../../models/Search"
 import { getFileName } from "../common"
+import { FullSearchResult } from "../../models/Search"
 
 const searchTypes = ['paragraph', 'table-cell', 'code-line', 'head']
 
