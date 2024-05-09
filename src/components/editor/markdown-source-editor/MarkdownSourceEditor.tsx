@@ -4,7 +4,6 @@ import { languages } from '@codemirror/language-data';
 import useStore from '../../../store/MStore'
 import { useMEditor } from '../../../models/MEditor';
 import { markdownSourceToMEditorNodes } from '../slate/parser/ParseMarkdownSourceToSlateNodes';
-import { SlateEditorUtils } from '../slate/SlateEditorUtils';
 import useTreeStore from '../../../store/TreeStore';
 
 const MarkdownSourceEditor = () => {
@@ -18,9 +17,11 @@ const MarkdownSourceEditor = () => {
   const onChange = (value: string, viewUpdate: ViewUpdate) => {
     updateSourceContent(value)
 
+    // To re-render the slate editor, do not SlateEditorUtils.resetSlateNodes() because it will reset the cursor position two Editor planes.
+    // Instead, update activeEditor.editor.children directly.
     const slateNodes = markdownSourceToMEditorNodes(value)
-    SlateEditorUtils.resetSlateNodes(activeEditor.editor, slateNodes);
     updateSlateNodes(slateNodes)
+    activeEditor.editor.children = slateNodes
 
     // update the cache
     if (activeEditor.filePath) {
