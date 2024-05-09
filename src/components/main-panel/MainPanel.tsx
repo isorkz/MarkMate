@@ -22,6 +22,7 @@ const MainPanel = () => {
   const activeTabIndex = useStore((state) => state.activeTabIndex);
   const updateSourceContent = useStore((state) => state.updateSourceContent);
   const saveTab = useStore((state) => state.saveTab);
+  const toggleMarkdownSourceEditor = useStore((state) => state.toggleMarkdownSourceEditor);
 
   const showSearch = useSearchStore((state) => state.showSearch);
   const setShowSearch = useSearchStore((state) => state.setShowSearch);
@@ -91,14 +92,16 @@ const MainPanel = () => {
     window.ipcRenderer.on('save-file', onSave)
     window.ipcRenderer.on('search-doc', onShowSearch);
     window.ipcRenderer.on('full-search', onShowFullSearch);
-    console.log("register search listener")
+    window.ipcRenderer.on('toggle-source-editor', toggleMarkdownSourceEditor);
+    console.log("register listeners")
 
     // Specify how to clean up after this effect
     return () => {
       window.ipcRenderer.removeListener('save-file', onSave)
       window.ipcRenderer.removeListener('search-doc', onShowSearch);
       window.ipcRenderer.removeListener('full-search', onShowSearch);
-      console.log("remove search listener")
+      window.ipcRenderer.removeListener('toggle-source-editor', toggleMarkdownSourceEditor);
+      console.log("remove listeners")
     };
   }, []);
 
