@@ -1,4 +1,4 @@
-import { DefaultEmptyListItemElement, HeadElement, ListItemElement, ParagraphElement } from './../Element';
+import { DefaultEmptyListItemElement, DefaultParagraphElement, HeadElement, ListItemElement, ParagraphElement } from './../Element';
 import { Editor, Transforms, Element as SlateElement, Text, Range, Point, Node, Path, BaseRange } from 'slate'
 
 // Handle the break when user press the enter key in head element
@@ -10,12 +10,12 @@ export const insertBreakForHead = (editor: Editor, selection: BaseRange, head: H
   const text = Node.string(head)
   const beforeText = text.slice(0, start.offset)
   const afterText = text.slice(end.offset)
-  Transforms.removeNodes(editor, { at: path })
   if (beforeText === '') {
-    Transforms.insertNodes(editor, { type: 'paragraph', children: [{ text: afterText }] }, { at: path })
+    Transforms.insertNodes(editor, DefaultParagraphElement(), { at: path })
     // Set the cursor to the start of the new paragraph
     Transforms.select(editor, Editor.start(editor, path))
   } else {
+    Transforms.removeNodes(editor, { at: path })
     Transforms.insertNodes(editor, { type: 'head', children: [{ text: beforeText }], level: head.level }, { at: path })
     Transforms.insertNodes(editor, { type: 'paragraph', children: [{ text: afterText }] }, { at: Path.next(path) })
     // Set the cursor to the start of the new paragraph

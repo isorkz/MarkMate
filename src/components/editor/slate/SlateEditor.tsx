@@ -128,10 +128,10 @@ const SlateEditor = () => {
     <div className="w-full overflow-y-auto overflow-x-hidden">
       <div className={`w-full ${showMarkdownSourceEditor ? 'px-[10%]' : 'px-[15%]'}`}>
         <div className='w-full break-all MarkMateContent pt-5 pb-[20%]' onClick={handleDivClick}>
-          <button onClick={onLogMarkdownSource}>Log Markdown Source</button>
-          <button onClick={onSave}>Save</button>
           <button onClick={ShowSlateNodes}>Show Slate Nodes</button>
+          <button onClick={onLogMarkdownSource}>Log Markdown Source</button>
           <button onClick={onLogFileTree}>Show File Tree</button>
+          <button onClick={onSave}>Save</button>
           {/* use onValueChange instead of onChange */}
           <Slate editor={activeEditor.editor} initialValue={activeEditor.slateNodes} onValueChange={onValueChange}>
             <div ref={htmlDivSlateEitorRef}>
