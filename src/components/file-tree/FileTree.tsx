@@ -104,9 +104,9 @@ const FileTree = () => {
     window.ipcRenderer.on('tree-command-delete', deleteFile);
 
     return () => {
-      window.ipcRenderer.removeListener('tree-command-rename', renameFile)
-      window.ipcRenderer.removeListener('tree-command-newfile', newFile)
-      window.ipcRenderer.removeListener('tree-command-delete', deleteFile)
+      window.ipcRenderer.removeAllListeners('tree-command-rename')
+      window.ipcRenderer.removeAllListeners('tree-command-newfile')
+      window.ipcRenderer.removeAllListeners('tree-command-delete')
     }
   }, []);
 

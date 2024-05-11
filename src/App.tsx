@@ -19,7 +19,7 @@ function App() {
 
     // Specify how to clean up after this effect
     return () => {
-      window.ipcRenderer.removeListener('new-tab', onNewTab)
+      window.ipcRenderer.removeAllListeners('new-tab')
     }
   }, [])
 

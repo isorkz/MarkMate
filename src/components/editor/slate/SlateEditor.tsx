@@ -19,6 +19,7 @@ const SlateEditor = () => {
   const showMarkdownSourceEditor = useStore((state) => state.showMarkdownSourceEditor);
 
   const slateNodesCache = useTreeStore((state) => state.slateNodesCache);
+  const fileTree = useTreeStore((state) => state.fileTree);
 
   const htmlDivSlateEitorRef = useRef<HTMLDivElement>(null);
 
@@ -56,6 +57,10 @@ const SlateEditor = () => {
     // Move the cursor to the end of the document
     const end = Editor.end(activeEditor.editor, []);
     Transforms.setSelection(activeEditor.editor, { anchor: end, focus: end });
+  }
+
+  const onLogFileTree = () => {
+    console.log('fileTree: ', fileTree)
   }
 
   const onLogMarkdownSource = () => {
@@ -126,6 +131,7 @@ const SlateEditor = () => {
           <button onClick={onLogMarkdownSource}>Log Markdown Source</button>
           <button onClick={onSave}>Save</button>
           <button onClick={ShowSlateNodes}>Show Slate Nodes</button>
+          <button onClick={onLogFileTree}>Show File Tree</button>
           {/* use onValueChange instead of onChange */}
           <Slate editor={activeEditor.editor} initialValue={activeEditor.slateNodes} onValueChange={onValueChange}>
             <div ref={htmlDivSlateEitorRef}>

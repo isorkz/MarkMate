@@ -60,7 +60,7 @@ const useTreeStore = create<TreeStore>()(
             if (node.children) {
               node.children.forEach(child => {
                 if (child.name === newNode.name) {
-                  throw new Error(`Name ${newNode.name} already exists in ${path}`)
+                  throw new Error(`Name \'${newNode.name}\' already exists in ${path}`)
                 }
               })
               node.children.push(newNode)

@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import TabsNav from '../tabs/TabsNav';
 import { EditorPanel } from '../editor/EditorPanel';
 import useStore from '../../store/MStore';
@@ -54,7 +55,7 @@ const MainPanel = () => {
   }, [showFullSearchModal]);
 
   // Triggered by the 'save-file' event, all values should use useRef to get the latest value.
-  const onSave = () => {
+  const onSave = useCallback(() => {
     try {
       console.log('save file: ', tabsRef.current[activeTabIndexRef.current].filePath)
       if (tabsRef.current[activeTabIndexRef.current].filePath) {
@@ -74,7 +75,7 @@ const MainPanel = () => {
       console.error('failed to save file: ', error)
       toast.error(`Failed to save file ${tabsRef.current[activeTabIndexRef.current].filePath}. ${error}`);
     }
-  }
+  }, [tabsRef, activeTabIndexRef])
 
   const getTopbarTitle = (): string => {
     if (rootDir && tabs.length > 0) {
@@ -100,10 +101,11 @@ const MainPanel = () => {
 
     // Specify how to clean up after this effect
     return () => {
-      window.ipcRenderer.removeListener('save-file', onSave)
-      window.ipcRenderer.removeListener('search-doc', onShowSearch);
-      window.ipcRenderer.removeListener('full-search', onShowSearch);
-      window.ipcRenderer.removeListener('toggle-source-editor', toggleMarkdownSourceEditor);
+      // use removeAllListeners to remove the listener rather than removeListener, because in development mode, still have multiple listeners when changing the code and re-rendering the component.
+      window.ipcRenderer.removeAllListeners('save-file')
+      window.ipcRenderer.removeAllListeners('search-doc');
+      window.ipcRenderer.removeAllListeners('full-search');
+      window.ipcRenderer.removeAllListeners('toggle-source-editor');
       console.log("remove listeners")
     };
   }, []);
