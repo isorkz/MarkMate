@@ -11,6 +11,8 @@ interface MStore {
   setRootDir: (rootDir: string | undefined) => void;
 
   tabs: MEditor[];
+  setTabs: (tabs: MEditor[]) => void;
+
   activeTabIndex: number;
   activeTabId: string | undefined;
   setActiveTabId: (id: string) => void;
@@ -73,6 +75,7 @@ const useStore = create<MStore>()(
       setRootDir: (rootDir: string | undefined) => set({ rootDir: rootDir }),
 
       tabs: [new MEditor(InitTabId, import.meta.env.VITE_APP_PATH)],
+      setTabs: (tabs: MEditor[]) => set({ tabs: tabs }),
 
       activeTabIndex: 0,
       activeTabId: InitTabId,
@@ -80,6 +83,9 @@ const useStore = create<MStore>()(
       getActiveTab: () => {
         return get().tabs[get().activeTabIndex]
       },
+
+      getActiveFilePath: () =>
+        get().tabs[get().activeTabIndex].filePath,
 
       setActiveTab: (filePath: string, content: string) =>
         set((state) => {
@@ -150,9 +156,6 @@ const useStore = create<MStore>()(
           }
           return {}
         }),
-
-      getActiveFilePath: () =>
-        get().tabs[get().activeTabIndex].filePath,
 
       updateSourceContent: (sourceContent: string) =>
         set((state) => {

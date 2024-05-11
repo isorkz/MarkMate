@@ -25,11 +25,12 @@ const TreeItem = ({
   const editingMode = useTreeStore((state) => state.editingMode);
   const reset = useTreeStore((state) => state.reset);
 
-  const setActiveTabId = useStore((state) => state.setActiveTabId);
   const activeTabIndex = useStore((state) => state.activeTabIndex);
+  const setActiveTabId = useStore((state) => state.setActiveTabId);
   const getActiveTab = useStore((state) => state.getActiveTab);
   const setActiveTab = useStore((state) => state.setActiveTab);
   const tabs = useStore((state) => state.tabs);
+  const setTabs = useStore((state) => state.setTabs);
   const newTab = useStore((state) => state.newTab);
 
   const setShowSearch = useSearchStore((state) => state.setShowSearch);
@@ -94,11 +95,20 @@ const TreeItem = ({
       const newFilePath = dir + editingNode.name;
       window.api.renameFile(node.path, editingNode.name).then(() => {
         console.log('renamed file:', node.path, ' to ', newFilePath)
+        const oldFilePath = node.path;
         // Re-render file tree
         node.name = editingNode.name;
         node.path = newFilePath;
         const newTree = JSON.parse(JSON.stringify(fileTree));
         setFileTree(newTree);
+        // update the tab's filePath
+        let newTabs = tabs.map((tab) => {
+          if (tab.filePath === oldFilePath) {
+            tab.filePath = newFilePath;
+          }
+          return tab;
+        })
+        setTabs(newTabs);
       }).catch((err: any) => {
         console.error('failed to rename file: ', node.path, ' to ', newFilePath, err)
         toast.error('failed to rename file: ' + node.path + ' to ' + newFilePath + err);
@@ -175,8 +185,9 @@ const TreeItem = ({
         )}
       </div>
 
+      {/* use filePath as unique id rather than nanoid(), because every time the file tree is re-rendered, the nanoid() will be changed */}
       {node.isOpened && node.children && node.children.map((childNode) =>
-        <TreeItem node={childNode} level={level + 1} editingNodeRef={editingNodeRef} key={childNode.id} />
+        <TreeItem node={childNode} level={level + 1} editingNodeRef={editingNodeRef} key={childNode.path} />
       )}
     </div>
   );
