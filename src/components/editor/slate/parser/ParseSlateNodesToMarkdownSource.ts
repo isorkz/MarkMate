@@ -2,11 +2,15 @@ import { Text } from 'slate'
 
 // ancestorNode is the most outer node of the current node, which is the direct child of the markdown AST root node.
 export const slateNodesToMarkdownSource = (nodes: any[], preStr: string = '', ancestorNode: any = undefined) => {
-  let markdownSource = ''
-  for (const node of nodes) {
-    markdownSource += parseSlateNodeToMarkdownSource(node, preStr, ancestorNode)
+  try {
+    let markdownSource = ''
+    for (const node of nodes) {
+      markdownSource += parseSlateNodeToMarkdownSource(node, preStr, ancestorNode)
+    }
+    return markdownSource
+  } catch (error) {
+    console.error('failed to slateNodesToMarkdownSource: ', error)
   }
-  return markdownSource
 }
 
 // ancestorNode is the most outer node of the current node, which is the direct child of the markdown AST root node.

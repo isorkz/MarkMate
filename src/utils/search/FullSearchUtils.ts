@@ -73,6 +73,9 @@ const fullSearchOnFileTree = (slateNodesCache: Map<string, Descendant[]>, node: 
           console.error(err);
         } else {
           slateNodes = markdownSourceToMEditorNodes(data)
+          if (!slateNodes) {
+            throw new Error('Failed to parse markdown source to slate nodes.')
+          }
           slateNodesCache.set(node.path, slateNodes);
           const res = searchFile(node.path, slateNodes, searchText)
           if (res) searchResults.push(res)

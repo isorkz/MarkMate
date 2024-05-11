@@ -5,6 +5,7 @@ import { withMarkdownShortcuts } from "../components/editor/slate/plugin/WithMar
 import { withImages } from "../components/editor/slate/plugin/withImages";
 import { markdownSourceToMEditorNodes } from '../components/editor/slate/parser/ParseMarkdownSourceToSlateNodes';
 import { createContext, useContext } from 'react';
+import { DefaultEmptySlateNodes } from '../components/editor/slate/Element';
 
 export const EditorContext = createContext<MEditor | undefined>(undefined)
 export const useMEditor = () => {
@@ -44,6 +45,8 @@ export class MEditor {
     this.id = id;
     this.filePath = filePath;
     this.sourceContent = sourceContent;
-    this.slateNodes = slateNodes && slateNodes.length > 0 ? slateNodes : markdownSourceToMEditorNodes(sourceContent);
+    let parsedSlateNodes = markdownSourceToMEditorNodes(sourceContent);
+    if (!parsedSlateNodes) parsedSlateNodes = DefaultEmptySlateNodes;
+    this.slateNodes = slateNodes && slateNodes.length > 0 ? slateNodes : parsedSlateNodes;
   }
 }

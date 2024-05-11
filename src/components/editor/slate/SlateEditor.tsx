@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useRef } from 'react'
 import { Descendant, Transforms, Element as SlateElement } from 'slate'
 import { Editor } from 'slate'
 import { Slate, RenderElementProps, RenderLeafProps, Editable, ReactEditor } from 'slate-react'
@@ -35,6 +35,7 @@ const SlateEditor = () => {
 
     // update the source content
     const markdownSource = slateNodesToMarkdownSource(activeEditor.slateNodes)
+    if (!markdownSource) return
     updateSourceContent(markdownSource)
 
     // update the cache
@@ -57,11 +58,6 @@ const SlateEditor = () => {
     Transforms.setSelection(activeEditor.editor, { anchor: end, focus: end });
   }
 
-  const onMarkdownSource = () => {
-    const markdownSource = slateNodesToMarkdownSource(activeEditor.slateNodes)
-    updateSourceContent(markdownSource)
-  }
-
   const onLogMarkdownSource = () => {
     console.log('slateNodes: ', activeEditor.slateNodes)
     const markdownSource = slateNodesToMarkdownSource(activeEditor.slateNodes)
@@ -73,6 +69,9 @@ const SlateEditor = () => {
       console.log('save file: ', activeEditor.filePath)
       if (activeEditor.filePath) {
         const markdownSource = slateNodesToMarkdownSource(activeEditor.slateNodes)
+        if (!markdownSource) {
+          throw new Error('markdownSource is undefined.')
+        }
         updateSourceContent(markdownSource)
         window.api.saveFile(activeEditor.filePath, markdownSource).then(() => {
           saveTab();
@@ -126,7 +125,6 @@ const SlateEditor = () => {
         <div className='w-full break-all MarkMateContent pt-5 pb-[20%]' onClick={handleDivClick}>
           <button onClick={onLogMarkdownSource}>Log Markdown Source</button>
           <button onClick={onSave}>Save</button>
-          <button onClick={onMarkdownSource}>To Markdown</button>
           <button onClick={ShowSlateNodes}>Show Slate Nodes</button>
           {/* use onValueChange instead of onChange */}
           <Slate editor={activeEditor.editor} initialValue={activeEditor.slateNodes} onValueChange={onValueChange}>

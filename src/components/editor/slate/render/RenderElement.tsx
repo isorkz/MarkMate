@@ -86,30 +86,35 @@ export const RenderElement = ({ attributes, children, element }: RenderElementPr
 }
 
 export const RenderLeaf = (props: RenderLeafProps) => {
-  let children = <>{props.children}</>
-  if (props.leaf.url) {
-    children = <a href={props.leaf.url} className='underline'>{children}</a>
-  }
-  if (props.leaf.bold) {
-    children = <strong>{children}</strong>
-  }
-  if (props.leaf.emphasis) {
-    children = <em>{children}</em>
-  }
-  if (props.leaf.delete) {
-    children = <del>{children}</del>
-  }
-  if (props.leaf.isInlineCode) {
-    children = <code>{children}</code>
-  }
-  if (props.leaf.highlight) {
-    if (props.leaf.isCurrentHighlight) {
-      children = <mark style={{ backgroundColor: 'orange' }}>{children}</mark>
-    } else {
-      children = <mark>{children}</mark>
+  try {
+    let children = <>{props.children}</>
+    if (props.leaf.url) {
+      children = <a href={props.leaf.url} className='underline'>{children}</a>
     }
-  }
+    if (props.leaf.bold) {
+      children = <strong>{children}</strong>
+    }
+    if (props.leaf.emphasis) {
+      children = <em>{children}</em>
+    }
+    if (props.leaf.delete) {
+      children = <del>{children}</del>
+    }
+    if (props.leaf.isInlineCode) {
+      children = <code>{children}</code>
+    }
+    if (props.leaf.highlight) {
+      if (props.leaf.isCurrentHighlight) {
+        children = <mark style={{ backgroundColor: 'orange' }}>{children}</mark>
+      } else {
+        children = <mark>{children}</mark>
+      }
+    }
 
-  const style = props.leaf.color ? { color: props.leaf.color } : undefined;
-  return <span {...props.attributes} style={style}>{children}</span>
+    const style = props.leaf.color ? { color: props.leaf.color } : undefined;
+    return <span {...props.attributes} style={style}>{children}</span>
+  }
+  catch (err) {
+    console.error('Failed to render leaf:', props, err)
+  }
 }

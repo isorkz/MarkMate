@@ -3,6 +3,7 @@ import { persist, createJSONStorage, PersistStorage } from 'zustand/middleware'
 import { MEditor } from "../models/MEditor";
 import { markdownSourceToMEditorNodes } from "../components/editor/slate/parser/ParseMarkdownSourceToSlateNodes";
 import { nanoid } from 'nanoid'
+import { DefaultEmptySlateNodes } from "../components/editor/slate/Element";
 
 const InitTabId = 'default_id_0';
 
@@ -93,7 +94,7 @@ const useStore = create<MStore>()(
           newTabs[state.activeTabIndex].changed = false;
           newTabs[state.activeTabIndex].filePath = filePath;
           newTabs[state.activeTabIndex].sourceContent = content;
-          newTabs[state.activeTabIndex].slateNodes = markdownSourceToMEditorNodes(content);
+          newTabs[state.activeTabIndex].slateNodes = markdownSourceToMEditorNodes(content) || DefaultEmptySlateNodes;
 
           return {
             ...state,

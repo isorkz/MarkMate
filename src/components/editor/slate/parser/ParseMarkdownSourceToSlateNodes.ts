@@ -5,16 +5,20 @@ import remarkGfm from 'remark-gfm'
 import { CustomText, DefaultEmptyListItemElement, DefaultEmptySlateNodes, DefaultParagraphElement } from '../Element'
 
 export const markdownSourceToMEditorNodes = (mdContent: string) => {
-  if (!mdContent || mdContent === '') {
-    return DefaultEmptySlateNodes
-  }
+  try {
+    if (!mdContent || mdContent === '') {
+      return DefaultEmptySlateNodes
+    }
 
-  let slateNodes = markdownSourceToSlateNodes(mdContent)
-  if (slateNodes.length === 0) {
-    slateNodes = DefaultEmptySlateNodes;
+    let slateNodes = markdownSourceToSlateNodes(mdContent)
+    if (slateNodes.length === 0) {
+      slateNodes = DefaultEmptySlateNodes;
+    }
+    console.log('init slateNodes: ', slateNodes)
+    return slateNodes;
+  } catch (error) {
+    console.error('failed to markdownSourceToMEditorNodes: ', error)
   }
-  console.log('init slateNodes: ', slateNodes)
-  return slateNodes;
 }
 
 const markdownSourceToSlateNodes = (mdContent: string) => {

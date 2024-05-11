@@ -27,6 +27,9 @@ const ConfirmModal = ({ showModal, setShowModal, tabIndex }: { showModal: boolea
     try {
       if (tabs[tabIndex].filePath) {
         const markdownSource = slateNodesToMarkdownSource(tabs[tabIndex].slateNodes)
+        if (!markdownSource) {
+          throw new Error('markdownSource is undefined.')
+        }
         updateSourceContent(markdownSource)
         window.api.saveFile(tabs[tabIndex].filePath, markdownSource).then(() => {
           removeTabByIndex(tabIndex)

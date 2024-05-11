@@ -59,6 +59,9 @@ const MainPanel = () => {
       console.log('save file: ', tabsRef.current[activeTabIndexRef.current].filePath)
       if (tabsRef.current[activeTabIndexRef.current].filePath) {
         const markdownSource = slateNodesToMarkdownSource(tabsRef.current[activeTabIndexRef.current].slateNodes)
+        if (!markdownSource) {
+          throw new Error('markdownSource is undefined.')
+        }
         updateSourceContent(markdownSource)
         window.api.saveFile(tabsRef.current[activeTabIndexRef.current].filePath, markdownSource).then(() => {
           saveTab();

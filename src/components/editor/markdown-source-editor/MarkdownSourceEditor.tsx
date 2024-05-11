@@ -20,6 +20,7 @@ const MarkdownSourceEditor = () => {
     // To re-render the slate editor, do not SlateEditorUtils.resetSlateNodes() because it will reset the cursor position two Editor planes.
     // Instead, update activeEditor.editor.children directly.
     const slateNodes = markdownSourceToMEditorNodes(value)
+    if (!slateNodes) return
     updateSlateNodes(slateNodes)
     activeEditor.editor.children = slateNodes
 
