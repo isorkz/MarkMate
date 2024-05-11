@@ -5,7 +5,7 @@ import { CodeElement } from '../Element'
 import { getHighlighter, BundledLanguage } from 'shikiji'
 import useSearchStore from '../../../../store/SearchStore'
 
-const supportedLanguages = ['javascript', 'cpp', 'c++', 'python', 'java', 'html', 'shell', 'bash']
+const supportedLanguages = ['javascript', 'cpp', 'c++', 'python', 'java', 'html', 'shell', 'bash', 'sql']
 
 export const LanguageSelectMap = {
   'javascript': 'javascript',
@@ -16,6 +16,7 @@ export const LanguageSelectMap = {
   'html': 'html',
   'bash': 'shell',
   'shell': 'shell',
+  'sql': 'sql',
 }
 
 const highlighter = await getHighlighter({
@@ -127,16 +128,17 @@ export const LanguageSelect = (props: JSX.IntrinsicElements['select']) => {
     <select
       data-test-id="language-select"
       contentEditable={false}
-      className='absolute top-0 right-0 text-gray-400 text-xs p-1 z-10 bg-transparent'
+      className='absolute top-0 right-0 text-gray-400 text-xs p-1 z-10 bg-transparent focus:outline-none'
       {...props}
     >
+      <option value="text">Text</option>
       <option value="cpp">C++</option>
       <option value="python">Python</option>
       <option value="java">Java</option>
       <option value="shell">Shell</option>
       <option value="html">Html</option>
       <option value="javascript">Javascript</option>
-      <option value="text">Text</option>
+      <option value="sql">SQL</option>
     </select>
   )
 }
