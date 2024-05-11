@@ -171,7 +171,7 @@ const TreeItem = ({
             }}
             onBlur={() => cancelEdit()} />
         ) : (
-          <span className="font-medium text-gray-300">{node.name}</span>
+          <span className="text-gray-300">{node.name}</span>
         )}
       </div>
 

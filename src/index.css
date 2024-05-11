@@ -135,7 +135,7 @@ body {
 
 .MarkMateContent .MarkMateCodeBlocks pre {
   display: block;
-  padding: 20px;
+  padding: 18px;
   margin: 0 0 10px;
   font-size: 14px;
   line-height: 1.42857143;
@@ -144,7 +144,7 @@ body {
   caret-color: #5a9ff4;
   background-color: #2e3440ff;
   border: 1px solid #ccc;
-  border-radius: 4px;
+  border-radius: 5px;
   overflow-x: auto;
 }
 

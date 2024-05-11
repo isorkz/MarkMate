@@ -10,8 +10,6 @@ interface TabButtonProps {
   title: string;
   tabIndex: number;
   tabId: string;
-  showModal: boolean;
-  setShowModal: Dispatch<SetStateAction<boolean>>;
 };
 
 const ConfirmModal = ({ showModal, setShowModal, tabIndex }: { showModal: boolean, setShowModal: Dispatch<SetStateAction<boolean>>, tabIndex: number }) => {
