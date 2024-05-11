@@ -50,16 +50,21 @@ declare module 'slate' {
   }
 }
 
-export const DefaultParagraphElement: ParagraphElement = {
-  type: 'paragraph',
-  children: [{ text: '' }],
+// create a new element instead of a pre-defined object, to avoid sharing the same object in different places.
+export const DefaultParagraphElement = (): ParagraphElement => {
+  return {
+    type: 'paragraph',
+    children: [{ text: '' }],
+  }
 }
 
-export const DefaultEmptySlateNodes: Descendant[] = [
-  DefaultParagraphElement
-]
+export const DefaultEmptySlateNodes = (): Descendant[] => {
+  return [DefaultParagraphElement()]
+}
 
-export const DefaultEmptyListItemElement: ListItemElement = {
-  type: 'list-item',
-  children: [DefaultParagraphElement]
+export const DefaultEmptyListItemElement = (): ListItemElement => {
+  return {
+    type: 'list-item',
+    children: [DefaultParagraphElement()]
+  }
 }

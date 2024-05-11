@@ -38,14 +38,14 @@ export const insertBreakForListItem = (editor: Editor, selection: BaseRange, par
     const start = Editor.start(editor, path)
     const end = Editor.end(editor, path)
     if (Point.equals(selection.anchor, start)) {
-      Transforms.insertNodes(editor, DefaultEmptyListItemElement, { at: listItemPath })
+      Transforms.insertNodes(editor, DefaultEmptyListItemElement(), { at: listItemPath })
     } else if (Point.equals(selection.anchor, end)) {
-      Transforms.insertNodes(editor, DefaultEmptyListItemElement, { at: Path.next(listItemPath) })
+      Transforms.insertNodes(editor, DefaultEmptyListItemElement(), { at: Path.next(listItemPath) })
       Transforms.select(editor, Editor.start(editor, Path.next(listItemPath)));
     } else {
       // Split the nodes at the current selection location.
       Transforms.splitNodes(editor)
-      Transforms.wrapNodes(editor, DefaultEmptyListItemElement, { at: Path.next(path) })
+      Transforms.wrapNodes(editor, DefaultEmptyListItemElement(), { at: Path.next(path) })
     }
   }
 }

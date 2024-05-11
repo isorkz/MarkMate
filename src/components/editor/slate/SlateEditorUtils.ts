@@ -16,7 +16,7 @@ export class SlateEditorUtils {
     if (slateNodes) {
       Transforms.insertNodes(editor, slateNodes, { at: [0] })
     } else {
-      Transforms.insertNodes(editor, DefaultEmptySlateNodes, { at: [0] })
+      Transforms.insertNodes(editor, DefaultEmptySlateNodes(), { at: [0] })
     }
 
     if (cleanupHistory) {

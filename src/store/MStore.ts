@@ -94,7 +94,7 @@ const useStore = create<MStore>()(
           newTabs[state.activeTabIndex].changed = false;
           newTabs[state.activeTabIndex].filePath = filePath;
           newTabs[state.activeTabIndex].sourceContent = content;
-          newTabs[state.activeTabIndex].slateNodes = markdownSourceToMEditorNodes(content) || DefaultEmptySlateNodes;
+          newTabs[state.activeTabIndex].slateNodes = markdownSourceToMEditorNodes(content) || DefaultEmptySlateNodes();
 
           return {
             ...state,

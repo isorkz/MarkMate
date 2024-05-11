@@ -7,12 +7,12 @@ import { CustomText, DefaultEmptyListItemElement, DefaultEmptySlateNodes, Defaul
 export const markdownSourceToMEditorNodes = (mdContent: string) => {
   try {
     if (!mdContent || mdContent === '') {
-      return DefaultEmptySlateNodes
+      return DefaultEmptySlateNodes()
     }
 
     let slateNodes = markdownSourceToSlateNodes(mdContent)
     if (slateNodes.length === 0) {
-      slateNodes = DefaultEmptySlateNodes;
+      slateNodes = DefaultEmptySlateNodes();
     }
     console.log('init slateNodes: ', slateNodes)
     return slateNodes;
@@ -53,14 +53,14 @@ const markdownAstToSlateNodes = (mdastNodes: any[]) => {
           type: 'list',
           order: node.ordered,
           start: node.start,
-          children: node.children && node.children.length > 0 ? markdownAstToSlateNodes(node.children) : [DefaultEmptyListItemElement],
+          children: node.children && node.children.length > 0 ? markdownAstToSlateNodes(node.children) : [DefaultEmptyListItemElement()],
         })
         break;
       case 'listItem':
         slateNodes.push({
           type: 'list-item',
           checked: node.checked,
-          children: node.children && node.children.length > 0 ? markdownAstToSlateNodes(node.children) : [DefaultParagraphElement],
+          children: node.children && node.children.length > 0 ? markdownAstToSlateNodes(node.children) : [DefaultParagraphElement()],
         });
         break;
       case 'code':

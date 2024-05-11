@@ -46,7 +46,7 @@ export class MEditor {
     this.filePath = filePath;
     this.sourceContent = sourceContent;
     let parsedSlateNodes = markdownSourceToMEditorNodes(sourceContent);
-    if (!parsedSlateNodes) parsedSlateNodes = DefaultEmptySlateNodes;
+    if (!parsedSlateNodes) parsedSlateNodes = DefaultEmptySlateNodes();
     this.slateNodes = slateNodes && slateNodes.length > 0 ? slateNodes : parsedSlateNodes;
   }
 }
