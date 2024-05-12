@@ -4,9 +4,45 @@ import { Descendant } from "slate";
 
 type EditingMode = 'rename' | 'newfile' | undefined
 
+const initTreeType = (node: TreeNode | undefined) => {
+  if (!node) {
+    return
+  }
+
+  if (node.children) {
+    node.type = 'folder'
+    for (const child of node.children) {
+      initTreeType(child)
+    }
+  } else {
+    node.type = 'file'
+  }
+}
+
+const initTreeIsOpened = (node: TreeNode | undefined, openedFile: string | undefined): boolean => {
+  if (node && openedFile) {
+    if (node.path === openedFile) {
+      node.isOpened = true
+      return true
+    }
+
+    if (node.children) {
+      for (const child of node.children) {
+        if (initTreeIsOpened(child, openedFile)) {
+          node.isOpened = true;
+          return true;
+        }
+      }
+    }
+  }
+  return false
+}
+
 interface TreeStore {
   fileTree: TreeNode | undefined;
   setFileTree: (fileTree: TreeNode | undefined) => void;
+
+  initTree: (rootDir: string | undefined, activeFilePath: string | undefined) => void;
 
   updateTreeNode: (updateNode: TreeNode) => void;
 
@@ -29,6 +65,21 @@ const useTreeStore = create<TreeStore>()(
   (set) => ({
     fileTree: undefined,
     setFileTree: (fileTree: TreeNode | undefined) => set({ fileTree: fileTree }),
+
+    initTree: (rootDir: string | undefined, activeFilePath: string | undefined) => {
+      if (!rootDir) return;
+
+      window.api.readDirTree(rootDir).then((treeData: any) => {
+        initTreeType(treeData)
+        initTreeIsOpened(treeData, activeFilePath)
+        set(state => {
+          state.slateNodesCache.clear()
+          return { fileTree: treeData }
+        });
+      }).catch((err: any) => {
+        throw new Error('Failed to read dir tree: ' + err);
+      })
+    },
 
     slateNodesCache: new Map(),
 

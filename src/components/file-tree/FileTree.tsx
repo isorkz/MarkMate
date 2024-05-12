@@ -7,52 +7,17 @@ import { toast } from 'react-hot-toast';
 
 const FileTree = () => {
   const fileTree = useTreeStore((state) => state.fileTree);
-  const setFileTree = useTreeStore((state) => state.setFileTree);
   const editingNode = useTreeStore((state) => state.editingNode);
   const setEditingNode = useTreeStore((state) => state.setEditingNode);
   const pushTreeNode = useTreeStore((state) => state.pushTreeNode);
   const setEditingMode = useTreeStore((state) => state.setEditingMode);
-  const slateNodesCache = useTreeStore((state) => state.slateNodesCache);
+  const initTree = useTreeStore((state) => state.initTree);
 
   const rootDir = useStore((state) => state.rootDir);
   const getActiveFilePath = useStore((state) => state.getActiveFilePath);
 
   // Using useRef to get the latest value for window.ipcRenderer.on function.
   const editingNodeRef = useRef(editingNode);
-
-  const initTreeIsOpened = (node: TreeNode | undefined, openedFile: string | undefined): boolean => {
-    if (node && openedFile) {
-      if (node.path === openedFile) {
-        node.isOpened = true
-        return true
-      }
-
-      if (node.children) {
-        for (const child of node.children) {
-          if (initTreeIsOpened(child, openedFile)) {
-            node.isOpened = true;
-            return true;
-          }
-        }
-      }
-    }
-    return false
-  }
-
-  const initTreeType = (node: TreeNode | undefined) => {
-    if (!node) {
-      return
-    }
-
-    if (node.children) {
-      node.type = 'folder'
-      for (const child of node.children) {
-        initTreeType(child)
-      }
-    } else {
-      node.type = 'file'
-    }
-  }
 
   const renameFile = (event: any, params: { filePath: string }) => {
     setEditingMode('rename')
@@ -82,20 +47,7 @@ const FileTree = () => {
 
   useEffect(() => {
     console.log('[FileTree] rootDir has changed: ', rootDir)
-    if (rootDir) {
-      slateNodesCache.clear()
-
-      // window.api defined in preload.ts, and implemented in ipcHandler.ts
-      window.api.readDirTree(rootDir).then((treeData: any) => {
-        initTreeType(treeData)
-        initTreeIsOpened(treeData, getActiveFilePath())
-        console.log('[FileTree] tree: ', treeData)
-        setFileTree(treeData);
-      }).catch((err: any) => {
-        console.error('Failed to read dir tree:', err);
-        toast.error('Failed to read dir tree: ' + err);
-      });
-    }
+    initTree(rootDir, getActiveFilePath())
   }, [rootDir]);
 
   useEffect(() => {
