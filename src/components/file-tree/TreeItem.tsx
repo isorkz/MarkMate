@@ -162,35 +162,37 @@ const TreeItem = ({
   }
 
   return (
-    <div>
-      <div className={`flex items-center hover:bg-neutral-700 ${node.path === tabs[activeTabIndex].filePath && 'bg-neutral-600'} ${node.type === 'folder' && 'my-1'}`} style={{ paddingLeft: `${level}em` }}
-        onClick={handleClick}
-        onContextMenu={onContextMenu}
-      >
-        {node.type === 'folder' && (node.isOpened ? <ChevronDownIcon className="w-4 h-4 mr-1.5" /> : <ChevronRightIcon className="w-4 h-4 mr-1.5" />)}
-        {editingNode && ((editingMode === 'rename' && editingNode && editingNode.path === node.path) || (editingMode === 'newfile' && node.name === '')) ? (
-          <input type="text"
-            className='bg-transparent border-b border-gray-300 focus:border-gray-300 focus:outline-none'
-            ref={inputRef}
-            value={editingNode.name}
-            onChange={onInputChange}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                handleEdit();
-              }
-            }}
-            onBlur={() => cancelEdit()} />
-        ) : (
-          <span className="text-gray-300">{node.name}</span>
+    // filter out the hidden files and folders
+    !node.name.startsWith('.')) && (
+      <div>
+        <div className={`flex items-center hover:bg-neutral-700 ${node.path === tabs[activeTabIndex].filePath && 'bg-neutral-600'} ${node.type === 'folder' && 'my-1'}`} style={{ paddingLeft: `${level}em` }}
+          onClick={handleClick}
+          onContextMenu={onContextMenu}
+        >
+          {node.type === 'folder' && (node.isOpened ? <ChevronDownIcon className="w-4 h-4 mr-1.5" /> : <ChevronRightIcon className="w-4 h-4 mr-1.5" />)}
+          {editingNode && ((editingMode === 'rename' && editingNode && editingNode.path === node.path) || (editingMode === 'newfile' && node.name === '')) ? (
+            <input type="text"
+              className='bg-transparent border-b border-gray-300 focus:border-gray-300 focus:outline-none'
+              ref={inputRef}
+              value={editingNode.name}
+              onChange={onInputChange}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  handleEdit();
+                }
+              }}
+              onBlur={() => cancelEdit()} />
+          ) : (
+            <span className="text-gray-300">{node.name}</span>
+          )}
+        </div>
+
+        {/* use filePath as unique id rather than nanoid(), because every time the file tree is re-rendered, the nanoid() will be changed */}
+        {node.isOpened && node.children && node.children.map((childNode) =>
+          <TreeItem node={childNode} level={level + 1} editingNodeRef={editingNodeRef} key={childNode.path} />
         )}
       </div>
-
-      {/* use filePath as unique id rather than nanoid(), because every time the file tree is re-rendered, the nanoid() will be changed */}
-      {node.isOpened && node.children && node.children.map((childNode) =>
-        <TreeItem node={childNode} level={level + 1} editingNodeRef={editingNodeRef} key={childNode.path} />
-      )}
-    </div>
-  );
+    )
 };
 
 export default TreeItem;
