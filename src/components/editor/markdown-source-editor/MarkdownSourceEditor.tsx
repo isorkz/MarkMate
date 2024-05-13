@@ -23,6 +23,8 @@ const MarkdownSourceEditor = () => {
     if (!slateNodes) return
     updateSlateNodes(slateNodes)
     activeEditor.editor.children = slateNodes
+    // clear the selection in SlateEditor, otherwise, the selection may throw an error due to the missing node.
+    activeEditor.editor.selection = null
 
     // update the cache
     if (activeEditor.filePath) {
