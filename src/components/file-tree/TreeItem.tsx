@@ -188,9 +188,11 @@ const TreeItem = ({
         </div>
 
         {/* use filePath as unique id rather than nanoid(), because every time the file tree is re-rendered, the nanoid() will be changed */}
-        {node.isOpened && node.children && node.children.map((childNode) =>
-          <TreeItem node={childNode} level={level + 1} editingNodeRef={editingNodeRef} key={childNode.path} />
-        )}
+        {node.isOpened && node.children &&
+          // sort by folder first, then by file
+          [...node.children].sort((a, b) => (a.type === 'folder' && b.type !== 'folder') ? -1 : 1).map((childNode) =>
+            <TreeItem node={childNode} level={level + 1} editingNodeRef={editingNodeRef} key={childNode.path} />
+          )}
       </div>
     )
 };
