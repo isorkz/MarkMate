@@ -1,5 +1,5 @@
 import { useCallback, useRef } from 'react'
-import { Descendant, Transforms, Element as SlateElement } from 'slate'
+import { Descendant, Transforms, Element as SlateElement, Range } from 'slate'
 import { Editor } from 'slate'
 import { Slate, RenderElementProps, RenderLeafProps, Editable, ReactEditor } from 'slate-react'
 import useStore from '../../../store/MStore'
@@ -9,6 +9,7 @@ import { SetNodeToDecorations, useDecorate } from '../slate/decorate/SetNodeToDe
 import { useMEditor } from '../../../models/MEditor'
 import useTreeStore from '../../../store/TreeStore'
 import { toast } from 'react-hot-toast';
+import { insertTabForListItem } from './plugin/insertTab'
 
 const SlateEditor = () => {
   const activeEditor = useMEditor()
@@ -110,6 +111,30 @@ const SlateEditor = () => {
           anchor: start,
           focus: end,
         })
+      }
+    } else if (event.key === 'Tab') {
+      const { selection } = activeEditor.editor
+      if (selection) {
+        event.preventDefault(); // prevent tab from losing focus of the editable area
+        if (Range.isCollapsed(selection)) {
+          const [block] = Editor.nodes<any>(activeEditor.editor, {
+            match: n => SlateElement.isElement(n) && n.type === 'paragraph',
+            mode: 'lowest'
+          })
+          if (block) {
+            const [node, path] = block
+            switch (node.type) {
+              case 'paragraph':
+                const [parentNode, parentPath] = Editor.parent(activeEditor.editor, path)
+                if (SlateElement.isElement(parentNode) && parentNode.type === 'list-item') {
+                  insertTabForListItem(activeEditor.editor, selection, node, path, parentNode, parentPath)
+                  return
+                }
+                break
+            }
+          }
+          // activeEditor.editor.insertText('\t')
+        }
       }
     }
   }
