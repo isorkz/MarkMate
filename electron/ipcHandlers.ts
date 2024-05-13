@@ -1,7 +1,12 @@
 import { ipcMain } from 'electron';
 import fs from 'fs';
+import os from 'os';
 import path from 'path';
 import dirTree from 'directory-tree';
+
+export const isMac = (): boolean => {
+  return os.platform().toLocaleLowerCase() === 'darwin';
+}
 
 // 使用contextBridge和ipcMain/ipcRenderer来在主进程和渲染进程之间安全地传递数据。
 // 在主进程中执行需要Node.js原生模块的操作, 比如fs，然后将结果发送到渲染进程。
@@ -95,13 +100,17 @@ export const registerIpcHandlers = (): void => {
   // mediaFilePath: the path of the image file
   ipcMain.on('get-file-url', (event, currentFilePath: string, mediaFilePath: string) => {
     let fileUrl = '';
+    const fileHead = isMac() ? 'file://' : 'file:///';
     if (path.isAbsolute(mediaFilePath)) {
-      fileUrl = 'file://' + mediaFilePath;
+      fileUrl = fileHead + mediaFilePath
     } else {
       // If it's a relative path, get the absolute path based on the currentFileDir
       const currentFileStats = fs.statSync(currentFilePath);
       const currentFileDir = currentFileStats.isDirectory() ? currentFilePath : path.dirname(currentFilePath);
-      fileUrl = 'file://' + path.join(currentFileDir, mediaFilePath);
+      fileUrl = fileHead + path.join(currentFileDir, mediaFilePath);
+    }
+    if(!isMac()){
+      fileUrl = fileUrl.replace(/\\/g, '/');
     }
     // console.log('fileUrl: ', fileUrl);
     // Note: for ipcMain.on, use event.returnValue to return value synchronously, instead of returning the value directly.

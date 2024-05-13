@@ -13,8 +13,15 @@ export function isValidUrl(str: string) {
   }
 }
 
+export function isMac(): boolean {
+  // console.log('window.navigator.platform: ', window.navigator.platform);
+  // console.log('window.navigator.userAgent: ', window.navigator.userAgent);
+  return window.navigator.platform.toLocaleLowerCase() === 'darwin';
+}
+
 export function getFileName(path: string): string {
-  let fileName = path.split('/').pop() || '';
+  const delimiter = isMac() ? '/' : '\\';
+  let fileName = path.split(delimiter).pop() || '';
   if (fileName.includes('.')) {
     // remove file extension
     fileName = fileName.split('.').slice(0, -1).join('.');
@@ -23,16 +30,32 @@ export function getFileName(path: string): string {
 }
 
 export function getFolderPath(rootDir: string, filePath: string): string {
-  // rootDir: /path/md
-  // filePath: /path/md/Work/test/1.md
-  // return: Work / test
-  const fileName = filePath.split('/').pop() || '';
-  return filePath.replace(rootDir, '').replace(fileName, '').replace(/\.md$/, '').replace(/\//g, ' / ');
+  
+  const delimiter = isMac() ? '/' : '\\';
+  const fileName = filePath.split(delimiter).pop() || '';
+  if (isMac()){
+    // rootDir: /path/md
+    // filePath: /path/md/dir/test/1.md
+    // return: dir / test
+    return filePath.replace(rootDir, '').replace(fileName, '').replace(/^\//, '').replace(/\/$/, '').replace(/\//g, ' / ');
+  }else{
+    // rootDir: C:\\path\\md
+    // filePath: C:\\path\\md\\dir\\test\\1.md
+    // return: dir / test
+    return filePath.replace(rootDir, '').replace(fileName, '').replace(/^\\/, '').replace(/\\$/, '').replace(/\\/g, ' / ');
+  }
 }
 
 export function getTopBarTitle(rootDir: string, filePath: string): string {
-  // rootDir: /path/md
-  // filePath: /path/md/Work/test/1.md
-  // return: Work / test / 1
-  return filePath.replace(rootDir, '').replace(/^\//, '').replace(/\.md$/, '').replace(/\//g, ' / ');
+  if (isMac()){
+    // rootDir: /path/md
+    // filePath: /path/md/dir/test/1.md
+    // return: dir / test / 1
+    return filePath.replace(rootDir, '').replace(/^\//, '').replace(/\.md$/, '').replace(/\//g, ' / ');
+  }else{
+    // rootDir: C:\\path\\md
+    // filePath: C:\\path\\md\\dir\\test\\1.md
+    // return: dir / test / 1
+    return filePath.replace(rootDir, '').replace(/^\\/, '').replace(/\.md$/, '').replace(/\\/g, ' / ');
+  }
 }
