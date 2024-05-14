@@ -33,9 +33,8 @@ const parseSlateNodeToMarkdownSource = (node: any, preStr: string = '', ancestor
     case 'paragraph':
       if (ancestorNode && ancestorNode.type === 'blockquote') markdownSource += preStr
       markdownSource += slateNodesToMarkdownSource(node.children, preStr, ancestor, node) + '\n'
-      // Unused ancestorNode?
-      // If current node is in a blockquote block, don't add a new line after the paragraph. Otherwise, add a new line.
-      // if (!ancestorNode || (ancestorNode.type !== 'blockquote' && ancestorNode.type !== 'list')) markdownSource += '\n'
+      // If current node is in a blockquote block, add '>' in the beginning of the next line.
+      if (ancestorNode && ancestorNode.type === 'blockquote') markdownSource += '>'
       if (!parentNode || (parentNode.type !== 'list-item')) markdownSource += '\n'
       return markdownSource
     case 'blockquote':

@@ -24,7 +24,7 @@ export const markdownSourceToMEditorNodes = (mdContent: string) => {
 const markdownSourceToSlateNodes = (mdContent: string) => {
   const parser = unified().use(remarkParse).use(remarkGfm)
   const mdast = parser.parse(mdContent)
-  // console.log('mdast: ', mdast)
+  console.log('mdast: ', mdast)
   return markdownAstToSlateNodes(mdast.children)
 }
 
@@ -87,7 +87,7 @@ const markdownAstToSlateNodes = (mdastNodes: any[]) => {
       case 'blockquote':
         slateNodes.push({
           type: 'blockquote',
-          children: markdownAstToSlateNodes(node.children),
+          children: node.children && node.children.length > 0 ? markdownAstToSlateNodes(node.children) : [DefaultParagraphElement()],
         })
         break;
       case 'table':

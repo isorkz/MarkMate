@@ -2,6 +2,7 @@ import { Editor, Transforms, Element as SlateElement, Range } from 'slate'
 import { assert } from '../../../../utils/common';
 import { insertBreakForHead, insertBreakForListItem } from './insertBreak';
 import { deleteBackwardForHead, deleteBackwardForListItem, deleteBackwardForParagraph } from './deleteBackward';
+import { DefaultParagraphElement } from '../Element';
 
 const SHORTCUTS = {
   '*': { type: 'list-item' },
@@ -161,6 +162,8 @@ export const withMarkdownShortcuts = (editor: Editor) => {
             // } else {
             //   // Transforms.insertNodes(editor, element)
             // }
+          } else if (element.type === 'blockquote') {
+            Transforms.wrapNodes(editor, { type: 'blockquote', children: [DefaultParagraphElement()] }, { at: path })
           } else {
             // set the type of the current block to the new element type
             Transforms.setNodes<SlateElement>(editor, element, {
