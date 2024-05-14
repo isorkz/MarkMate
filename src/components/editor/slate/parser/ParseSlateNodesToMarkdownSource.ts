@@ -1,7 +1,7 @@
 import { Text } from 'slate'
 
 // ancestorNode is the most outer node of the current node, which is the direct child of the markdown AST root node.
-export const slateNodesToMarkdownSource = (nodes: any[], preStr: string = '', ancestorNode: any = undefined) => {
+export const slateNodesToMarkdownSource = (nodes: any[], preStr: string = '', ancestorNode: any = undefined, parentNode: any = undefined) => {
   try {
     let markdownSource = ''
     for (const node of nodes) {
@@ -14,7 +14,7 @@ export const slateNodesToMarkdownSource = (nodes: any[], preStr: string = '', an
 }
 
 // ancestorNode is the most outer node of the current node, which is the direct child of the markdown AST root node.
-const parseSlateNodeToMarkdownSource = (node: any, preStr: string = '', ancestorNode: any = undefined) => {
+const parseSlateNodeToMarkdownSource = (node: any, preStr: string = '', ancestorNode: any = undefined, parentNode: any = undefined) => {
   // Keep track of the most outer node of the current node.
   const ancestor = ancestorNode ? ancestorNode : node
 
@@ -32,49 +32,50 @@ const parseSlateNodeToMarkdownSource = (node: any, preStr: string = '', ancestor
   switch (node.type) {
     case 'paragraph':
       if (ancestorNode && ancestorNode.type === 'blockquote') markdownSource += preStr
-      markdownSource += slateNodesToMarkdownSource(node.children, preStr, ancestor) + '\n'
-      // If current node is in a blockquote block, don't add a new line after the paragraph.
-      // Otherwise, add a new line.
-      if (!ancestorNode || (ancestorNode.type !== 'blockquote' && ancestorNode.type !== 'list')) markdownSource += '\n'
+      markdownSource += slateNodesToMarkdownSource(node.children, preStr, ancestor, node) + '\n'
+      // Unused ancestorNode?
+      // If current node is in a blockquote block, don't add a new line after the paragraph. Otherwise, add a new line.
+      // if (!ancestorNode || (ancestorNode.type !== 'blockquote' && ancestorNode.type !== 'list')) markdownSource += '\n'
+      if (!parentNode || (parentNode.type !== 'list-item')) markdownSource += '\n'
       return markdownSource
     case 'blockquote':
-      markdownSource = slateNodesToMarkdownSource(node.children, preStr + '> ', ancestor)
+      markdownSource = slateNodesToMarkdownSource(node.children, preStr + '> ', ancestor, node)
       // if it's the outermost blockquote, add a new line in the end.
       if (!ancestorNode) markdownSource += '\n'
       return markdownSource
     case 'head':
-      return '#'.repeat(node.level) + ' ' + slateNodesToMarkdownSource(node.children, preStr, ancestor) + '\n\n'
+      return '#'.repeat(node.level) + ' ' + slateNodesToMarkdownSource(node.children, preStr, ancestor, node) + '\n\n'
     case 'list':
       if (node.order) {
         const start = node.start ? node.start : 1
         for (let i = 0; i < node.children.length; i++) {
-          markdownSource += preStr + (start + i) + '. ' + parseSlateNodeToMarkdownSource(node.children[i], preStr, ancestorNode)
+          markdownSource += preStr + (start + i) + '. ' + parseSlateNodeToMarkdownSource(node.children[i], preStr, ancestorNode, node)
         }
       } else {
         for (let listItem of node.children) {
-          markdownSource += preStr + '* ' + parseSlateNodeToMarkdownSource(listItem, preStr, ancestorNode)
+          markdownSource += preStr + '* ' + parseSlateNodeToMarkdownSource(listItem, preStr, ancestorNode, node)
         }
       }
       return markdownSource
     case 'list-item':
       for (let child of node.children) {
         if (child.type === 'list') {
-          markdownSource += parseSlateNodeToMarkdownSource(child, preStr + '  ', ancestorNode)
+          markdownSource += parseSlateNodeToMarkdownSource(child, preStr + '  ', ancestorNode, node)
         } else {
           let checkedPrefix = ''
           if (node.checked !== undefined && node.checked !== null) {
             checkedPrefix = node.checked ? '[x] ' : '[ ] '
           }
-          markdownSource += checkedPrefix + parseSlateNodeToMarkdownSource(child, preStr, ancestorNode)
+          markdownSource += checkedPrefix + parseSlateNodeToMarkdownSource(child, preStr, ancestorNode, node)
         }
       }
-      return markdownSource
+      return markdownSource + '\n'
     case 'code':
       const language = node.language !== undefined && node.language !== null ? node.language : ''
-      return '```' + language + '\n' + slateNodesToMarkdownSource(node.children, preStr, ancestor) + '```\n\n'
+      return '```' + language + '\n' + slateNodesToMarkdownSource(node.children, preStr, ancestor, node) + '```\n\n'
     case 'code-line':
       for (let textNode of node.children) {
-        markdownSource += parseSlateNodeToMarkdownSource(textNode, preStr, ancestorNode) + '\n'
+        markdownSource += parseSlateNodeToMarkdownSource(textNode, preStr, ancestorNode, node) + '\n'
       }
       return markdownSource
     case 'hr':
