@@ -45,7 +45,8 @@ export const insertBreakForListItem = (editor: Editor, selection: BaseRange, par
     } else {
       // Split the nodes at the current selection location.
       Transforms.splitNodes(editor)
-      Transforms.wrapNodes(editor, DefaultEmptyListItemElement(), { at: Path.next(path) })
+      Transforms.moveNodes(editor, { at: Path.next(path), to: Path.next(listItemPath) })
+      Transforms.wrapNodes(editor, { type: 'list-item', children: [] }, { at: Path.next(listItemPath) })
     }
   }
 }
