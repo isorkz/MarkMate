@@ -16,7 +16,7 @@ export function isValidUrl(str: string) {
 export function isMac(): boolean {
   // console.log('window.navigator.platform: ', window.navigator.platform);
   // console.log('window.navigator.userAgent: ', window.navigator.userAgent);
-  return window.navigator.platform.toLocaleLowerCase() === 'darwin';
+  return window.navigator.userAgent.toLocaleLowerCase().includes('mac');
 }
 
 export function getFileName(path: string): string {
@@ -30,15 +30,15 @@ export function getFileName(path: string): string {
 }
 
 export function getFolderPath(rootDir: string, filePath: string): string {
-  
+
   const delimiter = isMac() ? '/' : '\\';
   const fileName = filePath.split(delimiter).pop() || '';
-  if (isMac()){
+  if (isMac()) {
     // rootDir: /path/md
     // filePath: /path/md/dir/test/1.md
     // return: dir / test
     return filePath.replace(rootDir, '').replace(fileName, '').replace(/^\//, '').replace(/\/$/, '').replace(/\//g, ' / ');
-  }else{
+  } else {
     // rootDir: C:\\path\\md
     // filePath: C:\\path\\md\\dir\\test\\1.md
     // return: dir / test
@@ -47,12 +47,12 @@ export function getFolderPath(rootDir: string, filePath: string): string {
 }
 
 export function getTopBarTitle(rootDir: string, filePath: string): string {
-  if (isMac()){
+  if (isMac()) {
     // rootDir: /path/md
     // filePath: /path/md/dir/test/1.md
     // return: dir / test / 1
     return filePath.replace(rootDir, '').replace(/^\//, '').replace(/\.md$/, '').replace(/\//g, ' / ');
-  }else{
+  } else {
     // rootDir: C:\\path\\md
     // filePath: C:\\path\\md\\dir\\test\\1.md
     // return: dir / test / 1

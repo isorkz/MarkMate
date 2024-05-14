@@ -5,6 +5,7 @@ import { CloseIcon } from '../icons';
 import { Button, Box, DialogContentText, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material'
 import { toast } from 'react-hot-toast';
 import { slateNodesToMarkdownSource } from '../editor/slate/parser/ParseSlateNodesToMarkdownSource';
+import { getFileName } from '../../utils/common';
 
 interface TabButtonProps {
   title: string;
@@ -119,13 +120,6 @@ const TabButton = ({
   )
 }
 
-const getFileName = (filePath: string | undefined) => {
-  if (filePath === undefined) return 'Untitled'
-
-  const parts = filePath.split('/')
-  return parts[parts.length - 1]
-}
-
 const TabsNav = () => {
   const tabs = useStore((state) => state.tabs);
 
@@ -134,7 +128,7 @@ const TabsNav = () => {
     tabs.length > 1 && (
       <div className="flex h-8 justify-center items-center border border-gray-200 bg-gray-50">
         {tabs.map((tab, index) => (
-          <TabButton key={tab.id} title={getFileName(tab.filePath)} tabIndex={index} tabId={tab.id} />
+          <TabButton key={tab.id} title={tab.filePath ? getFileName(tab.filePath) : 'Untitled'} tabIndex={index} tabId={tab.id} />
         ))}
       </div>
     )
