@@ -235,7 +235,6 @@ export const withMarkdownShortcuts = (editor: Editor) => {
           }
 
           const [parentNode, parentPath] = Editor.parent(editor, path)
-          // If user is breaking in a list item
           if (SlateElement.isElement(parentNode) && parentNode.type === 'list-item') {
             assert(node.type === 'paragraph', 'Invalid node: ' + node)
             if (deleteBackwardForListItem(editor, selection, node, path, parentNode, parentPath)) {
