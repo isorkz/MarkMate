@@ -3,6 +3,7 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import dirTree from 'directory-tree';
+import git from 'simple-git';
 
 export const isMac = (): boolean => {
   return os.platform().toLocaleLowerCase() === 'darwin';
@@ -109,11 +110,36 @@ export const registerIpcHandlers = (): void => {
       const currentFileDir = currentFileStats.isDirectory() ? currentFilePath : path.dirname(currentFilePath);
       fileUrl = fileHead + path.join(currentFileDir, mediaFilePath);
     }
-    if(!isMac()){
+    if (!isMac()) {
       fileUrl = fileUrl.replace(/\\/g, '/');
     }
     // console.log('fileUrl: ', fileUrl);
     // Note: for ipcMain.on, use event.returnValue to return value synchronously, instead of returning the value directly.
     event.returnValue = fileUrl;
+  });
+
+  ipcMain.handle('git-sync', async (event, rootDir: string, remoteRepo: string) => {
+    try {
+      const simpleGit = git(rootDir);
+      let pullResult = await simpleGit.pull(remoteRepo, 'main');
+      // console.log('pullResult: ', pullResult);
+      await simpleGit.add('./*');
+      await simpleGit.commit('update');
+      const pushResult = await simpleGit.push(remoteRepo);
+      // console.log('pushResult: ', pushResult);
+    } catch (error) {
+      throw error;
+    }
+  });
+
+  ipcMain.handle('git-status', async (event, rootDir: string) => {
+    try {
+      const simpleGit = git(rootDir);
+      let statusResult = await simpleGit.status();
+      // console.log('statusResult: ', statusResult);
+      return statusResult.files.length === 0 ? 'up-to-date' : 'out-of-date'
+    } catch (error) {
+      throw error;
+    }
   });
 };

@@ -4,6 +4,8 @@ import { Descendant } from "slate";
 
 type EditingMode = 'rename' | 'newfile' | undefined
 
+type SyncStatus = 'up-to-date' | 'syncing' | 'out-of-date' | 'failed'
+
 const initTreeType = (node: TreeNode | undefined) => {
   if (!node) {
     return
@@ -53,6 +55,9 @@ interface TreeStore {
   // key: file path, value: slate nodes
   slateNodesCache: Map<string, Descendant[]>;
 
+  syncStatus: SyncStatus;
+  setSyncStatus: (syncStatus: SyncStatus) => void;
+
   // The current editing node, such as rename, delete, etc.
   editingNode: TreeNode | undefined;
   setEditingNode: (node: TreeNode | undefined) => void;
@@ -82,6 +87,9 @@ const useTreeStore = create<TreeStore>()(
     },
 
     slateNodesCache: new Map(),
+
+    syncStatus: 'out-of-date',
+    setSyncStatus: (syncStatus: SyncStatus) => set({ syncStatus: syncStatus }),
 
     updateTreeNode: (updateNode: TreeNode) =>
       set((state) => {

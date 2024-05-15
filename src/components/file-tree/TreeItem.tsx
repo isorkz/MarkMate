@@ -165,7 +165,7 @@ const TreeItem = ({
     // filter out the hidden files and folders
     !node.name.startsWith('.')) && (
       <div>
-        <div className={`flex items-center hover:bg-neutral-700 ${node.path === tabs[activeTabIndex].filePath && 'bg-neutral-600'} ${node.type === 'folder' && 'my-1'}`} style={{ paddingLeft: `${level}em` }}
+        <div className={`flex items-center my-1 hover:bg-neutral-700 ${node.path === tabs[activeTabIndex].filePath && 'bg-neutral-600'}`} style={{ paddingLeft: `${level}em` }}
           onClick={handleClick}
           onContextMenu={onContextMenu}
         >

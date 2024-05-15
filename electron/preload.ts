@@ -28,7 +28,13 @@ contextBridge.exposeInMainWorld('api', {
   getFileUrl: (currentFilePath: string, mediaFilePath: string) => {
     // sendSync is to return value synchronously, and uses ipcMain.on() for listening
     return ipcRenderer.sendSync('get-file-url', currentFilePath, mediaFilePath);
-  }
+  },
+  gitSync: (rootDir: string, remoteRepo: string) => {
+    return ipcRenderer.invoke('git-sync', rootDir, remoteRepo);
+  },
+  gitStatus: (rootDir: string) => {
+    return ipcRenderer.invoke('git-status', rootDir);
+  },
 });
 
 // --------- Expose some API to the Renderer process ---------

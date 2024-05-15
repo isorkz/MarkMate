@@ -1,6 +1,23 @@
+import toast from "react-hot-toast";
 import useStore from "../../store/MStore";
 import useTreeStore from "../../store/TreeStore";
-import { LayoutSplitIcon, RefreshIcon, TocIcon } from "../icons";
+import { LayoutSplitIcon, RefreshIcon, SyncFailedIcon, SyncOutOfDateIcon, SyncUpToDateIcon, SyncingIcon, TocIcon } from "../icons";
+import { FunctionComponent, useEffect, MouseEvent } from "react";
+
+interface MenuItemProps {
+  className: string;
+  icon: FunctionComponent<{ className: string }>;
+  onClick: (event: MouseEvent<HTMLElement>) => void;
+}
+
+const MenuButton: React.FC<MenuItemProps> = ({ icon: Icon, className, onClick }) => {
+  return (
+    <button type="button" className={`p-2 mx-1 bg-transparent border-none text-blue-400 hover:bg-gray-200 focus:outline-none ${className}`}
+      onClick={(e) => onClick(e)}>
+      <Icon className="w-4 h-4" />
+    </button>
+  );
+};
 
 interface TopBarProps {
   title: string;
@@ -15,10 +32,72 @@ const MainPanelTopBar = ({ title, changed }: TopBarProps) => {
   const getActiveFilePath = useStore((state) => state.getActiveFilePath);
 
   const initTree = useTreeStore((state) => state.initTree);
+  const syncStatus = useTreeStore((state) => state.syncStatus);
+  const setSyncStatus = useTreeStore((state) => state.setSyncStatus);
 
   const onRefreshFileTree = () => {
     initTree(rootDir, getActiveFilePath())
   }
+
+  const onSyncUp = () => {
+    const remoteRepo = import.meta.env.VITE_APP_GIT_REMOTE_REPO;
+    if (syncStatus !== 'syncing') {
+      setSyncStatus('syncing');
+      window.api.gitSync(rootDir, remoteRepo).then(() => {
+        setSyncStatus('up-to-date');
+      }).catch((error: any) => {
+        console.error('git sync error: ', error);
+        toast.error('Failed to sync up the remote repository: ', error);
+        setSyncStatus('failed');
+      })
+    }
+  }
+
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout;
+
+    const checkGitStatus = async () => {
+      window.api.gitStatus(rootDir).then((status: any) => {
+        console.log('git status: ', status);
+        setSyncStatus(status);
+      }).catch((error: any) => {
+        console.error('git status error: ', error);
+        toast.error('git status error: ', error);
+        setSyncStatus('failed');
+      })
+    }
+
+    const startChecking = () => {
+      checkGitStatus(); // check once first
+      intervalId = setInterval(checkGitStatus, 60 * 1000); // check git status every minute
+    };
+
+    const stopChecking = () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+
+    // If the window is unfocused, stop checking
+    if (document.visibilityState === 'visible') {
+      startChecking();
+    }
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        startChecking();
+      } else {
+        stopChecking();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      stopChecking();
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
 
   return (
     <div className={`relative flex w-full z-10 h-10 bg-gray-50 items-center px-4 border-b border-gray-200/80 select-none`}>
@@ -47,6 +126,17 @@ const MainPanelTopBar = ({ title, changed }: TopBarProps) => {
           <button onClick={onRefreshFileTree} className='p-2 mx-1 bg-transparent border-none hover:bg-gray-200 focus:outline-none'>
             <RefreshIcon className="w-4 h-4" />
           </button>
+
+
+          {syncStatus === 'up-to-date' ? (
+            <MenuButton icon={SyncUpToDateIcon} className='text-blue-400' onClick={onSyncUp} />
+          ) : syncStatus === 'out-of-date' ? (
+            <MenuButton icon={SyncOutOfDateIcon} className='text-red-500' onClick={onSyncUp} />
+          ) : (syncStatus === 'syncing') ? (
+            <MenuButton icon={SyncingIcon} className='text-blue-400' onClick={onSyncUp} />
+          ) : (
+            <MenuButton icon={SyncFailedIcon} className='text-red-500' onClick={onSyncUp} />
+          )}
         </div>
       </div>
     </div>
