@@ -93,30 +93,64 @@ const SlateEditor = () => {
   }
 
   const onKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
-    if (event.key === 'a' && (event.metaKey || event.ctrlKey)) {
-      event.preventDefault()
-      // If the cursor is inside the code block, cmd+a only select the code block.
-      const [codeBlockEntries] = Array.from(
-        Editor.nodes(activeEditor.editor, {
-          match: n => SlateElement.isElement(n) && n.type === 'code',
-          universal: true,
-        }))
-      if (codeBlockEntries) {
-        const [node, path] = codeBlockEntries;
-        Transforms.select(activeEditor.editor, path);
-      } else {
-        // If the cursor is not inside the code block, cmd+a select all the content.
-        const [start, end] = Editor.edges(activeEditor.editor, [])
-        Transforms.select(activeEditor.editor, {
-          anchor: start,
-          focus: end,
-        })
-      }
-    } else if (event.key === 'Tab') {
+    if (event.key === 'Tab') {
       const { selection } = activeEditor.editor
       if (selection) {
         event.preventDefault(); // prevent tab from losing focus of the editable area
         insertTab(activeEditor.editor, selection)
+      }
+      return
+    }
+
+    if (event.metaKey || event.ctrlKey) {
+      switch (event.key) {
+        // Select all the content when user press cmd+a
+        case 'a':
+          {
+            event.preventDefault()
+            // If the cursor is inside the code block, cmd+a only select the code block.
+            const [codeBlockEntries] = Array.from(
+              Editor.nodes(activeEditor.editor, {
+                match: n => SlateElement.isElement(n) && n.type === 'code',
+                universal: true,
+              }))
+            if (codeBlockEntries) {
+              const [node, path] = codeBlockEntries;
+              Transforms.select(activeEditor.editor, path);
+            } else {
+              // If the cursor is not inside the code block, cmd+a select all the content.
+              const [start, end] = Editor.edges(activeEditor.editor, [])
+              Transforms.select(activeEditor.editor, {
+                anchor: start,
+                focus: end,
+              })
+            }
+          }
+          break;
+        // Bold the selected text when user press cmd+b
+        case 'b':
+          {
+            event.preventDefault()
+            const marks = Editor.marks(activeEditor.editor);
+            if (marks && marks.bold === true) {
+              Editor.removeMark(activeEditor.editor, 'bold');
+            } else {
+              Editor.addMark(activeEditor.editor, 'bold', true);
+            }
+          }
+          break;
+        // Italicize the selected text when user press cmd+i
+        case 'i':
+          {
+            event.preventDefault()
+            const marks = Editor.marks(activeEditor.editor);
+            if (marks && marks.emphasis === true) {
+              Editor.removeMark(activeEditor.editor, 'emphasis');
+            } else {
+              Editor.addMark(activeEditor.editor, 'emphasis', true);
+            }
+          }
+          break;
       }
     }
   }
