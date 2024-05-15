@@ -25,15 +25,30 @@ const markdownSourceToSlateNodes = (mdContent: string) => {
   const parser = unified().use(remarkParse).use(remarkGfm)
   const mdast = parser.parse(mdContent)
   console.log('mdast: ', mdast)
-  return markdownAstToSlateNodes(mdast.children)
+  return markdownAstToSlateNodes(mdast.children, true)
 }
 
 // Parse markdown AST to Slate nodes.
 // For markdown AST, it's a tree.
 // For Slate, it's an array of nodes.
-const markdownAstToSlateNodes = (mdastNodes: any[]) => {
+// isTop: whether the current node is the top node in the AST.
+const markdownAstToSlateNodes = (mdastNodes: any[], isTop: boolean = false) => {
   let slateNodes: Descendant[] = []
+  let prevNode: any = null
   for (let node of mdastNodes) {
+    // handle whether need to add a new empty line between two nodes.
+    if (isTop && prevNode) {
+      const distance = (node.position?.start.line || 0) - (prevNode.position.end.line || 0)
+      // to be consistent with slateNodesToMarkdownSource, use '>=4' here instead of '>2'.
+      if (distance >= 4) {
+        // const lineCount = Math.floor(distance / 2)
+        const lineCount = Math.floor((distance - 2) / 2)
+        for (let i = 0; i < lineCount; i++) {
+          slateNodes.push(DefaultParagraphElement())
+        }
+      }
+    }
+
     switch (node.type) {
       case 'paragraph':
         slateNodes.push({
@@ -164,6 +179,8 @@ const markdownAstToSlateNodes = (mdastNodes: any[]) => {
           console.error(`Unknown node type in markdownAstToSlateNodes: ${JSON.stringify(node)}`);
         }
     }
+
+    prevNode = node
   }
 
   return slateNodes
