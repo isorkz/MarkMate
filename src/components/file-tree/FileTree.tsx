@@ -15,6 +15,9 @@ const FileTree = () => {
 
   const rootDir = useStore((state) => state.rootDir);
   const getActiveFilePath = useStore((state) => state.getActiveFilePath);
+  const tabs = useStore((state) => state.tabs);
+  const newTab = useStore((state) => state.newTab);
+  const setActiveTabId = useStore((state) => state.setActiveTabId);
 
   // Using useRef to get the latest value for window.ipcRenderer.on function.
   const editingNodeRef = useRef(editingNode);
@@ -41,6 +44,23 @@ const FileTree = () => {
     }
   }
 
+  const openFile = (event: any, params: { filePath: string }) => {
+    // If the file is already opened in the tabs, only activate the tab.
+    const index = tabs.findIndex((tab) => tab.filePath === params.filePath);
+    if (index >= 0) {
+      setActiveTabId(tabs[index].id)
+    } else {
+      // window.api defined in preload.ts, and implemented in ipcHandler.ts
+      window.api.readFile(params.filePath, (err: any, data: any) => {
+        if (err) {
+          console.error(err);
+        } else {
+          newTab(params.filePath, data)
+        }
+      })
+    }
+  }
+
   const deleteFile = (event: any, params: { filePath: string }) => {
     console.log('delete file: ', params.filePath)
   }
@@ -53,11 +73,13 @@ const FileTree = () => {
   useEffect(() => {
     window.ipcRenderer.on('tree-command-rename', renameFile);
     window.ipcRenderer.on('tree-command-newfile', newFile);
+    window.ipcRenderer.on('tree-command-openfile', openFile);
     window.ipcRenderer.on('tree-command-delete', deleteFile);
 
     return () => {
       window.ipcRenderer.removeAllListeners('tree-command-rename')
       window.ipcRenderer.removeAllListeners('tree-command-newfile')
+      window.ipcRenderer.removeAllListeners('tree-command-openfile')
       window.ipcRenderer.removeAllListeners('tree-command-delete')
     }
   }, []);

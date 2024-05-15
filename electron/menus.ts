@@ -7,20 +7,29 @@ export const registerMenus = (): void => {
   }) => {
     const menuTemplate = [];
 
+    if (params.type === 'folder') {
+      menuTemplate.push({
+        label: 'New File',
+        click: () => {
+          e.sender.send('tree-command-newfile', { filePath: params.filePath })
+        }
+      });
+    }
+
+    if (params.type === 'file') {
+      menuTemplate.push({
+        label: 'Open in New Tab',
+        click: () => {
+          e.sender.send('tree-command-openfile', { filePath: params.filePath })
+        }
+      });
+    }
+
     if (params.type === 'folder' || params.type === 'file') {
       menuTemplate.push({
         label: 'Rename',
         click: () => {
           e.sender.send('tree-command-rename', { filePath: params.filePath })
-        }
-      });
-    }
-
-    if (params.type === 'folder') {
-      menuTemplate.push({
-        label: 'New file',
-        click: () => {
-          e.sender.send('tree-command-newfile', { filePath: params.filePath })
         }
       });
     }
