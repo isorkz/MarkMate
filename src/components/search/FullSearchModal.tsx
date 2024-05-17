@@ -1,5 +1,5 @@
 import { Dispatch, MouseEvent, SetStateAction, useCallback, useEffect, useState } from 'react'
-import { ArrowReturnRightIcon, CloseIcon, DocumentIcon } from '../icons';
+import { ArrowReturnRightIcon, DocumentIcon } from '../icons';
 import useTreeStore from '../../store/TreeStore';
 import { FullSearchUtils } from '../../utils/search/FullSearchUtils';
 import { FullSearchResult } from '../../models/Search';
@@ -7,6 +7,9 @@ import { getFolderPath } from '../../utils/common';
 import useStore from '../../store/MStore';
 import { SlateEditorUtils } from '../editor/slate/SlateEditorUtils';
 
+import LoadingButton from '@mui/lab/LoadingButton';
+import CloseIcon from '@mui/icons-material/Close';
+import SearchIcon from '@mui/icons-material/Search';
 import Divider from '@mui/material/Divider';
 import Modal from '../common/Modal';
 
@@ -40,21 +43,19 @@ const FullSearch = ({ showFullSearchModal, setShowFullSearchModal }: FullSearchM
     };
   }, [searchText]);
 
-  const handleSearch = useCallback((text: string) => {
-    if (text.length > 2) {
-      const results = fullSearch(text);
-      // Sort the search results by match score.
-      setSearchResults(results.sort((a: FullSearchResult, b: FullSearchResult) => b.matchScore - a.matchScore));
-    } else {
-      setSearchResults([]);
-    }
-  }, [])
+  const handleSearch = useCallback((searchText: string) => {
+    if (!fileTree) return;
 
-  const fullSearch = useCallback((searchText: string) => {
-    if (fileTree) {
-      return FullSearchUtils.fullSearch(slateNodesCache, fileTree, searchText)
-    } else {
-      return []
+    if (searchText.length > 1) {  // set the minimum length to 1 for Chinese input.
+      setSearching(true);
+      FullSearchUtils.fullSearch(slateNodesCache, fileTree, searchText).then((results) => {
+        // Sort the search results by match score.
+        setSearchResults(results.sort((a: FullSearchResult, b: FullSearchResult) => b.matchScore - a.matchScore));
+      }).catch((err) => {
+        console.error(err);
+      }).finally(() => {
+        setSearching(false);
+      })
     }
   }, [])
 
@@ -94,9 +95,12 @@ const FullSearch = ({ showFullSearchModal, setShowFullSearchModal }: FullSearchM
       <div className='flex w-full absolute justify-center items-center top-[10%]'>
         <div className='flex relative w-full justify-center items-center'>
           <div className='flex flex-row w-1/2 justify-center items-center bg-white shadow-2xl shadow-black/20 rounded-md'>
+            <LoadingButton loading={searching} disabled>
+              {!searching && <SearchIcon />}
+            </LoadingButton>
             <input
               type="text"
-              className="w-full mx-3 my-2 px-4 py-[5px] rounded-md text-gray-800"
+              className="w-full mr-3 my-2 px-4 py-[5px] rounded-md text-gray-800"
               placeholder="Search..."
               value={searchText}
               autoFocus={true}
@@ -109,17 +113,17 @@ const FullSearch = ({ showFullSearchModal, setShowFullSearchModal }: FullSearchM
             <button
               onClick={onClose}
               className={`rounded-md px-[3px] py-[3px] mr-3 my-2 text-neutral-400 focus:outline-none dark:text-white bg-white border-none hover:bg-black/5 dark:hover:bg-neutral-600`}>
-              <CloseIcon className='w-5 h-5' />
+              <CloseIcon />
             </button>
           </div>
 
           {searchResults.length > 0 && (
             <div className="absolute w-1/2 top-full h-auto max-h-[70vh] overflow-y-auto py-1 bg-white text-gray-700 rounded-md select-none text-xs shadow-2xl shadow-black/20 ring-1 ring-black ring-opacity-5 focus:outline-none">
               {searchResults.slice(0, 20).map((result, i) => (
-                <div key={result.filePath} className='flex w-full flex-col px-4 py-[0.4rem] items-center'>
+                <div key={result.filePath} className='flex w-full flex-col px-5 py-1 items-center'>
                   {i > 0 && <Divider orientation='horizontal' flexItem />}
 
-                  <div className='flex flex-col w-full mt-3 hover:bg-gray-100' onClick={(e) => onOpen(e, result.filePath)}>
+                  <div className='flex flex-col px-3 py-2 w-full mt-2 hover:bg-gray-100 overflow-hidden' onClick={(e) => onOpen(e, result.filePath)}>
                     <div className='flex flex-row items-center'>
                       <DocumentIcon className="w-4 h-4 mr-2 text-gray-500" />
                       <span className='font-semibold text-base'>{result.title}</span>
@@ -128,7 +132,7 @@ const FullSearch = ({ showFullSearchModal, setShowFullSearchModal }: FullSearchM
 
                     {/* only show the first 3 match contents */}
                     {result.matchContents.slice(0, 3).map((matchResult, j) => (
-                      <div key={j} className='flex px-4 py-[0.4rem] items-center hover:bg-gray-100'>
+                      <div key={j} className='flex px-4 py-[0.4rem] items-center hover:bg-gray-100 break-all'>
                         <ArrowReturnRightIcon className="w-3 h-3 mr-2" />
                         <span dangerouslySetInnerHTML={{ __html: matchResult.content }} />
                       </div>

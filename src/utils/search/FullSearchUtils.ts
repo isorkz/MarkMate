@@ -56,42 +56,42 @@ const searchFile = (filePath: string, slateNodes: Descendant[], searchText: stri
   }
 }
 
-const fullSearchOnFileTree = (slateNodesCache: Map<string, Descendant[]>, node: TreeNode | undefined, searchText: string, searchResults: FullSearchResult[]) => {
+const fullSearchOnFileTree = async (slateNodesCache: Map<string, Descendant[]>, node: TreeNode | undefined, searchText: string, searchResults: FullSearchResult[]) => {
   if (!node) {
     return
   }
 
   if (node.children) {
     for (const child of node.children) {
-      fullSearchOnFileTree(slateNodesCache, child, searchText, searchResults)
+      await fullSearchOnFileTree(slateNodesCache, child, searchText, searchResults)
     }
   } else {
     let slateNodes = slateNodesCache.get(node.path)
     if (!slateNodes) {
-      window.api.readFile(node.path, (err: any, data: any) => {
-        if (err) {
-          console.error(err);
-        } else {
-          slateNodes = markdownSourceToMEditorNodes(data)
-          if (!slateNodes) {
-            throw new Error('Failed to parse markdown source to slate nodes.')
+      const data: string = await new Promise((resolve, reject) => {
+        window.api.readFile(node.path, (error: any, data: any) => {
+          if (error) {
+            reject(error);
+          } else {
+            resolve(data);
           }
-          slateNodesCache.set(node.path, slateNodes);
-          const res = searchFile(node.path, slateNodes, searchText)
-          if (res) searchResults.push(res)
-        }
-      })
-    } else {
-      const res = searchFile(node.path, slateNodes, searchText)
-      if (res) searchResults.push(res)
+        });
+      });
+      slateNodes = markdownSourceToMEditorNodes(data)
+      if (!slateNodes) {
+        throw new Error('Failed to parse markdown source to slate nodes.')
+      }
+      slateNodesCache.set(node.path, slateNodes);
     }
+    const res = searchFile(node.path, slateNodes, searchText)
+    if (res) searchResults.push(res)
   }
 }
 
 export class FullSearchUtils {
-  static fullSearch = (slateNodesCache: Map<string, Descendant[]>, treeNode: TreeNode, searchText: string): FullSearchResult[] => {
+  static fullSearch = async (slateNodesCache: Map<string, Descendant[]>, treeNode: TreeNode, searchText: string): Promise<FullSearchResult[]> => {
     let searchResults: FullSearchResult[] = []
-    fullSearchOnFileTree(slateNodesCache, treeNode, searchText, searchResults)
+    await fullSearchOnFileTree(slateNodesCache, treeNode, searchText, searchResults)
     return searchResults
   }
 }
