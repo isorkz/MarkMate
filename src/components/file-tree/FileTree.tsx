@@ -12,11 +12,13 @@ const FileTree = () => {
   const pushTreeNode = useTreeStore((state) => state.pushTreeNode);
   const setEditingMode = useTreeStore((state) => state.setEditingMode);
   const initTree = useTreeStore((state) => state.initTree);
+  const openFileItem = useTreeStore((state) => state.openFileItem);
 
   const rootDir = useStore((state) => state.rootDir);
   const getActiveFilePath = useStore((state) => state.getActiveFilePath);
   const tabs = useStore((state) => state.tabs);
   const newTab = useStore((state) => state.newTab);
+  const activeTabIndex = useStore((state) => state.activeTabIndex);
   const setActiveTabId = useStore((state) => state.setActiveTabId);
 
   // Using useRef to get the latest value for window.ipcRenderer.on function.
@@ -64,6 +66,14 @@ const FileTree = () => {
   const deleteFile = (event: any, params: { filePath: string }) => {
     console.log('delete file: ', params.filePath)
   }
+
+  useEffect(() => {
+    // Re-render the file tree when the active tab has changed.
+    const filePath = getActiveFilePath()
+    if (filePath) {
+      openFileItem(filePath)
+    }
+  }, [tabs[activeTabIndex].filePath]);
 
   useEffect(() => {
     console.log('[FileTree] rootDir has changed: ', rootDir)

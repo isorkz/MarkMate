@@ -21,7 +21,7 @@ const initTreeType = (node: TreeNode | undefined) => {
   }
 }
 
-const initTreeIsOpened = (node: TreeNode | undefined, openedFile: string | undefined): boolean => {
+const openFileItemByDfs = (node: TreeNode | undefined, openedFile: string | undefined): boolean => {
   if (node && openedFile) {
     if (node.path === openedFile) {
       node.isOpened = true
@@ -30,7 +30,7 @@ const initTreeIsOpened = (node: TreeNode | undefined, openedFile: string | undef
 
     if (node.children) {
       for (const child of node.children) {
-        if (initTreeIsOpened(child, openedFile)) {
+        if (openFileItemByDfs(child, openedFile)) {
           node.isOpened = true;
           return true;
         }
@@ -46,9 +46,9 @@ interface TreeStore {
 
   initTree: (rootDir: string | undefined, activeFilePath: string | undefined) => void;
 
-  updateTreeNode: (updateNode: TreeNode) => void;
-
   pushTreeNode: (path: string, newNode: TreeNode) => void;
+
+  openFileItem: (filePath: string) => void;
 
   reset: () => void;
 
@@ -76,7 +76,7 @@ const useTreeStore = create<TreeStore>()(
 
       window.api.readDirTree(rootDir).then((treeData: any) => {
         initTreeType(treeData)
-        initTreeIsOpened(treeData, activeFilePath)
+        openFileItemByDfs(treeData, activeFilePath)
         set(state => {
           state.slateNodesCache.clear()
           return { fileTree: treeData }
@@ -90,24 +90,6 @@ const useTreeStore = create<TreeStore>()(
 
     syncStatus: 'out-of-date',
     setSyncStatus: (syncStatus: SyncStatus) => set({ syncStatus: syncStatus }),
-
-    updateTreeNode: (updateNode: TreeNode) =>
-      set((state) => {
-        // return {} means nothing needs to re-render
-        if (!state.fileTree) return {};
-
-        const dfs = (node: TreeNode) => {
-          if (node.path === updateNode.path) {
-            node.name = updateNode.name;
-            return
-          } else if (node.children) {
-            node.children.forEach(dfs);
-          }
-        };
-
-        dfs(state.fileTree);
-        return { fileTree: { ...state.fileTree } };
-      }),
 
     pushTreeNode: (path: string, newNode: TreeNode) =>
       set((state) => {
@@ -131,6 +113,15 @@ const useTreeStore = create<TreeStore>()(
         };
 
         dfs(state.fileTree);
+        return { fileTree: { ...state.fileTree } };
+      }),
+
+    openFileItem: (openedFile: string) =>
+      set((state) => {
+        // return {} means nothing needs to re-render
+        if (!state.fileTree) return {};
+
+        openFileItemByDfs(state.fileTree, openedFile)
         return { fileTree: { ...state.fileTree } };
       }),
 

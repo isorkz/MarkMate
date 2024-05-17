@@ -76,13 +76,13 @@ const FullSearch = ({ showFullSearchModal, setShowFullSearchModal }: FullSearchM
             setActiveTab(filePath, data)
             // Reset the slate nodes when switching to another tab, and clear the history.
             SlateEditorUtils.resetSlateNodes(getActiveTab().editor, getActiveTab().slateNodes, true);
-            setShowFullSearchModal(false);
-            setSearchResults([]);
-            setSearchText('');
           }
         }
       })
     }
+    setShowFullSearchModal(false);
+    setSearchResults([]);
+    setSearchText('');
   };
 
   const onClose = () => {
