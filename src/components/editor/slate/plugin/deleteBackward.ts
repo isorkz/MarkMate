@@ -24,7 +24,7 @@ export const deleteBackwardForListItem = (editor: Editor, selection: BaseRange, 
   if (Point.equals(selection.anchor, start)) {
     const prevNode = Editor.previous(editor, { at: path })
     // If the user is deleting at the beginning of a list item node and the previous node is a paragraph, use the default delete backward behavior.
-    if (prevNode && SlateElement.isElement(prevNode[0]) && prevNode[0].type !== 'list') {
+    if (prevNode && SlateElement.isElement(prevNode[0])) {
       // Return false to use the default delete backward behavior.
       return false
     }
@@ -72,7 +72,9 @@ export const deleteBackwardForParagraph = (editor: Editor, selection: BaseRange,
   // If it's a empty top level paragraph, delete it.
   // Cannot use the default behavior because the result is unexpected for the case: Hr -> Paragraph
   if (path.length === 1 && Node.string(paragraph) === '') {
-    Transforms.delete(editor, { at: path })
+    if (editor.children.length > 1) {
+      Transforms.delete(editor, { at: path })
+    }
     return true
   }
 

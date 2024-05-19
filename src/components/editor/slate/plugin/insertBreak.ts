@@ -24,14 +24,29 @@ export const insertBreakForHead = (editor: Editor, selection: BaseRange, head: H
 }
 
 // Handle the break when user press the enter key in list item element
-// 1. If the current list item is empty, convert it to a paragraph.
+// 1. If the current list item is empty, lift it out of the list.
 // 2. If the current list item is not empty, split it into two list items.
 export const insertBreakForListItem = (editor: Editor, selection: BaseRange, paragraph: ParagraphElement, path: Path, listItem: ListItemElement, listItemPath: Path) => {
   // If the current list item is empty, convert it to a paragraph
   if (hasOnlyOneEmptyText(paragraph)) {
-    // Lift the paragraph out of the list.
-    Transforms.unwrapNodes(editor, { at: listItemPath });
-    Transforms.liftNodes(editor, { at: listItemPath });
+    const list = Editor.parent(editor, listItemPath)
+    const parentList = Editor.parent(editor, list[1])
+    // If the current empty list item is in a sub-list, lift the list item out of the sub-list.
+    if (parentList && SlateElement.isElement(parentList[0]) && parentList[0].type === 'list-item') {
+      const nextListItem = Editor.next(editor, { at: listItemPath })
+      if (nextListItem) {
+        Transforms.removeNodes(editor, { at: listItemPath })
+      } else {
+        Transforms.moveNodes(editor, { at: listItemPath, to: Path.next(parentList[1]) });
+        if (list[0].children.length === 1) {
+          Transforms.removeNodes(editor, { at: list[1] })
+        }
+      }
+    } else {
+      // Lift the paragraph out of the list.
+      Transforms.unwrapNodes(editor, { at: listItemPath });
+      Transforms.liftNodes(editor, { at: listItemPath });
+    }
   } else {
     // If the current list item is not empty, split it into two list items.
     // If the cursor is at the start/end of the list item, Transforms.splitNodes() can't split the list item, we need to handle it manually.
@@ -39,6 +54,7 @@ export const insertBreakForListItem = (editor: Editor, selection: BaseRange, par
     const end = Editor.end(editor, path)
     if (Point.equals(selection.anchor, start)) {
       Transforms.insertNodes(editor, DefaultEmptyListItemElement(), { at: listItemPath })
+      Transforms.select(editor, selection);
     } else if (Point.equals(selection.anchor, end)) {
       Transforms.insertNodes(editor, DefaultEmptyListItemElement(), { at: Path.next(listItemPath) })
       Transforms.select(editor, Editor.start(editor, Path.next(listItemPath)));
