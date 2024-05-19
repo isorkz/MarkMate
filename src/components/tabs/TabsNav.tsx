@@ -24,7 +24,6 @@ const ConfirmModal = ({ showModal, setShowModal, tabIndex }: { showModal: boolea
   }
 
   const onSaveAndClose = () => {
-    console.log('save and close: tabIndex=', tabIndex, ' filePath=', tabs[tabIndex].filePath)
     try {
       if (tabs[tabIndex].filePath) {
         const markdownSource = slateNodesToMarkdownSource(tabs[tabIndex].slateNodes)

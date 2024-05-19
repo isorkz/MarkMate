@@ -14,7 +14,6 @@ export const markdownSourceToMEditorNodes = (mdContent: string) => {
     if (slateNodes.length === 0) {
       slateNodes = DefaultEmptySlateNodes();
     }
-    console.log('init slateNodes: ', slateNodes)
     return slateNodes;
   } catch (error) {
     console.error('failed to markdownSourceToMEditorNodes: ', error)

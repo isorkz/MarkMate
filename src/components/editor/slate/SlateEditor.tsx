@@ -64,34 +64,6 @@ const SlateEditor = () => {
     console.log('fileTree: ', fileTree)
   }
 
-  const onLogMarkdownSource = () => {
-    console.log('slateNodes: ', activeEditor.slateNodes)
-    const markdownSource = slateNodesToMarkdownSource(activeEditor.slateNodes)
-    console.log('markdownSource: ', markdownSource)
-  }
-
-  const onSave = () => {
-    try {
-      console.log('save file: ', activeEditor.filePath)
-      if (activeEditor.filePath) {
-        const markdownSource = slateNodesToMarkdownSource(activeEditor.slateNodes)
-        if (!markdownSource) {
-          throw new Error('markdownSource is undefined.')
-        }
-        updateSourceContent(markdownSource)
-        window.api.saveFile(activeEditor.filePath, markdownSource).then(() => {
-          saveTab();
-        })
-      } else {
-        throw new Error('filePath is empty.')
-      }
-    }
-    catch (error) {
-      console.error('failed to save file: ', error)
-      toast.error(`Failed to save file ${activeEditor.filePath}. ${error}`);
-    }
-  }
-
   const onKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
     if (event.key === 'Tab') {
       const { selection } = activeEditor.editor
@@ -170,9 +142,7 @@ const SlateEditor = () => {
       <div className={`w-full ${showMarkdownSourceEditor ? 'px-[10%]' : 'px-[15%]'}`}>
         <div className='w-full break-all MarkMateContent pt-5 pb-[20%]' onClick={handleDivClick}>
           <button onClick={ShowSlateNodes}>Show Slate Nodes</button>
-          <button onClick={onLogMarkdownSource}>Log Markdown Source</button>
           <button onClick={onLogFileTree}>Show File Tree</button>
-          <button onClick={onSave}>Save</button>
           {/* use onValueChange instead of onChange */}
           <Slate editor={activeEditor.editor} initialValue={activeEditor.slateNodes} onValueChange={onValueChange}>
             <div ref={htmlDivSlateEitorRef}>

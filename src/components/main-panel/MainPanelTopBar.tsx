@@ -58,7 +58,6 @@ const MainPanelTopBar = ({ title, changed }: TopBarProps) => {
 
     const checkGitStatus = async () => {
       window.api.gitStatus(rootDir).then((status: any) => {
-        console.log('git status: ', status);
         setSyncStatus(status);
       }).catch((error: any) => {
         console.error('git status error: ', error);

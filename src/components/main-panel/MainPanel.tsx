@@ -57,7 +57,6 @@ const MainPanel = () => {
   // Triggered by the 'save-file' event, all values should use useRef to get the latest value.
   const onSave = useCallback(() => {
     try {
-      console.log('save file: ', tabsRef.current[activeTabIndexRef.current].filePath)
       if (tabsRef.current[activeTabIndexRef.current].filePath) {
         const markdownSource = slateNodesToMarkdownSource(tabsRef.current[activeTabIndexRef.current].slateNodes)
         if (!markdownSource) {
@@ -97,7 +96,6 @@ const MainPanel = () => {
     window.ipcRenderer.on('search-doc', onShowSearch);
     window.ipcRenderer.on('full-search', onShowFullSearch);
     window.ipcRenderer.on('toggle-source-editor', toggleMarkdownSourceEditor);
-    console.log("register listeners")
 
     // Specify how to clean up after this effect
     return () => {
@@ -106,7 +104,6 @@ const MainPanel = () => {
       window.ipcRenderer.removeAllListeners('search-doc');
       window.ipcRenderer.removeAllListeners('full-search');
       window.ipcRenderer.removeAllListeners('toggle-source-editor');
-      console.log("remove listeners")
     };
   }, []);
 

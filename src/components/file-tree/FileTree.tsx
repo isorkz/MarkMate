@@ -87,7 +87,6 @@ const FileTree = () => {
   }, [tabs[activeTabIndex].filePath]);
 
   useEffect(() => {
-    console.log('[FileTree] rootDir has changed: ', rootDir)
     initTree(rootDir, getActiveFilePath())
   }, [rootDir]);
 
