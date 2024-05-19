@@ -85,6 +85,11 @@ body {
   margin-bottom: 10px;
 }
 
+.MarkMateContent li.check-list-item>p {
+  /* do not add margin to the paragraph inside check-list-item */
+  margin-left: 1.4em;
+}
+
 .MarkMateContent a {
   /* font-weight: 500; */
   color: #5a9ff4;

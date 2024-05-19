@@ -1,4 +1,4 @@
-import { Transforms } from 'slate'
+import { Descendant, Transforms, Editor, Node } from 'slate'
 import { ReactEditor, RenderElementProps, RenderLeafProps, useSlateStatic } from 'slate-react'
 import { LanguageSelect, LanguageSelectMap } from '../decorate/SetNodeToDecorations'
 import { Image } from '../elements/Image'
@@ -6,6 +6,20 @@ import { Image } from '../elements/Image'
 const getLanguage = (lang: string | undefined) => {
   if (lang === undefined) return 'text'
   return LanguageSelectMap[lang] || 'text'
+}
+
+const setLanguage = (editor: Editor, element: Descendant, language: string) => {
+  const path = ReactEditor.findPath(editor, element)
+  Transforms.setNodes(editor, { language }, { at: path })
+}
+
+const setChecked = (editor: Editor, element: Descendant, checked: boolean) => {
+  const path = ReactEditor.findPath(editor, element)
+  Transforms.setNodes(editor, { checked }, { at: path })
+  for (const [node, nodePath] of Node.texts(element)) {
+    const absolutePath = [...path, ...nodePath]
+    Transforms.setNodes(editor, { delete: checked }, { at: absolutePath })
+  }
 }
 
 export const RenderElement = ({ attributes, children, element }: RenderElementProps) => {
@@ -22,27 +36,13 @@ export const RenderElement = ({ attributes, children, element }: RenderElementPr
         else return <ul {...attributes}>{children}</ul>
       case 'list-item':
         if (element.checked === undefined || element.checked === null) return <li {...attributes}>{children}</li>
-        return element.checked ? (
-          <li {...attributes}>
-            <div {...attributes}>
-              <input type="checkbox" checked />
-              {children}
-            </div>
-          </li>
-        ) : (
-          <li {...attributes}>
-            <div {...attributes}>
-              <input type="checkbox" />
-              {children}
-            </div>
-          </li>)
+        return <li {...attributes} className='check-list-item relative'>
+          <input type="checkbox" className='absolute top-[6px] select-none' checked={element.checked} onChange={() => setChecked(editor, element, !element.checked)} />
+          {children}
+        </li>
       case 'image':
         return <Image attributes={attributes} children={children} element={element} />
       case 'code':
-        const setLanguage = (language: string) => {
-          const path = ReactEditor.findPath(editor, element)
-          Transforms.setNodes(editor, { language }, { at: path })
-        }
         return (
           <div className="MarkMateCodeBlocks" style={{ position: 'relative' }} {...attributes}>
             {/* caretColor: to set the cursor color */}
@@ -52,7 +52,7 @@ export const RenderElement = ({ attributes, children, element }: RenderElementPr
             </pre>
             <LanguageSelect
               value={getLanguage(element.language)}
-              onChange={e => setLanguage(e.target.value)}
+              onChange={e => setLanguage(editor, element, e.target.value)}
             />
           </div>
         );
@@ -98,7 +98,7 @@ export const RenderLeaf = (props: RenderLeafProps) => {
       children = <em>{children}</em>
     }
     if (props.leaf.delete) {
-      children = <del>{children}</del>
+      children = <del className='opacity-50'>{children}</del>
     }
     if (props.leaf.isInlineCode) {
       children = <code>{children}</code>

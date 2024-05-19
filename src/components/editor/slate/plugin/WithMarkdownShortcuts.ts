@@ -8,6 +8,7 @@ const SHORTCUTS = {
   '*': { type: 'list-item' },
   '-': { type: 'list-item' },
   '+': { type: 'list-item' },
+  '[]': { type: 'list-item', checked: false },
   '>': { type: 'blockquote' },
   '#': { type: 'head', level: 1 },
   '##': { type: 'head', level: 2 },
@@ -149,7 +150,7 @@ export const withMarkdownShortcuts = (editor: Editor) => {
           }
 
           if (element.type === 'list-item') {
-            Transforms.wrapNodes(editor, { type: 'list-item', children: [] }, { at: path })
+            Transforms.wrapNodes(editor, { type: 'list-item', checked: element.checked, children: [] }, { at: path })
             Transforms.wrapNodes(editor, { type: 'list', children: [] }, { at: path })
             // // If the above and below blocks are not list items, wrap the current block with a new list
             // const prevNode = Editor.previous(editor, { match: n => SlateElement.isElement(n) && n.type === 'list-item' })

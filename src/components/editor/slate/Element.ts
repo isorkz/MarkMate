@@ -62,9 +62,10 @@ export const DefaultEmptySlateNodes = (): Descendant[] => {
   return [DefaultParagraphElement()]
 }
 
-export const DefaultEmptyListItemElement = (): ListItemElement => {
+export const DefaultEmptyListItemElement = (isCheck: boolean = false): ListItemElement => {
   return {
     type: 'list-item',
+    checked: isCheck ? false : undefined,
     children: [DefaultParagraphElement()]
   }
 }

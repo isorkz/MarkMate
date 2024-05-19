@@ -22,6 +22,12 @@ export const deleteBackwardForHead = (editor: Editor, selection: BaseRange, head
 export const deleteBackwardForListItem = (editor: Editor, selection: BaseRange, paragraph: ParagraphElement, path: Path, listItem: ListItemElement, listItemPath: Path) => {
   const start = Editor.start(editor, path)
   if (Point.equals(selection.anchor, start)) {
+    // If it's a check list item, remove the check mark.
+    if (listItem.checked !== undefined && listItem.checked !== null) {
+      Transforms.setNodes(editor, { checked: undefined }, { at: listItemPath })
+      return true
+    }
+
     const prevNode = Editor.previous(editor, { at: path })
     // If the user is deleting at the beginning of a list item node and the previous node is a paragraph, use the default delete backward behavior.
     if (prevNode && SlateElement.isElement(prevNode[0])) {
@@ -33,9 +39,14 @@ export const deleteBackwardForListItem = (editor: Editor, selection: BaseRange, 
     const prevListItem = Editor.previous(editor, { at: listItemPath })
     if (prevListItem) {
       if (SlateElement.isElement(prevListItem[0]) && prevListItem[0].type === 'list-item') {
-        const toPath = prevListItem[1].concat([prevListItem[0].children.length])
-        Transforms.moveNodes(editor, { at: listItemPath, to: toPath })
-        Transforms.unwrapNodes(editor, { at: toPath })
+        if (prevListItem[0].checked === undefined || prevListItem[0].checked === null) {
+          const toPath = prevListItem[1].concat([prevListItem[0].children.length])
+          Transforms.moveNodes(editor, { at: listItemPath, to: toPath })
+          Transforms.unwrapNodes(editor, { at: toPath })
+        } else {
+          Transforms.unwrapNodes(editor, { at: listItemPath });
+          Transforms.liftNodes(editor, { at: listItemPath });
+        }
         return true
       }
     } else {

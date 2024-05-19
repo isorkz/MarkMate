@@ -56,7 +56,7 @@ export const insertBreakForListItem = (editor: Editor, selection: BaseRange, par
       Transforms.insertNodes(editor, DefaultEmptyListItemElement(), { at: listItemPath })
       Transforms.select(editor, selection);
     } else if (Point.equals(selection.anchor, end)) {
-      Transforms.insertNodes(editor, DefaultEmptyListItemElement(), { at: Path.next(listItemPath) })
+      Transforms.insertNodes(editor, DefaultEmptyListItemElement(listItem.checked !== undefined && listItem.checked !== null ? true : false), { at: Path.next(listItemPath) })
       Transforms.select(editor, Editor.start(editor, Path.next(listItemPath)));
     } else {
       // Split the nodes at the current selection location.
