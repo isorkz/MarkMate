@@ -47,6 +47,7 @@ interface TreeStore {
   initTree: (rootDir: string | undefined, activeFilePath: string | undefined) => void;
 
   pushTreeNode: (path: string, newNode: TreeNode) => void;
+  removeTreeNode: (path: string) => void;
 
   openFileItem: (filePath: string) => void;
 
@@ -108,6 +109,22 @@ const useTreeStore = create<TreeStore>()(
               return
             }
           } else if (node.children) {
+            node.children.forEach(dfs);
+          }
+        };
+
+        dfs(state.fileTree);
+        return { fileTree: { ...state.fileTree } };
+      }),
+
+    removeTreeNode: (path: string) =>
+      set((state) => {
+        // return {} means nothing needs to re-render
+        if (!state.fileTree) return {};
+
+        const dfs = (node: TreeNode) => {
+          if (node.children) {
+            node.children = node.children.filter((n) => n.path !== path);
             node.children.forEach(dfs);
           }
         };

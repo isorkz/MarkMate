@@ -73,6 +73,15 @@ export const registerIpcHandlers = (): void => {
     }
   });
 
+  ipcMain.handle('delete-file', async (event, filePath: string) => {
+    try {
+      await fs.promises.unlink(filePath);
+    } catch (err) {
+      console.error('An error occurred while deleting the file:', filePath, err);
+      throw err;
+    }
+  });
+
   ipcMain.handle('save-image-file', async (event, rootDir: string, currentFilePath: string, dataUrlContent: string) => {
     const match = dataUrlContent.match(/^data:(image\/\w+);base64,(.*)$/);
     if (match === null) {

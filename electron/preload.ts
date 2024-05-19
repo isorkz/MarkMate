@@ -21,6 +21,9 @@ contextBridge.exposeInMainWorld('api', {
   newFile: (filePath: string, newFileName: string) => {
     return ipcRenderer.invoke('new-file', filePath, newFileName);
   },
+  deleteFile: (filePath: string) => {
+    return ipcRenderer.invoke('delete-file', filePath);
+  },
   // Save the image file to the path: rootDir/.images/
   saveImageFile: (rootDir: string, currentFilePath: string, dataUrlContent: string) => {
     return ipcRenderer.invoke('save-image-file', rootDir, currentFilePath, dataUrlContent);
