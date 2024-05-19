@@ -1,8 +1,8 @@
-import { Editor, Transforms } from 'slate'
+import { Editor, Transforms, Element as SlateElement } from 'slate'
 import { ImageElement } from '../Element';
 
 // TODO: handle if rootDir / currentFilePath is undefined
-export const withImages = (editor: Editor, rootDir: string | undefined, currentFilePath: string | undefined) => {
+export const withInsertData = (editor: Editor, rootDir: string | undefined, currentFilePath: string | undefined) => {
   const { insertData, isVoid } = editor
 
   editor.isVoid = element => {
@@ -13,7 +13,7 @@ export const withImages = (editor: Editor, rootDir: string | undefined, currentF
   // This is a proxy method to call in this order insertFragmentData(editor: ReactEditor, data: DataTransfer) and then insertTextData(editor: ReactEditor, data: DataTransfer).
   // Wiki: https://docs.slatejs.org/libraries/slate-react/react-editor#datatransfer-methods
   editor.insertData = data => {
-    const text = data.getData('text/plain')
+    let text = data.getData('text/plain')
     const { files } = data
 
     console.log('[insertData] data: ', data)
@@ -48,6 +48,22 @@ export const withImages = (editor: Editor, rootDir: string | undefined, currentF
         }
       }
     }
+
+    // Only insert the text in code block. Because the default insertData method will add extra code block format.
+    if (editor.selection) {
+      const [match] = Editor.nodes(editor, {
+        match: n => SlateElement.isElement(n) && n.type === 'code',
+      })
+      if (match) {
+        // For text copied from code block, remove the extra new line.
+        text = text.replace(/\n\n/g, '\n')
+        Transforms.insertFragment(editor, text.split('\n').map(lineText => {
+          return { type: 'code-line', children: [{ text: lineText }] }
+        }))
+        return
+      }
+    }
+
     //  else if (isImageUrl(text)) {
     //   insertImage(editor, text)
     //   return

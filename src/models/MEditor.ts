@@ -2,7 +2,7 @@ import { ReactEditor, withReact } from 'slate-react'
 import { HistoryEditor, withHistory } from 'slate-history'
 import { BaseEditor, createEditor } from 'slate'
 import { withMarkdownShortcuts } from "../components/editor/slate/plugin/WithMarkdownShortcuts";
-import { withImages } from "../components/editor/slate/plugin/withImages";
+import { withInsertData } from "../components/editor/slate/plugin/withInsertData";
 import { markdownSourceToMEditorNodes } from '../components/editor/slate/parser/ParseMarkdownSourceToSlateNodes';
 import { createContext, useContext } from 'react';
 import { DefaultEmptySlateNodes } from '../components/editor/slate/Element';
@@ -19,7 +19,7 @@ export const useMEditor = () => {
 export class MEditor {
   // Rich text editor: Slate, wiki: https://docs.slatejs.org/walkthroughs/02-adding-event-handlers
   // withMarkdownShortcuts: is a custom plugin to modify the editor's behavior.
-  // withImages: is a custom plugin to handle image insertion.
+  // withInsertData: is a custom plugin to handle the paste event.
   // withHistory: to add undo/redo history to the editor.
   editor: BaseEditor & ReactEditor & HistoryEditor & { nodeToDecorations?: Map<any, any> };
 
@@ -36,7 +36,7 @@ export class MEditor {
     this.rootDir = rootDir;
     this.filePath = filePath;
     this.sourceContent = sourceContent;
-    this.editor = withImages(withMarkdownShortcuts(withReact(withHistory(createEditor()))), rootDir, filePath);
+    this.editor = withInsertData(withMarkdownShortcuts(withReact(withHistory(createEditor()))), rootDir, filePath);
 
     // 1. For a new empty document: filePath=undefined, sourceContent='', slateNodes=[].
     // 2. For a opened document: filePath != undefined
