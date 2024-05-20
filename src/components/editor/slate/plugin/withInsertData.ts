@@ -1,5 +1,6 @@
 import { Editor, Transforms, Element as SlateElement } from 'slate'
-import { ImageElement } from '../Element';
+import { CustomText, ImageElement } from '../Element';
+import { isValidUrl } from '../../../../utils/common';
 
 // TODO: handle if rootDir / currentFilePath is undefined
 export const withInsertData = (editor: Editor, rootDir: string | undefined, currentFilePath: string | undefined) => {
@@ -62,6 +63,18 @@ export const withInsertData = (editor: Editor, rootDir: string | undefined, curr
         }))
         return
       }
+    }
+
+    // If the text is a URL, insert a link instead of plain text.
+    if (isValidUrl(text)) {
+      const linkFragment: CustomText[] = [
+        {
+          text: text,
+          url: text,
+        }
+      ]
+      Editor.insertFragment(editor, linkFragment)
+      return
     }
 
     //  else if (isImageUrl(text)) {
