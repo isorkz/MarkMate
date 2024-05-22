@@ -201,6 +201,18 @@ const parseLeafElement = (astNode: any, slateCustomText: CustomText) => {
       break;
     case 'link':
       slateCustomText.url = astNode.url
+      if (slateCustomText.url && slateCustomText.url.length > 0) {
+        slateCustomText.url = astNode.url
+      } else {
+        // for text like '[]()', the parser will treat it as a link, convert it back to the original text.
+        if (astNode.children) {
+          for (let child of astNode.children) {
+            parseLeafElement(child, slateCustomText)
+          }
+        }
+        slateCustomText.text = '[' + slateCustomText.text + ']()'
+        return slateCustomText
+      }
       break;
     case 'inlineCode':
       slateCustomText.isInlineCode = true
@@ -231,6 +243,18 @@ const markdownAstToSlateCustomTextNodes = (mdastNodes: any[], slateTextNodes: Cu
     if (['strong', 'link', 'text', 'emphasis', 'delete', 'inlineCode'].includes(node.type)) {
       let slateCustomText: CustomText = { text: '' }
       slateTextNodes.push(parseLeafElement(node, slateCustomText))
+    } else if (node.type === 'link') {
+      if (node.url && node.url.length > 0) {
+        let slateCustomText: CustomText = { text: '' }
+        slateTextNodes.push(parseLeafElement(node, slateCustomText))
+        slateTextNodes.push({ text: '[' + node.children[0].value + '](' + node.url + ')' })
+      } else {
+        // for the text like '[]()', the parser will treat it as a link, convert it back to the original text.
+        let slateCustomText: CustomText = { text: '' }
+        slateCustomText = parseLeafElement(node, slateCustomText)
+        slateCustomText.text = '[' + slateCustomText.text + ']()'
+        slateTextNodes.push(slateCustomText)
+      }
     } else if (node.type === 'break') {
       slateTextNodes.push({ text: '\n' })
     } else if (['footnoteReference', 'footnoteDefinition'].includes(node.type)) {

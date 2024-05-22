@@ -8,7 +8,6 @@ import { slateNodesToMarkdownSource } from '../slate/parser/ParseSlateNodesToMar
 import { SetNodeToDecorations, useDecorate } from '../slate/decorate/SetNodeToDecorations'
 import { useMEditor } from '../../../models/MEditor'
 import useTreeStore from '../../../store/TreeStore'
-import { toast } from 'react-hot-toast';
 import { insertTab } from './plugin/insertTab'
 
 const SlateEditor = () => {
@@ -16,7 +15,6 @@ const SlateEditor = () => {
 
   const updateSourceContent = useStore((state) => state.updateSourceContent);
   const updateSlateNodes = useStore((state) => state.updateSlateNodes);
-  const saveTab = useStore((state) => state.saveTab);
   const showMarkdownSourceEditor = useStore((state) => state.showMarkdownSourceEditor);
 
   const slateNodesCache = useTreeStore((state) => state.slateNodesCache);
