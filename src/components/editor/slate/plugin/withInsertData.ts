@@ -1,5 +1,5 @@
 import { Editor, Transforms, Element as SlateElement } from 'slate'
-import { CustomText, ImageElement } from '../Element';
+import { CustomText, DefaultParagraphElement, ImageElement } from '../Element';
 import { isValidUrl } from '../../../../utils/common';
 
 // TODO: handle if rootDir / currentFilePath is undefined
@@ -91,9 +91,7 @@ export const withInsertData = (editor: Editor, rootDir: string | undefined, curr
 
 const insertImage = (editor: Editor, url: string) => {
   const image: ImageElement = { type: 'image', url: url, children: [{ text: '' }] }
-  Transforms.insertNodes(editor, image)
-  Transforms.insertNodes(editor, {
-    type: 'paragraph',
-    children: [{ text: '' }],
-  })
+  // Always wrap the image with a paragraph element, because parseMarkdownSourceToSlateNodes will always wrap the image with a paragraph element.
+  Transforms.insertNodes(editor, { type: 'paragraph', children: [image] })
+  Transforms.insertNodes(editor, DefaultParagraphElement())
 }
