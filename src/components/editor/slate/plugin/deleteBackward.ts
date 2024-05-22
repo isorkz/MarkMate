@@ -85,6 +85,8 @@ export const deleteBackwardForParagraph = (editor: Editor, selection: BaseRange,
   if (path.length === 1 && Node.string(paragraph) === '') {
     if (editor.children.length > 1) {
       Transforms.delete(editor, { at: path })
+      // Move the cursor to the end of the previous node.
+      Transforms.select(editor, Editor.end(editor, Path.previous(path)))
     }
     return true
   }

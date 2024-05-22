@@ -70,3 +70,23 @@ export const insertBreakForListItem = (editor: Editor, selection: BaseRange, par
 const hasOnlyOneEmptyText = (element: SlateElement) => {
   return element.children.length === 1 && Text.isText(element.children[0]) && element.children[0].text === ''
 }
+
+export const insertBreakForLink = (editor: Editor, selection: BaseRange, paragraph: ParagraphElement, path: Path) => {
+  // The default behavior of insertBreak will insert new text in link, so we need to handle it manually.
+  const [node] = Editor.node(editor, selection)
+  if (Text.isText(node) && node.url) {
+    const end = Editor.end(editor, path)
+    if (Point.equals(selection.anchor, end)) {
+      const parent = Editor.parent(editor, path)
+      // If it's not in list-item, insert a new paragraph;
+      if (parent[1].length === 0 || SlateElement.isElement(parent[0]) && parent[0].type !== 'list-item') {
+        Transforms.insertNodes(editor, DefaultParagraphElement(), { at: Path.next(path) })
+        Transforms.select(editor, Editor.start(editor, Path.next(path)))
+        return true
+      }
+    }
+  }
+
+  // return false to let the default behavior to handle the break
+  return false
+}

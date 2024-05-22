@@ -1,6 +1,6 @@
 import { Editor, Transforms, Element as SlateElement, Range } from 'slate'
 import { assert } from '../../../../utils/common';
-import { insertBreakForHead, insertBreakForListItem } from './insertBreak';
+import { insertBreakForHead, insertBreakForLink, insertBreakForListItem } from './insertBreak';
 import { deleteBackwardForHead, deleteBackwardForListItem, deleteBackwardForParagraph } from './deleteBackward';
 import { DefaultParagraphElement } from '../Element';
 
@@ -212,6 +212,8 @@ export const withMarkdownShortcuts = (editor: Editor) => {
         const path = block[1]
 
         if (SlateElement.isElement(node)) {
+          if (node.type === 'paragraph' && insertBreakForLink(editor, selection, node, path)) return
+
           // If user is breaking in a head
           if (node.type === 'head') {
             insertBreakForHead(editor, selection, node, path)
