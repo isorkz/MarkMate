@@ -98,14 +98,15 @@ export const withMarkdownShortcuts = (editor: Editor) => {
       }
       // Handle emphasis '*'
       else if (lineText.endsWith('*')) {
-        let boldText = lineText.slice(0, -1)
-        let index = boldText.lastIndexOf('*')
-        if (index != -1 && !boldText.endsWith('*')) { // filter out bold '**'
-          boldText = boldText.slice(index + 1)
-          for (let i = 0; i < boldText.length + 1; i++) {
+        let emphasisText = lineText.slice(0, -1)
+        let index = emphasisText.lastIndexOf('*')
+        // additional check to see if there's another '*' before this one, to ensure user is not typing bold text
+        if (index != -1 && !emphasisText.endsWith('*') && emphasisText.charAt(index - 1) !== '*') {
+          emphasisText = emphasisText.slice(index + 1)
+          for (let i = 0; i < emphasisText.length + 1; i++) {
             Editor.deleteBackward(editor, { unit: 'character' })
           }
-          Transforms.insertNodes(editor, { text: boldText, emphasis: true })
+          Transforms.insertNodes(editor, { text: emphasisText, emphasis: true })
           Transforms.insertNodes(editor, { text: ' ', isInlineCode: false })
           return
         }
