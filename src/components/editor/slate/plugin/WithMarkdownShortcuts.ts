@@ -18,6 +18,9 @@ const SHORTCUTS = {
   '######': { type: 'head', level: 6 },
 }
 
+// 'sometext [linktext](linkurl)' -> ['sometext ', 'linktext', 'linkurl']
+const MarkdwonLinkRegex = /(.*?)(?=\[)\[(.*?)\]\((.*?)\)/;
+
 // withMarkdownShortcuts: is a custom plugin to modify the editor's behavior. Example: https://github.com/ianstormtaylor/slate/blob/main/site/examples/markdown-shortcuts.tsx
 export const withMarkdownShortcuts = (editor: Editor) => {
   // insertText is a built-in function of Editor to insert text.
@@ -48,6 +51,9 @@ export const withMarkdownShortcuts = (editor: Editor) => {
 
       const [parentNode] = Editor.parent(editor, path)
       // console.log('[insertText] block: ', block)
+      // console.log('[insertText] text: ', text)
+      // console.log('[insertText] rangeText: ', rangeText)
+      // console.log('[insertText] beforeText: ', beforeText)
       // console.log('[insertText] lineText: ', lineText)
       // console.log('[insertText] parentNode: ', parentNode)
       if (SlateElement.isElement(parentNode) && parentNode.type === 'code') {
@@ -135,6 +141,17 @@ export const withMarkdownShortcuts = (editor: Editor) => {
           }
           Transforms.insertNodes(editor, { text: inlineCodeText, isInlineCode: true })
           Transforms.insertNodes(editor, { text: ' ', isInlineCode: false })
+          return
+        }
+      }
+      // If the user is typing a link
+      else if (text.endsWith(')')) {
+        let match = lineText.match(MarkdwonLinkRegex)
+        if (match) {
+          for (let i = 0; i < match[2].length + match[3].length + 3; i++) {
+            Editor.deleteBackward(editor, { unit: 'character' })
+          }
+          Transforms.insertNodes(editor, { text: match[2], url: match[3] })
           return
         }
       }
