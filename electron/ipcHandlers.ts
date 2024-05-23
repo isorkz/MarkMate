@@ -9,6 +9,22 @@ export const isMac = (): boolean => {
   return os.platform().toLocaleLowerCase() === 'darwin';
 }
 
+const getImageFileName = (): string => {
+  let now = Date.now();
+  let date = new Date(now);
+
+  let year = date.getFullYear();
+  let month = (date.getMonth() + 1).toString().padStart(2, '0'); // getMonth() returns 0-11
+  let day = date.getDate().toString().padStart(2, '0');
+
+  let hours = date.getHours().toString().padStart(2, '0');
+  let minutes = date.getMinutes().toString().padStart(2, '0');
+  let seconds = date.getSeconds().toString().padStart(2, '0');
+
+  const formattedTime = year + '-' + month + '-' + day + '_' + hours + '_' + minutes + '_' + seconds;
+  return formattedTime;
+}
+
 // 使用contextBridge和ipcMain/ipcRenderer来在主进程和渲染进程之间安全地传递数据。
 // 在主进程中执行需要Node.js原生模块的操作, 比如fs，然后将结果发送到渲染进程。
 export const registerIpcHandlers = (): void => {
@@ -93,7 +109,7 @@ export const registerIpcHandlers = (): void => {
     // decode the image data
     const buffer = Buffer.from(imageData, 'base64');
     const imageDir = path.join(rootDir, '.images');
-    const filePath = path.join(imageDir, `${Date.now()}.${imageType.split('/')[1]}`);
+    const filePath = path.join(imageDir, `${getImageFileName()}.${imageType.split('/')[1]}`);
     // console.log('Saving image file: ', filePath)
     if (!fs.existsSync(imageDir)) {
       fs.mkdirSync(path.join(rootDir, '.images'), { recursive: true });
