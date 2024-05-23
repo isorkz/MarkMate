@@ -80,17 +80,6 @@ export const deleteBackwardForParagraph = (editor: Editor, selection: BaseRange,
     }
   }
 
-  // If it's a empty top level paragraph, delete it.
-  // Cannot use the default behavior because the result is unexpected for the case: Hr -> Paragraph
-  if (path.length === 1 && Node.string(paragraph) === '') {
-    if (editor.children.length > 1) {
-      Transforms.delete(editor, { at: path })
-      // Move the cursor to the end of the previous node.
-      Transforms.select(editor, Editor.end(editor, Path.previous(path)))
-    }
-    return true
-  }
-
   // Return false to use the default delete backward behavior.
   return false
 }

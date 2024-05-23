@@ -61,7 +61,11 @@ export const RenderElement = ({ attributes, children, element }: RenderElementPr
       case 'blockquote':
         return <blockquote {...attributes}>{children}</blockquote>
       case 'hr':
-        return <hr />
+        return (
+          <div className='border-t border-gray-300 my-5 select-none' contentEditable={false} {...attributes}>
+            <span className='hidden'>{children}</span>
+          </div>
+        );
       case 'table':
         const head = children[0];  // set the first row as table head
         const body = children.slice(1); // set the rest rows as table body
