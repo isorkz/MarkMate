@@ -117,7 +117,7 @@ const markdownAstToSlateNodes = (mdastNodes: any[], isTop: boolean = false) => {
                   // Treat the first row as the table header.
                   isFirstRow: i === 0,
                   align: node.align[j],
-                  children: markdownAstToSlateNodes(cell.children),
+                  children: cell.children && cell.children.length > 0 ? markdownAstToSlateNodes(cell.children) : [{ text: '' }],
                 }
               }),
             }
@@ -130,12 +130,12 @@ const markdownAstToSlateNodes = (mdastNodes: any[], isTop: boolean = false) => {
           children: markdownAstToSlateNodes(node.children),
         })
         break;
-      case 'tableCell':
-        slateNodes.push({
-          type: 'table-cell',
-          children: markdownAstToSlateNodes(node.children),
-        })
-        break;
+      // case 'tableCell':
+      //   slateNodes.push({
+      //     type: 'table-cell',
+      //     children: node.children && node.children.length > 0 ? markdownAstToSlateNodes(node.children) : [{ text: '' }],
+      //   })
+      //   break;
       case 'thematicBreak':
         slateNodes.push({
           type: 'hr',
