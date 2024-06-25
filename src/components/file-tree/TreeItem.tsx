@@ -1,5 +1,5 @@
 import { useEffect, useRef, MutableRefObject } from 'react';
-import { ChevronRightIcon, ChevronDownIcon } from '../icons'
+import { ChevronRightIcon, ChevronDownIcon, DocumentIcon } from '../icons'
 import useStore from '../../store/MStore'
 import useTreeStore from '../../store/TreeStore'
 import { TreeNode } from '../../models/FileTree'
@@ -170,6 +170,7 @@ const TreeItem = ({
           onContextMenu={onContextMenu}
         >
           {node.type === 'folder' && (node.isOpened ? <ChevronDownIcon className="w-4 h-4 mr-1.5" /> : <ChevronRightIcon className="w-4 h-4 mr-1.5" />)}
+          {node.type !== 'folder' && <DocumentIcon className="w-4 h-4 mr-1.5 text-gray-400" />}
           {editingNode && ((editingMode === 'rename' && editingNode && editingNode.path === node.path) || (editingMode === 'newfile' && node.name === '')) ? (
             <input type="text"
               className='bg-transparent border-b border-gray-300 focus:border-gray-300 focus:outline-none'
