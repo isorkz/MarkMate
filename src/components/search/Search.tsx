@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { ReactEditor } from 'slate-react'
 import useSearchStore from '../../store/SearchStore';
 import { ArrowDownIcon, ArrowUpIcon, CloseIcon } from '../icons';
 import { MEditor } from '../../models/MEditor';
@@ -41,10 +42,28 @@ const Search = ({ activeEditor }: SearchProps) => {
 
   const onGoNext = () => {
     goNext();
+    scrollToCurrentSearchResult(true);
   }
 
   const onGoPrev = () => {
     goPrev();
+    scrollToCurrentSearchResult(false);
+  }
+
+  const scrollToCurrentSearchResult = (isNext: boolean) => {
+    if (searchResult) {
+      const currentRange = searchResult.ranges[currentSearchIndex];
+      const domRange = ReactEditor.toDOMRange(activeEditor.editor, currentRange);
+      if (domRange) {
+        const domElement = domRange.startContainer.parentElement;
+        if (domElement) {
+          domElement.scrollIntoView({
+            behavior: 'smooth',
+            block: isNext ? 'start' : 'center'
+          });
+        }
+      }
+    }
   }
 
   return (
