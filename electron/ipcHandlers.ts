@@ -33,8 +33,13 @@ export const registerIpcHandlers = (): void => {
   });
 
   ipcMain.handle('read-dir-tree', async (event, path: string) => {
-    // filter by md files
-    return dirTree(path, { extensions: /\.md$/ });
+    // Filter by both md files and hidden folders
+    return dirTree(path, {
+      extensions: /\.md$/,
+      // Custom filter function to exclude hidden folders and files
+      normalizePath: true, // Normalize the paths for cross-platform compatibility
+      exclude: /(^|\/)\.[^\/\.]/, // Exclude hidden files and folders
+    });
   });
 
   ipcMain.handle('save-file', async (event, path: string, content: string) => {
