@@ -34,7 +34,7 @@ export const registerMenus = (): void => {
       });
     }
 
-    if (params.type === 'folder' || params.type === 'file') {
+    if (params.type === 'file') {
       menuTemplate.push({
         label: 'Delete',
         click: () => {
