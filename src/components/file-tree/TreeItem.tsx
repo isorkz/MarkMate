@@ -25,6 +25,12 @@ const TreeItem = ({
   const editingMode = useTreeStore((state) => state.editingMode);
   const reset = useTreeStore((state) => state.reset);
 
+  const dragSrc = useTreeStore((state) => state.dragSrc);
+  const setDragSrc = useTreeStore((state) => state.setDragSrc);
+  const dragDes = useTreeStore((state) => state.dragDes);
+  const setDragDes = useTreeStore((state) => state.setDragDes);
+  const move = useTreeStore((state) => state.move);
+
   const activeTabIndex = useStore((state) => state.activeTabIndex);
   const setActiveTabId = useStore((state) => state.setActiveTabId);
   const getActiveTab = useStore((state) => state.getActiveTab);
@@ -161,36 +167,79 @@ const TreeItem = ({
     }
   }
 
+  const handleDragStart = (e: React.DragEvent) => {
+    setDragSrc(node);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    if (node === dragSrc) {
+      setDragDes(undefined);
+      return;
+    }
+
+    const { clientY } = e;
+    const target = e.target as HTMLElement;
+    const { top, bottom } = target.getBoundingClientRect();
+    const middle = (top + bottom) / 2;
+    const mode = clientY <= middle ? 'top' : 'bottom';
+    setDragDes({ node, mode });
+  };
+
+  const handleDragEnd = () => {
+    if (dragSrc && dragDes) {
+      move()
+
+      setDragSrc(undefined);
+      setDragDes(undefined);
+    }
+  };
+
   return (
     <div>
-      <div className={`flex items-center my-1 hover:bg-neutral-700 ${node.path === tabs[activeTabIndex].filePath && 'bg-neutral-600'}`} style={{ paddingLeft: `${level}em` }}
-        onClick={handleClick}
-        onContextMenu={onContextMenu}
-      >
-        {node.type === 'folder' && (node.isOpened ? <ChevronDownIcon className="w-4 h-4 mr-1.5" /> : <ChevronRightIcon className="w-4 h-4 mr-1.5" />)}
-        {node.type !== 'folder' && <DocumentIcon className="w-4 h-4 mr-1.5 text-gray-400" />}
-        {editingNode && ((editingMode === 'rename' && editingNode && editingNode.path === node.path) || (editingMode === 'newfile' && node.name === '')) ? (
-          <input type="text"
-            className='bg-transparent border-b border-gray-300 focus:border-gray-300 focus:outline-none'
-            ref={inputRef}
-            value={editingNode.name}
-            onChange={onInputChange}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                handleEdit();
-              }
-            }}
-            onBlur={() => cancelEdit()} />
-        ) : (
-          <span className="text-gray-300">{node.name}</span>
-        )}
+      <div
+        draggable
+        onDragStart={handleDragStart}
+        onDragOver={(e) => handleDragOver(e)}
+        onDragLeave={(e) => e.stopPropagation()}
+        onDragEnd={handleDragEnd}
+        className={
+          dragDes && dragDes.node.path === node.path && (dragDes?.node.path !== dragSrc?.path || dragDes?.node.index !== dragSrc?.index)
+            ? dragDes?.mode === 'top'
+              ? 'border-t'
+              : 'border-b'
+            : ''
+        }>
+        <div className={`flex items-center my-1 hover:bg-neutral-700 ${node.path === tabs[activeTabIndex].filePath && 'bg-neutral-600'}`} style={{ paddingLeft: `${level}em` }}
+          onClick={handleClick}
+          onContextMenu={onContextMenu}
+        >
+          {node.type === 'folder' && (node.isOpened ? <ChevronDownIcon className="w-4 h-4 mr-1.5" /> : <ChevronRightIcon className="w-4 h-4 mr-1.5" />)}
+          {node.type !== 'folder' && <DocumentIcon className="w-4 h-4 mr-1.5 text-gray-400" />}
+          {editingNode && ((editingMode === 'rename' && editingNode && editingNode.path === node.path) || (editingMode === 'newfile' && node.name === '')) ? (
+            <input type="text"
+              className='bg-transparent border-b border-gray-300 focus:border-gray-300 focus:outline-none'
+              ref={inputRef}
+              value={editingNode.name}
+              onChange={onInputChange}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  handleEdit();
+                }
+              }}
+              onBlur={() => cancelEdit()} />
+          ) : (
+            <span className="text-gray-300">{node.name}</span>
+          )}
+        </div>
       </div>
 
       {/* use filePath as unique id rather than nanoid(), because every time the file tree is re-rendered, the nanoid() will be changed */}
       {node.isOpened && node.children &&
         // sort by folder first, then by file
-        [...node.children].sort((a, b) => (a.type === 'folder' && b.type !== 'folder') ? -1 : 1).map((childNode) =>
-          <TreeItem node={childNode} level={level + 1} editingNodeRef={editingNodeRef} key={childNode.path} />
+        // [...node.children].sort((a, b) => (a.type === 'folder' && b.type !== 'folder') ? -1 : 1).map((childNode, i) =>
+        [...node.children].sort((a, b) => (a.index < b.index) ? -1 : 1).map((childNode, i) =>
+          <TreeItem node={childNode} level={level + 1} editingNodeRef={editingNodeRef} key={childNode.path} index={i} />
         )}
     </div>
   )

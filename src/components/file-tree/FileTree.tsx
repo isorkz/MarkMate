@@ -36,6 +36,7 @@ const FileTree = () => {
         name: '',
         path: editingNodeRef.current.path,
         type: 'file',
+        index: 1, // temporary index
       }
       try {
         pushTreeNode(editingNodeRef.current.path, newNode);

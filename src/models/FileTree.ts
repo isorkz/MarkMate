@@ -4,4 +4,5 @@ export type TreeNode = {
   type: 'file' | 'folder';
   children?: TreeNode[];
   isOpened?: boolean;
+  index: number;
 };

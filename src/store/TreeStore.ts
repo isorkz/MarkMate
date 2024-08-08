@@ -21,6 +21,29 @@ const initTreeType = (node: TreeNode | undefined) => {
   }
 }
 
+const defaultSortTree = (node: TreeNode | undefined, index = 1) => {
+  if (!node) {
+    return
+  }
+
+  node.index = index
+
+  if (node.children) {
+    // folders first, then files, and then sort by name
+    node.children.sort((a, b) => {
+      if (a.type === b.type) {
+        return a.name.localeCompare(b.name)
+      } else {
+        return a.type === 'folder' ? -1 : 1
+      }
+    })
+
+    for (let i = 0; i < node.children.length; i++) {
+      defaultSortTree(node.children[i], i + 1)
+    }
+  }
+}
+
 const openFileItemByDfs = (node: TreeNode | undefined, openedFile: string | undefined): boolean => {
   if (node && openedFile) {
     if (node.path === openedFile) {
@@ -64,6 +87,12 @@ interface TreeStore {
   setEditingNode: (node: TreeNode | undefined) => void;
   editingMode: EditingMode
   setEditingMode: (mode: EditingMode) => void;
+
+  dragSrc: TreeNode | undefined;
+  setDragSrc: (dragSrc: TreeNode | undefined) => void;
+  dragDes: { node: TreeNode; mode: 'top' | 'bottom' } | undefined;
+  setDragDes: (dragDes: { node: TreeNode; mode: 'top' | 'bottom' } | undefined) => void;
+  move: () => void;
 }
 
 // stored in memory
@@ -77,6 +106,8 @@ const useTreeStore = create<TreeStore>()(
 
       window.api.readDirTree(rootDir).then((treeData: any) => {
         initTreeType(treeData)
+        // Using default sort to sort the tree: folders first, then files, and then sort by name.
+        defaultSortTree(treeData)
         openFileItemByDfs(treeData, activeFilePath)
         set(state => {
           state.slateNodesCache.clear()
@@ -105,6 +136,7 @@ const useTreeStore = create<TreeStore>()(
                   throw new Error(`Name \'${newNode.name}\' already exists in ${path}`)
                 }
               })
+              newNode.index = node.children[node.children.length - 1].index + 1
               node.children.push(newNode)
               return
             }
@@ -163,6 +195,34 @@ const useTreeStore = create<TreeStore>()(
 
     editingMode: undefined,
     setEditingMode: (mode: EditingMode) => set({ editingMode: mode }),
+
+    dragSrc: undefined,
+    setDragSrc: (dragSrc: TreeNode | undefined) => set({ dragSrc: dragSrc }),
+
+    dragDes: undefined,
+    setDragDes: (dragDes: { node: TreeNode; mode: 'top' | 'bottom' } | undefined) => set({ dragDes: dragDes }),
+
+    move: () =>
+      set((state) => {
+        // return {} means nothing needs to re-render
+        if (!state.fileTree) return {};
+
+        const { dragSrc, dragDes } = state
+        if (!dragSrc || !dragDes) return {};
+        if (dragSrc.path === dragDes.node.path) return {}
+
+        // for now, only support moving under the same parent
+        const srcPath = dragSrc.path.slice(0, dragSrc.path.lastIndexOf('/'))
+        const desPath = dragDes.node.path.slice(0, dragSrc.path.lastIndexOf('/'))
+        if (srcPath !== desPath) return {}
+
+        // switch the index of dragSrc and dragDes
+        const dragSrcIndex = dragSrc.index
+        dragSrc.index = dragDes.node.index
+        dragDes.node.index = dragSrcIndex
+
+        return { fileTree: { ...state.fileTree } };
+      }),
   })
 );
 
