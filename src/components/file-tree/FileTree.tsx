@@ -15,6 +15,9 @@ const FileTree = () => {
   const loadTree = useTreeStore((state) => state.loadTree);
   const openFileItem = useTreeStore((state) => state.openFileItem);
   const removeTreeNode = useTreeStore((state) => state.removeTreeNode);
+  const favoriteFiles = useTreeStore((state) => state.favoriteFiles);
+  const toggleFavoriteTreeNode = useTreeStore((state) => state.toggleFavoriteTreeNode);
+  const reset = useTreeStore((state) => state.reset);
 
   const rootDir = useStore((state) => state.rootDir);
   const getActiveFilePath = useStore((state) => state.getActiveFilePath);
@@ -68,6 +71,11 @@ const FileTree = () => {
     }
   }
 
+  const toggleFavoriteFile = (event: any, params: { fileId: string, filePath: string }) => {
+    toggleFavoriteTreeNode(params.fileId)
+    reset()
+  }
+
   const deleteFile = (event: any, params: { fileId: string, filePath: string }) => {
     window.api.deleteFile(params.filePath).then(() => {
       removeTreeNode(params.fileId)
@@ -97,12 +105,16 @@ const FileTree = () => {
     window.ipcRenderer.on('tree-command-rename', renameFile);
     window.ipcRenderer.on('tree-command-newfile', newFile);
     window.ipcRenderer.on('tree-command-openfile', openFile);
+    window.ipcRenderer.on('tree-command-favorite', toggleFavoriteFile);
+    window.ipcRenderer.on('tree-command-unfavorite', toggleFavoriteFile);
     window.ipcRenderer.on('tree-command-delete', deleteFile);
 
     return () => {
       window.ipcRenderer.removeAllListeners('tree-command-rename')
       window.ipcRenderer.removeAllListeners('tree-command-newfile')
       window.ipcRenderer.removeAllListeners('tree-command-openfile')
+      window.ipcRenderer.removeAllListeners('tree-command-favorite')
+      window.ipcRenderer.removeAllListeners('tree-command-unfavorite')
       window.ipcRenderer.removeAllListeners('tree-command-delete')
     }
   }, []);
@@ -110,6 +122,14 @@ const FileTree = () => {
   return (
     // flex-grow: allow a flex item to grow and shrink as needed, then it will push the settings to the bottom
     <div className="flex flex-col flex-grow w-full overflow-y-auto overflow-x-hidden m-2 mt-10 select-none">
+      <ul>
+        {favoriteFiles.map((node) =>
+          <TreeItem node={node} level={1} editingNodeRef={editingNodeRef} key={node.id} />
+        )}
+      </ul>
+
+      {favoriteFiles.length > 0 && <hr className="w-full border-t-gray-500 border-t-[1px]" />}
+
       <ul>
         {fileTree ? <TreeItem node={fileTree} editingNodeRef={editingNodeRef} />
           : <div className="p-5 text-center text-gray-500">Loading...</div>}

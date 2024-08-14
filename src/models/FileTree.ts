@@ -6,4 +6,5 @@ export type TreeNode = {
   children?: TreeNode[];
   isOpened?: boolean;
   index: number;
+  favorite?: boolean;
 };

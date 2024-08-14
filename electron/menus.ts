@@ -5,6 +5,7 @@ export const registerMenus = (): void => {
     type: 'file' | 'folder',
     fileId: string,
     filePath: string,
+    favorite?: boolean,
   }) => {
     const menuTemplate = [];
 
@@ -22,6 +23,13 @@ export const registerMenus = (): void => {
         label: 'Open in New Tab',
         click: () => {
           e.sender.send('tree-command-openfile', { fileId: params.fileId, filePath: params.filePath })
+        }
+      });
+
+      menuTemplate.push({
+        label: params.favorite ? 'Unfavorite' : 'Favorite',
+        click: () => {
+          e.sender.send(params.favorite ? 'tree-command-unfavorite' : 'tree-command-favorite', { fileId: params.fileId, filePath: params.filePath })
         }
       });
     }

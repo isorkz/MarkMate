@@ -56,6 +56,7 @@ const updateTree = (node: TreeNode, oldTreeMap: Map<string, TreeNode>) => {
 
   const oldNode = oldTreeMap.get(node.path.toLowerCase())
   node.id = oldNode && oldNode.id ? oldNode.id : nanoid()
+  node.favorite = oldNode?.favorite
 
   if (node.children) {
     node.type = 'folder'
@@ -128,6 +129,18 @@ const loadFileTree = (treeData: any, oldTree: TreeNode | undefined): TreeNode =>
   return newTree
 }
 
+const getFavoriteFiles = (node: TreeNode, favoriteFiles: TreeNode[]) => {
+  if (node.children) {
+    for (const child of node.children) {
+      getFavoriteFiles(child, favoriteFiles)
+    }
+  } else {
+    if (node.favorite) {
+      favoriteFiles.push(node)
+    }
+  }
+}
+
 interface TreeStore {
   fileTree: TreeNode | undefined;
   setFileTree: (fileTree: TreeNode | undefined) => void;
@@ -135,10 +148,13 @@ interface TreeStore {
   // key: id, value: TreeNode
   treeNodeMap: Map<string, TreeNode>;
 
+  favoriteFiles: TreeNode[];
+
   loadTree: (rootDir: string | undefined, activeFilePath: string | undefined) => void;
 
   pushTreeNode: (path: string, newNode: TreeNode) => void;
   removeTreeNode: (id: string) => void;
+  toggleFavoriteTreeNode: (id: string) => void;
 
   openFileItem: (filePath: string) => void;
 
@@ -173,6 +189,8 @@ const useTreeStore = create<TreeStore>()(
 
       treeNodeMap: new Map<string, TreeNode>(),
 
+      favoriteFiles: [],
+
       loadTree: (rootDir: string | undefined, activeFilePath: string | undefined) => {
         if (!rootDir) return;
 
@@ -183,7 +201,9 @@ const useTreeStore = create<TreeStore>()(
             state.slateNodesCache.clear()
             state.treeNodeMap.clear()
             treeToMapById(newFileTree, state.treeNodeMap)
-            return { fileTree: newFileTree }
+            const favoriteFiles: TreeNode[] = []
+            getFavoriteFiles(newFileTree, favoriteFiles)
+            return { fileTree: newFileTree, favoriteFiles: favoriteFiles }
           });
         }).catch((err: any) => {
           throw new Error('Failed to read dir tree: ' + err);
@@ -236,7 +256,27 @@ const useTreeStore = create<TreeStore>()(
 
           dfs(state.fileTree);
           state.treeNodeMap.delete(id);
-          return { fileTree: { ...state.fileTree } };
+          state.favoriteFiles = state.favoriteFiles.filter((n) => n.id !== id)
+          return { fileTree: { ...state.fileTree }, favoriteFiles: state.favoriteFiles };
+        }),
+
+      toggleFavoriteTreeNode: (id: string) =>
+        set((state) => {
+          // return {} means nothing needs to re-render
+          if (!state.fileTree) return {};
+
+          let node = state.treeNodeMap.get(id)
+          if (!node) return {}
+
+          node.favorite = !node.favorite
+          let updatedFavoriteFiles = [...state.favoriteFiles];
+          if (node.favorite) {
+            updatedFavoriteFiles.push(node)
+          } else {
+            updatedFavoriteFiles = updatedFavoriteFiles.filter((n) => n.id !== id)
+          }
+
+          return { fileTree: { ...state.fileTree }, favoriteFiles: updatedFavoriteFiles };
         }),
 
       openFileItem: (openedFile: string) =>

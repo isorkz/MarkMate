@@ -92,7 +92,7 @@ const TreeItem = ({
     setEditingNode(node)
     editingNodeRef.current = node
     // show the menu
-    window.ipcRenderer.send('show-file-tree-menu', { type: node.type, fileId: node.id, filePath: node.path });
+    window.ipcRenderer.send('show-file-tree-menu', { type: node.type, fileId: node.id, filePath: node.path, favorite: node.favorite });
   }
 
   const handleRename = () => {
