@@ -1,46 +1,72 @@
 import { create } from "zustand";
+import { persist, createJSONStorage } from 'zustand/middleware'
 import { TreeNode } from "../models/FileTree";
 import { Descendant } from "slate";
+import { nanoid } from 'nanoid'
 
 type EditingMode = 'rename' | 'newfile' | undefined
 
 type SyncStatus = 'up-to-date' | 'syncing' | 'out-of-date' | 'failed'
 
-const initTreeType = (node: TreeNode | undefined) => {
-  if (!node) {
-    return
+// The result of readDirTree() looks like:
+// {
+//   "path": "/Users/xxx/md",
+//   "name": "md",
+//   "children": [
+//     {
+//       "path": "/Users/xxx/md/my-folder",
+//       "name": "my-folder",
+//       "children": [
+//         {
+//           "path": "/Users/xxx/md/my-folder/test.md",
+//           "name": "test.md",
+//         }
+//       ]
+//     },
+//   ]
+// }
+const updateTreeIndex = (children: TreeNode[], oldTreeMap: Map<string, TreeNode>) => {
+  // If the old node has index, then use it, otherwise, set it to -1
+  for (const child of children) {
+    const oldChildNode = oldTreeMap.get(child.path.toLowerCase())
+    child.index = oldChildNode ? oldChildNode.index : -1
   }
 
-  if (node.children) {
-    node.type = 'folder'
-    for (const child of node.children) {
-      initTreeType(child)
+  // sort the children by index, if index is -1, then put it at the end
+  children.sort((a, b) => {
+    if (a.index === -1) {
+      return 1
+    } else if (b.index === -1) {
+      return -1
+    } else {
+      return a.index - b.index
     }
-  } else {
-    node.type = 'file'
+  })
+
+  // update the index
+  for (let i = 0; i < children.length; i++) {
+    children[i].index = i + 1
   }
 }
 
-const defaultSortTree = (node: TreeNode | undefined, index = 1) => {
+const updateTree = (node: TreeNode, oldTreeMap: Map<string, TreeNode>) => {
   if (!node) {
     return
   }
 
-  node.index = index
+  const oldNode = oldTreeMap.get(node.path.toLowerCase())
+  node.id = oldNode && oldNode.id ? oldNode.id : nanoid()
 
   if (node.children) {
-    // folders first, then files, and then sort by name
-    node.children.sort((a, b) => {
-      if (a.type === b.type) {
-        return a.name.localeCompare(b.name)
-      } else {
-        return a.type === 'folder' ? -1 : 1
-      }
-    })
+    node.type = 'folder'
 
-    for (let i = 0; i < node.children.length; i++) {
-      defaultSortTree(node.children[i], i + 1)
+    updateTreeIndex(node.children, oldTreeMap)
+
+    for (const child of node.children) {
+      updateTree(child, oldTreeMap)
     }
+  } else {
+    node.type = 'file'
   }
 }
 
@@ -63,11 +89,35 @@ const openFileItemByDfs = (node: TreeNode | undefined, openedFile: string | unde
   return false
 }
 
+const treeToMap = (node: TreeNode | undefined, treeMap: Map<string, TreeNode>) => {
+  if (!node) {
+    return
+  }
+
+  treeMap.set(node.path.toLowerCase(), node)
+
+  if (node.children) {
+    for (const child of node.children) {
+      treeToMap(child, treeMap)
+    }
+  }
+}
+
+const loadFileTree = (treeData: any, oldTree: TreeNode | undefined): TreeNode => {
+  const newTree = JSON.parse(JSON.stringify(treeData))
+
+  let oldTreeMap = new Map<string, TreeNode>()
+  treeToMap(oldTree, oldTreeMap)
+
+  updateTree(newTree, oldTreeMap)
+  return newTree
+}
+
 interface TreeStore {
   fileTree: TreeNode | undefined;
   setFileTree: (fileTree: TreeNode | undefined) => void;
 
-  initTree: (rootDir: string | undefined, activeFilePath: string | undefined) => void;
+  loadTree: (rootDir: string | undefined, activeFilePath: string | undefined) => void;
 
   pushTreeNode: (path: string, newNode: TreeNode) => void;
   removeTreeNode: (path: string) => void;
@@ -76,6 +126,7 @@ interface TreeStore {
 
   reset: () => void;
 
+  // Used in search.
   // key: file path, value: slate nodes
   slateNodesCache: Map<string, Descendant[]>;
 
@@ -97,133 +148,138 @@ interface TreeStore {
 
 // stored in memory
 const useTreeStore = create<TreeStore>()(
-  (set) => ({
-    fileTree: undefined,
-    setFileTree: (fileTree: TreeNode | undefined) => set({ fileTree: fileTree }),
+  persist(
+    (set, get) => ({
+      fileTree: undefined,
+      setFileTree: (fileTree: TreeNode | undefined) => set({ fileTree: fileTree }),
 
-    initTree: (rootDir: string | undefined, activeFilePath: string | undefined) => {
-      if (!rootDir) return;
+      loadTree: (rootDir: string | undefined, activeFilePath: string | undefined) => {
+        if (!rootDir) return;
 
-      window.api.readDirTree(rootDir).then((treeData: any) => {
-        initTreeType(treeData)
-        // Using default sort to sort the tree: folders first, then files, and then sort by name.
-        defaultSortTree(treeData)
-        openFileItemByDfs(treeData, activeFilePath)
-        set(state => {
-          state.slateNodesCache.clear()
-          return { fileTree: treeData }
-        });
-      }).catch((err: any) => {
-        throw new Error('Failed to read dir tree: ' + err);
-      })
-    },
+        window.api.readDirTree(rootDir).then((treeData: any) => {
+          const tree = loadFileTree(treeData, get().fileTree)
+          openFileItemByDfs(tree, activeFilePath)
+          set(state => {
+            state.slateNodesCache.clear()
+            return { fileTree: tree }
+          });
+        }).catch((err: any) => {
+          throw new Error('Failed to read dir tree: ' + err);
+        })
+      },
 
-    slateNodesCache: new Map(),
+      slateNodesCache: new Map(),
 
-    syncStatus: 'out-of-date',
-    setSyncStatus: (syncStatus: SyncStatus) => set({ syncStatus: syncStatus }),
+      syncStatus: 'out-of-date',
+      setSyncStatus: (syncStatus: SyncStatus) => set({ syncStatus: syncStatus }),
 
-    pushTreeNode: (path: string, newNode: TreeNode) =>
-      set((state) => {
-        // return {} means nothing needs to re-render
-        if (!state.fileTree) return {};
+      pushTreeNode: (path: string, newNode: TreeNode) =>
+        set((state) => {
+          // return {} means nothing needs to re-render
+          if (!state.fileTree) return {};
 
-        const dfs = (node: TreeNode) => {
-          if (node.path === path) {
-            if (node.children) {
-              node.children.forEach(child => {
-                if (child.name === newNode.name) {
-                  throw new Error(`Name \'${newNode.name}\' already exists in ${path}`)
-                }
-              })
-              newNode.index = node.children[node.children.length - 1].index + 1
-              node.children.push(newNode)
-              return
+          const dfs = (node: TreeNode) => {
+            if (node.path === path) {
+              if (node.children) {
+                node.children.forEach(child => {
+                  if (child.name === newNode.name) {
+                    throw new Error(`Name \'${newNode.name}\' already exists in ${path}`)
+                  }
+                })
+                newNode.index = node.children[node.children.length - 1].index + 1
+                node.children.push(newNode)
+                return
+              }
+            } else if (node.children) {
+              node.children.forEach(dfs);
             }
-          } else if (node.children) {
-            node.children.forEach(dfs);
-          }
-        };
+          };
 
-        dfs(state.fileTree);
-        return { fileTree: { ...state.fileTree } };
-      }),
+          dfs(state.fileTree);
+          return { fileTree: { ...state.fileTree } };
+        }),
 
-    removeTreeNode: (path: string) =>
-      set((state) => {
-        // return {} means nothing needs to re-render
-        if (!state.fileTree) return {};
+      removeTreeNode: (path: string) =>
+        set((state) => {
+          // return {} means nothing needs to re-render
+          if (!state.fileTree) return {};
 
-        const dfs = (node: TreeNode) => {
-          if (node.children) {
-            node.children = node.children.filter((n) => n.path !== path);
-            node.children.forEach(dfs);
-          }
-        };
+          const dfs = (node: TreeNode) => {
+            if (node.children) {
+              node.children = node.children.filter((n) => n.path !== path);
+              node.children.forEach(dfs);
+            }
+          };
 
-        dfs(state.fileTree);
-        return { fileTree: { ...state.fileTree } };
-      }),
+          dfs(state.fileTree);
+          return { fileTree: { ...state.fileTree } };
+        }),
 
-    openFileItem: (openedFile: string) =>
-      set((state) => {
-        // return {} means nothing needs to re-render
-        if (!state.fileTree) return {};
+      openFileItem: (openedFile: string) =>
+        set((state) => {
+          // return {} means nothing needs to re-render
+          if (!state.fileTree) return {};
 
-        openFileItemByDfs(state.fileTree, openedFile)
-        return { fileTree: { ...state.fileTree } };
-      }),
+          openFileItemByDfs(state.fileTree, openedFile)
+          return { fileTree: { ...state.fileTree } };
+        }),
 
-    reset: () =>
-      set((state) => {
-        // return {} means nothing needs to re-render
-        if (!state.fileTree) return {};
+      reset: () =>
+        set((state) => {
+          // return {} means nothing needs to re-render
+          if (!state.fileTree) return {};
 
-        const dfs = (node: TreeNode) => {
-          if (node.children) {
-            node.children = node.children.filter((n) => n.name !== '');
-            node.children.forEach(dfs);
-          }
-        };
+          const dfs = (node: TreeNode) => {
+            if (node.children) {
+              node.children = node.children.filter((n) => n.name !== '');
+              node.children.forEach(dfs);
+            }
+          };
 
-        dfs(state.fileTree);
-        return { fileTree: { ...state.fileTree }, editingMode: undefined, editingNode: undefined };
-      }),
+          dfs(state.fileTree);
+          return { fileTree: { ...state.fileTree }, editingMode: undefined, editingNode: undefined };
+        }),
 
-    editingNode: undefined,
-    setEditingNode: (node: TreeNode | undefined) => set({ editingNode: node }),
+      editingNode: undefined,
+      setEditingNode: (node: TreeNode | undefined) => set({ editingNode: node }),
 
-    editingMode: undefined,
-    setEditingMode: (mode: EditingMode) => set({ editingMode: mode }),
+      editingMode: undefined,
+      setEditingMode: (mode: EditingMode) => set({ editingMode: mode }),
 
-    dragSrc: undefined,
-    setDragSrc: (dragSrc: TreeNode | undefined) => set({ dragSrc: dragSrc }),
+      dragSrc: undefined,
+      setDragSrc: (dragSrc: TreeNode | undefined) => set({ dragSrc: dragSrc }),
 
-    dragDes: undefined,
-    setDragDes: (dragDes: { node: TreeNode; mode: 'top' | 'bottom' } | undefined) => set({ dragDes: dragDes }),
+      dragDes: undefined,
+      setDragDes: (dragDes: { node: TreeNode; mode: 'top' | 'bottom' } | undefined) => set({ dragDes: dragDes }),
 
-    move: () =>
-      set((state) => {
-        // return {} means nothing needs to re-render
-        if (!state.fileTree) return {};
+      move: () =>
+        set((state) => {
+          // return {} means nothing needs to re-render
+          if (!state.fileTree) return {};
 
-        const { dragSrc, dragDes } = state
-        if (!dragSrc || !dragDes) return {};
-        if (dragSrc.path === dragDes.node.path) return {}
+          const { dragSrc, dragDes } = state
+          if (!dragSrc || !dragDes) return {};
+          if (dragSrc.path === dragDes.node.path) return {}
 
-        // for now, only support moving under the same parent
-        const srcPath = dragSrc.path.slice(0, dragSrc.path.lastIndexOf('/'))
-        const desPath = dragDes.node.path.slice(0, dragSrc.path.lastIndexOf('/'))
-        if (srcPath !== desPath) return {}
+          // for now, only support moving under the same parent
+          const srcPath = dragSrc.path.slice(0, dragSrc.path.lastIndexOf('/'))
+          const desPath = dragDes.node.path.slice(0, dragSrc.path.lastIndexOf('/'))
+          if (srcPath !== desPath) return {}
 
-        // switch the index of dragSrc and dragDes
-        const dragSrcIndex = dragSrc.index
-        dragSrc.index = dragDes.node.index
-        dragDes.node.index = dragSrcIndex
+          // switch the index of dragSrc and dragDes
+          const dragSrcIndex = dragSrc.index
+          dragSrc.index = dragDes.node.index
+          dragDes.node.index = dragSrcIndex
 
-        return { fileTree: { ...state.fileTree } };
-      }),
-  })
-);
+          return { fileTree: { ...state.fileTree } };
+        }),
+    }),
+    {
+      name: 'markmate-store-tree',          // unique name. For debugging, you can find it in Chrome DevTools 'Application' tab
+      storage: createJSONStorage(() => localStorage),
+      // partialize: enables you to pick some of the state's fields to be stored in the storage.
+      partialize: (state) => ({ fileTree: state.fileTree }),
+    }
+  ));
 
 export default useTreeStore

@@ -4,6 +4,7 @@ import useTreeStore from '../../store/TreeStore'
 import { TreeNode } from '../../models/FileTree'
 import TreeItem from './TreeItem';
 import { toast } from 'react-hot-toast';
+import { nanoid } from 'nanoid'
 
 const FileTree = () => {
   const fileTree = useTreeStore((state) => state.fileTree);
@@ -11,7 +12,7 @@ const FileTree = () => {
   const setEditingNode = useTreeStore((state) => state.setEditingNode);
   const pushTreeNode = useTreeStore((state) => state.pushTreeNode);
   const setEditingMode = useTreeStore((state) => state.setEditingMode);
-  const initTree = useTreeStore((state) => state.initTree);
+  const loadTree = useTreeStore((state) => state.loadTree);
   const openFileItem = useTreeStore((state) => state.openFileItem);
   const removeTreeNode = useTreeStore((state) => state.removeTreeNode);
 
@@ -33,6 +34,7 @@ const FileTree = () => {
   const newFile = (event: any, params: { dirPath: string }) => {
     if (editingNodeRef.current) {
       const newNode: TreeNode = {
+        id: nanoid(),
         name: '',
         path: editingNodeRef.current.path,
         type: 'file',
@@ -88,7 +90,7 @@ const FileTree = () => {
   }, [tabs[activeTabIndex].filePath]);
 
   useEffect(() => {
-    initTree(rootDir, getActiveFilePath())
+    loadTree(rootDir, getActiveFilePath())
   }, [rootDir]);
 
   useEffect(() => {

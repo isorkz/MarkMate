@@ -31,12 +31,12 @@ const MainPanelTopBar = ({ title, changed }: TopBarProps) => {
   const rootDir = useStore((state) => state.rootDir);
   const getActiveFilePath = useStore((state) => state.getActiveFilePath);
 
-  const initTree = useTreeStore((state) => state.initTree);
+  const loadTree = useTreeStore((state) => state.loadTree);
   const syncStatus = useTreeStore((state) => state.syncStatus);
   const setSyncStatus = useTreeStore((state) => state.setSyncStatus);
 
   const onRefreshFileTree = () => {
-    initTree(rootDir, getActiveFilePath())
+    loadTree(rootDir, getActiveFilePath())
   }
 
   const onSyncUp = () => {
