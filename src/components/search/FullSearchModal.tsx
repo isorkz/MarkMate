@@ -59,7 +59,7 @@ const FullSearch = ({ showFullSearchModal, setShowFullSearchModal }: FullSearchM
     }
   }, [])
 
-  const onOpen = (event: MouseEvent<HTMLElement>, filePath: string) => {
+  const onOpen = (event: MouseEvent<HTMLElement>, fileId: string, filePath: string) => {
     event.preventDefault();
 
     // If the file is already opened in the tabs, only activate the tab.
@@ -72,9 +72,9 @@ const FullSearch = ({ showFullSearchModal, setShowFullSearchModal }: FullSearchM
           console.error(err);
         } else {
           if (getActiveTab().changed) {
-            newTab(filePath, data)
+            newTab(fileId, filePath, data)
           } else {
-            setActiveTab(filePath, data)
+            setActiveTab(fileId, filePath, data)
             // Reset the slate nodes when switching to another tab, and clear the history.
             SlateEditorUtils.resetSlateNodes(getActiveTab().editor, getActiveTab().slateNodes, true);
           }
@@ -123,7 +123,7 @@ const FullSearch = ({ showFullSearchModal, setShowFullSearchModal }: FullSearchM
                 <div key={result.filePath} className='flex w-full flex-col px-5 py-1 items-center'>
                   {i > 0 && <Divider orientation='horizontal' flexItem />}
 
-                  <div className='flex flex-col px-3 py-2 w-full mt-2 hover:bg-gray-100 overflow-hidden' onClick={(e) => onOpen(e, result.filePath)}>
+                  <div className='flex flex-col px-3 py-2 w-full mt-2 hover:bg-gray-100 overflow-hidden' onClick={(e) => onOpen(e, result.fileId, result.filePath)}>
                     <div className='flex flex-row items-center'>
                       <DocumentIcon className="w-4 h-4 mr-2 text-gray-500" />
                       <span className='font-semibold text-base'>{result.title}</span>

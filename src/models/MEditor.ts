@@ -24,16 +24,21 @@ export class MEditor {
   editor: BaseEditor & ReactEditor & HistoryEditor & { nodeToDecorations?: Map<any, any> };
 
   rootDir: string | undefined;
+  fileId: string | undefined;
   filePath: string | undefined;
   sourceContent: string;
   slateNodes: any[];
+  // Whether the content in editor has been changed.
   changed: boolean = false;
   // This id is used to identify the tab in the tabs array, and the key for tab components.
   // It must have for remove tab scenarios, otherwise, the tab content could be rendered unexpectedly.
+  // (This id is not the same as fileId, because for new tabs without saving, the fileId is undefined.)
   id: string;
 
-  constructor(id: string, rootDir: string | undefined, filePath: string | undefined = undefined, sourceContent: string = '', slateNodes: any[] = []) {
+  constructor(id: string, rootDir: string | undefined, fileId: string | undefined = undefined, filePath: string | undefined = undefined, sourceContent: string = '', slateNodes: any[] = []) {
+    this.id = id;
     this.rootDir = rootDir;
+    this.fileId = fileId;
     this.filePath = filePath;
     this.sourceContent = sourceContent;
     this.editor = withInsertData(withMarkdownShortcuts(withReact(withHistory(createEditor()))), rootDir, filePath);
@@ -42,9 +47,6 @@ export class MEditor {
     // 2. For a opened document: filePath != undefined
     //   - if it's a new opened doc: slateNodes=[]. -> need to parse sourceContent to slateNodes.
     //   - if it's a editing doc: slateNodes=[...].
-    this.id = id;
-    this.filePath = filePath;
-    this.sourceContent = sourceContent;
     let parsedSlateNodes = markdownSourceToMEditorNodes(sourceContent);
     if (!parsedSlateNodes) parsedSlateNodes = DefaultEmptySlateNodes();
     this.slateNodes = slateNodes && slateNodes.length > 0 ? slateNodes : parsedSlateNodes;

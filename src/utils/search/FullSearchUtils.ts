@@ -20,7 +20,7 @@ const computeMatchScoreByTitle = (title: string, searchKeyWords: string): number
   return 0
 }
 
-const searchFile = (filePath: string, slateNodes: Descendant[], searchText: string): FullSearchResult | undefined => {
+const searchFile = (fileId: string, filePath: string, slateNodes: Descendant[], searchText: string): FullSearchResult | undefined => {
   let matchContents: {
     node: Descendant;
     content: string;
@@ -49,6 +49,7 @@ const searchFile = (filePath: string, slateNodes: Descendant[], searchText: stri
   }
 
   return {
+    fileId: fileId,
     filePath: filePath,
     title: title,
     matchContents: matchContents,
@@ -83,7 +84,7 @@ const fullSearchOnFileTree = async (slateNodesCache: Map<string, Descendant[]>, 
       }
       slateNodesCache.set(node.path, slateNodes);
     }
-    const res = searchFile(node.path, slateNodes, searchText)
+    const res = searchFile(node.id, node.path, slateNodes, searchText)
     if (res) searchResults.push(res)
   }
 }

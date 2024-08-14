@@ -89,7 +89,7 @@ const openFileItemByDfs = (node: TreeNode | undefined, openedFile: string | unde
   return false
 }
 
-const treeToMap = (node: TreeNode | undefined, treeMap: Map<string, TreeNode>) => {
+const treeToMapByPath = (node: TreeNode | undefined, treeMap: Map<string, TreeNode>) => {
   if (!node) {
     return
   }
@@ -98,7 +98,21 @@ const treeToMap = (node: TreeNode | undefined, treeMap: Map<string, TreeNode>) =
 
   if (node.children) {
     for (const child of node.children) {
-      treeToMap(child, treeMap)
+      treeToMapByPath(child, treeMap)
+    }
+  }
+}
+
+const treeToMapById = (node: TreeNode | undefined, treeMap: Map<string, TreeNode>) => {
+  if (!node) {
+    return
+  }
+
+  treeMap.set(node.id, node)
+
+  if (node.children) {
+    for (const child of node.children) {
+      treeToMapById(child, treeMap)
     }
   }
 }
@@ -106,8 +120,9 @@ const treeToMap = (node: TreeNode | undefined, treeMap: Map<string, TreeNode>) =
 const loadFileTree = (treeData: any, oldTree: TreeNode | undefined): TreeNode => {
   const newTree = JSON.parse(JSON.stringify(treeData))
 
+  // key: file path, value: TreeNode
   let oldTreeMap = new Map<string, TreeNode>()
-  treeToMap(oldTree, oldTreeMap)
+  treeToMapByPath(oldTree, oldTreeMap)
 
   updateTree(newTree, oldTreeMap)
   return newTree
@@ -117,10 +132,13 @@ interface TreeStore {
   fileTree: TreeNode | undefined;
   setFileTree: (fileTree: TreeNode | undefined) => void;
 
+  // key: id, value: TreeNode
+  treeNodeMap: Map<string, TreeNode>;
+
   loadTree: (rootDir: string | undefined, activeFilePath: string | undefined) => void;
 
   pushTreeNode: (path: string, newNode: TreeNode) => void;
-  removeTreeNode: (path: string) => void;
+  removeTreeNode: (id: string) => void;
 
   openFileItem: (filePath: string) => void;
 
@@ -153,15 +171,19 @@ const useTreeStore = create<TreeStore>()(
       fileTree: undefined,
       setFileTree: (fileTree: TreeNode | undefined) => set({ fileTree: fileTree }),
 
+      treeNodeMap: new Map<string, TreeNode>(),
+
       loadTree: (rootDir: string | undefined, activeFilePath: string | undefined) => {
         if (!rootDir) return;
 
         window.api.readDirTree(rootDir).then((treeData: any) => {
-          const tree = loadFileTree(treeData, get().fileTree)
-          openFileItemByDfs(tree, activeFilePath)
+          const newFileTree = loadFileTree(treeData, get().fileTree)
+          openFileItemByDfs(newFileTree, activeFilePath)
           set(state => {
             state.slateNodesCache.clear()
-            return { fileTree: tree }
+            state.treeNodeMap.clear()
+            treeToMapById(newFileTree, state.treeNodeMap)
+            return { fileTree: newFileTree }
           });
         }).catch((err: any) => {
           throw new Error('Failed to read dir tree: ' + err);
@@ -196,22 +218,24 @@ const useTreeStore = create<TreeStore>()(
           };
 
           dfs(state.fileTree);
+          state.treeNodeMap.set(newNode.id, newNode);
           return { fileTree: { ...state.fileTree } };
         }),
 
-      removeTreeNode: (path: string) =>
+      removeTreeNode: (id: string) =>
         set((state) => {
           // return {} means nothing needs to re-render
           if (!state.fileTree) return {};
 
           const dfs = (node: TreeNode) => {
             if (node.children) {
-              node.children = node.children.filter((n) => n.path !== path);
+              node.children = node.children.filter((n) => n.id !== id);
               node.children.forEach(dfs);
             }
           };
 
           dfs(state.fileTree);
+          state.treeNodeMap.delete(id);
           return { fileTree: { ...state.fileTree } };
         }),
 

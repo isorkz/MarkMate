@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { persist, createJSONStorage, PersistStorage } from 'zustand/middleware'
+import { persist, PersistStorage } from 'zustand/middleware'
 import { MEditor } from "../models/MEditor";
 import { markdownSourceToMEditorNodes } from "../components/editor/slate/parser/ParseMarkdownSourceToSlateNodes";
 import { nanoid } from 'nanoid'
@@ -18,11 +18,14 @@ interface MStore {
   activeTabId: string | undefined;
   setActiveTabId: (id: string) => void;
 
-  setActiveTab: (filePath: string, content: string) => void;
+  // open a file in the current active tab (update the tab content)
+  setActiveTab: (fileId: string, filePath: string, content: string) => void;
   getActiveTab: () => MEditor;
   getActiveFilePath: () => string | undefined;
 
-  newTab: (filePath: string, content: string) => void;
+  // open a file in a new tab
+  newTab: (fileId: string, filePath: string, content: string) => void;
+  // new a empty tab
   newEmptyTab: () => void;
   removeTabByIndex: (tabIndex: number) => void;
 
@@ -55,7 +58,7 @@ const customStorage: PersistStorage<MStore> = {
     const tabs = state.state.tabs;
     // Recreate the editor
     if (tabs) {
-      const newTabs: MEditor[] = tabs.map((tab: any) => new MEditor(tab.id, rootDir, tab.filePath, tab.sourceContent, tab.slateNodes));
+      const newTabs: MEditor[] = tabs.map((tab: any) => new MEditor(tab.id, rootDir, tab.fileId, tab.filePath, tab.sourceContent, tab.slateNodes));
       state.state.tabs = newTabs;
     }
     return state;
@@ -88,10 +91,11 @@ const useStore = create<MStore>()(
       getActiveFilePath: () =>
         get().tabs[get().activeTabIndex].filePath,
 
-      setActiveTab: (filePath: string, content: string) =>
+      setActiveTab: (fileId: string, filePath: string, content: string) =>
         set((state) => {
           const newTabs = [...state.tabs];
           newTabs[state.activeTabIndex].changed = false;
+          newTabs[state.activeTabIndex].fileId = fileId;
           newTabs[state.activeTabIndex].filePath = filePath;
           newTabs[state.activeTabIndex].sourceContent = content;
           newTabs[state.activeTabIndex].slateNodes = markdownSourceToMEditorNodes(content) || DefaultEmptySlateNodes();
@@ -102,9 +106,9 @@ const useStore = create<MStore>()(
           };
         }),
 
-      newTab: (filePath: string, content: string) =>
+      newTab: (fileId: string, filePath: string, content: string) =>
         set((state) => {
-          const newTab = new MEditor(nanoid(), state.rootDir, filePath, content);
+          const newTab = new MEditor(nanoid(), state.rootDir, fileId, filePath, content);
           const newTabs = [...state.tabs, newTab];
           return {
             ...state,

@@ -71,9 +71,9 @@ const TreeItem = ({
             console.error(err);
           } else {
             if (getActiveTab().changed) {
-              newTab(node.path, data)
+              newTab(node.id, node.path, data)
             } else {
-              setActiveTab(node.path, data)
+              setActiveTab(node.id, node.path, data)
               // Reset the slate nodes when switching to another tab, and clear the history.
               SlateEditorUtils.resetSlateNodes(getActiveTab().editor, getActiveTab().slateNodes, true);
             }
@@ -92,7 +92,7 @@ const TreeItem = ({
     setEditingNode(node)
     editingNodeRef.current = node
     // show the menu
-    window.ipcRenderer.send('show-file-tree-menu', { type: node.type, filePath: node.path });
+    window.ipcRenderer.send('show-file-tree-menu', { type: node.type, fileId: node.id, filePath: node.path });
   }
 
   const handleRename = () => {

@@ -1,6 +1,7 @@
 import { Descendant } from "slate";
 
 export type FullSearchResult = {
+  fileId: string;
   filePath: string;
   title: string;
   matchContents: {

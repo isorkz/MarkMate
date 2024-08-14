@@ -27,7 +27,7 @@ const FileTree = () => {
   // Using useRef to get the latest value for window.ipcRenderer.on function.
   const editingNodeRef = useRef(editingNode);
 
-  const renameFile = (event: any, params: { filePath: string }) => {
+  const renameFile = (event: any, params: { fileId: string, filePath: string }) => {
     setEditingMode('rename')
   }
 
@@ -51,7 +51,7 @@ const FileTree = () => {
     }
   }
 
-  const openFile = (event: any, params: { filePath: string }) => {
+  const openFile = (event: any, params: { fileId: string, filePath: string }) => {
     // If the file is already opened in the tabs, only activate the tab.
     const index = tabs.findIndex((tab) => tab.filePath === params.filePath);
     if (index >= 0) {
@@ -62,15 +62,15 @@ const FileTree = () => {
         if (err) {
           console.error(err);
         } else {
-          newTab(params.filePath, data)
+          newTab(params.fileId, params.filePath, data)
         }
       })
     }
   }
 
-  const deleteFile = (event: any, params: { filePath: string }) => {
+  const deleteFile = (event: any, params: { fileId: string, filePath: string }) => {
     window.api.deleteFile(params.filePath).then(() => {
-      removeTreeNode(params.filePath)
+      removeTreeNode(params.fileId)
       const index = tabs.findIndex((tab) => tab.filePath === params.filePath);
       if (index >= 0) {
         removeTabByIndex(index)

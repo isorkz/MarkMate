@@ -3,6 +3,7 @@ import { ipcMain, BrowserWindow, Menu } from 'electron';
 export const registerMenus = (): void => {
   ipcMain.on('show-file-tree-menu', (e, params: {
     type: 'file' | 'folder',
+    fileId: string,
     filePath: string,
   }) => {
     const menuTemplate = [];
@@ -20,7 +21,7 @@ export const registerMenus = (): void => {
       menuTemplate.push({
         label: 'Open in New Tab',
         click: () => {
-          e.sender.send('tree-command-openfile', { filePath: params.filePath })
+          e.sender.send('tree-command-openfile', { fileId: params.fileId, filePath: params.filePath })
         }
       });
     }
@@ -29,7 +30,7 @@ export const registerMenus = (): void => {
       menuTemplate.push({
         label: 'Rename',
         click: () => {
-          e.sender.send('tree-command-rename', { filePath: params.filePath })
+          e.sender.send('tree-command-rename', { fileId: params.fileId, filePath: params.filePath })
         }
       });
     }
@@ -38,7 +39,7 @@ export const registerMenus = (): void => {
       menuTemplate.push({
         label: 'Delete',
         click: () => {
-          e.sender.send('tree-command-delete', { filePath: params.filePath })
+          e.sender.send('tree-command-delete', { fileId: params.fileId, filePath: params.filePath })
         }
       });
     }
