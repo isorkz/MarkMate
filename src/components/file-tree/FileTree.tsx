@@ -25,7 +25,7 @@ const FileTree = () => {
   const newTab = useStore((state) => state.newTab);
   const activeTabIndex = useStore((state) => state.activeTabIndex);
   const setActiveTabId = useStore((state) => state.setActiveTabId);
-  const removeTabByIndex = useStore((state) => state.removeTabByIndex);
+  const removeTabByFilePath = useStore((state) => state.removeTabByFilePath);
 
   // Using useRef to get the latest value for window.ipcRenderer.on function.
   const editingNodeRef = useRef(editingNode);
@@ -79,10 +79,7 @@ const FileTree = () => {
   const deleteFile = (event: any, params: { fileId: string, filePath: string }) => {
     window.api.deleteFile(params.filePath).then(() => {
       removeTreeNode(params.fileId)
-      const index = tabs.findIndex((tab) => tab.filePath === params.filePath);
-      if (index >= 0) {
-        removeTabByIndex(index)
-      }
+      removeTabByFilePath(params.filePath)
     }).catch((err: any) => {
       console.error(err);
       toast.error(`Failed to delete file ${params.filePath}. ${err}`);

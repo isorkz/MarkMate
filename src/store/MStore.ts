@@ -28,6 +28,7 @@ interface MStore {
   // new a empty tab
   newEmptyTab: () => void;
   removeTabByIndex: (tabIndex: number) => void;
+  removeTabByFilePath: (filePath: string) => void;
 
   updateSourceContent: (sourceContent: string) => void;
   updateSlateNodes: (slateNodes: any[]) => void;
@@ -149,6 +150,39 @@ const useStore = create<MStore>()(
             activeTabIndex: newActiveTabIndex
           };
         }),
+
+        removeTabByFilePath: (filePath: string) =>
+          set((state) => {
+            const tabIndex = state.tabs.findIndex((tab) => tab.filePath === filePath);
+            if (tabIndex < 0) {
+              return {};
+            }
+
+            const newTabs = state.tabs.filter((_, index) => index !== tabIndex);
+            if (newTabs.length === 0) {
+              return {
+                ...state,
+                tabs: [new MEditor(InitTabId, state.rootDir)],
+                activeTabId: InitTabId,
+                activeTabIndex: 0
+              };
+            }
+
+            let newActiveTabIndex = state.activeTabIndex;
+            if (state.activeTabIndex === tabIndex) {
+              newActiveTabIndex = 0;
+            } else {
+              if (state.activeTabIndex > tabIndex) {
+                newActiveTabIndex = state.activeTabIndex - 1;
+              }
+            }
+            return {
+              ...state,
+              tabs: newTabs,
+              activeTabId: newTabs[newActiveTabIndex].id,
+              activeTabIndex: newActiveTabIndex
+            };
+          }),
 
       setActiveTabId: (id: string) =>
         set((state) => {
