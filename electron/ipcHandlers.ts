@@ -124,7 +124,11 @@ export const registerIpcHandlers = (): void => {
     // return the relative path of the image file
     const currentFileStats = await fs.promises.stat(currentFilePath);
     const currentFileDir = currentFileStats.isDirectory() ? currentFilePath : path.dirname(currentFilePath);
-    return path.relative(currentFileDir, filePath);
+    let relativePath = path.relative(currentFileDir, filePath);
+    if (!isMac()) {
+      relativePath = relativePath.replace(/\\/g, '/');
+    }
+    return relativePath;
   });
 
   // currentFilePath: the path of the current md document
