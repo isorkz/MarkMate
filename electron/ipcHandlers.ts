@@ -9,6 +9,13 @@ export const isMac = (): boolean => {
   return os.platform().toLocaleLowerCase() === 'darwin';
 }
 
+const normalizePath = (filePath: string): string => {
+  if (!isMac()) {
+    return filePath.replace(/\\/g, '/');
+  }
+  return filePath;
+}
+
 const getImageFileName = (): string => {
   let now = Date.now();
   let date = new Date(now);
@@ -37,6 +44,7 @@ export const registerIpcHandlers = (): void => {
     return dirTree(path, {
       extensions: /\.md$/,
       // Custom filter function to exclude hidden folders and files
+      // If normalizePath is true, use '/' for all paths in both mac and windows
       normalizePath: true, // Normalize the paths for cross-platform compatibility
       exclude: /(^|\/)\.[^\/\.]/, // Exclude hidden files and folders
     });
@@ -47,15 +55,18 @@ export const registerIpcHandlers = (): void => {
   });
 
   ipcMain.handle('rename-file', async (event, filePath: string, newFileName: string) => {
+    console.log('[rename-file] filePath:', filePath, ", newFileName:", newFileName);
     const stats = await fs.promises.stat(filePath);
     if (!stats.isFile()) {
       throw new Error('filePath must be a file');
     }
 
-    const dir = filePath.replace(/[^/]+$/, '');
-    const newFilePath = dir + newFileName;
+    const dir = path.dirname(filePath);
+    let newFilePath = path.join(dir, newFileName);
     try {
       await fs.promises.rename(filePath, newFilePath);
+      newFilePath = normalizePath(newFilePath);
+      console.log('[rename-file] rename success: ', newFilePath);
       return newFilePath;
     } catch (err) {
       console.error(`Failed to rename from ${filePath} to ${newFilePath}:`, err);
@@ -64,6 +75,7 @@ export const registerIpcHandlers = (): void => {
   });
 
   ipcMain.handle('new-file', async (event, dirPath: string, newFileName: string) => {
+    console.log('[new-file] dirPath:', dirPath, ", newFileName:", newFileName);
     if (!dirPath || !newFileName) {
       throw new Error('Invalid dirPath or newFileName');
     }
@@ -73,7 +85,7 @@ export const registerIpcHandlers = (): void => {
       throw new Error('dirPath must be a directory');
     }
 
-    const newFilePath = path.join(dirPath, newFileName);
+    let newFilePath = path.join(dirPath, newFileName);
     try {
       // Check if the file already exists
       await fs.promises.access(newFilePath);
@@ -87,6 +99,8 @@ export const registerIpcHandlers = (): void => {
 
     try {
       await fs.promises.writeFile(newFilePath, '');
+      newFilePath = normalizePath(newFilePath);
+      console.log('[new-file] create success: ', newFilePath);
       return newFilePath;
     } catch (err) {
       console.error('An error occurred while creating the file:', newFilePath, err);
@@ -95,7 +109,15 @@ export const registerIpcHandlers = (): void => {
   });
 
   ipcMain.handle('delete-file', async (event, filePath: string) => {
+    console.log('[delete-file] filePath:', filePath);
     try {
+      if (!isMac()) {
+        // convert the path to windows path
+        const isWindowsPath = /^[a-zA-Z]:\\/.test(filePath);
+        if (!isWindowsPath) {
+          filePath = filePath.replace(/\//g, '\\');
+        }
+      }
       await fs.promises.unlink(filePath);
     } catch (err) {
       console.error('An error occurred while deleting the file:', filePath, err);
@@ -125,9 +147,7 @@ export const registerIpcHandlers = (): void => {
     const currentFileStats = await fs.promises.stat(currentFilePath);
     const currentFileDir = currentFileStats.isDirectory() ? currentFilePath : path.dirname(currentFilePath);
     let relativePath = path.relative(currentFileDir, filePath);
-    if (!isMac()) {
-      relativePath = relativePath.replace(/\\/g, '/');
-    }
+    relativePath = normalizePath(relativePath);
     return relativePath;
   });
 
@@ -144,9 +164,7 @@ export const registerIpcHandlers = (): void => {
       const currentFileDir = currentFileStats.isDirectory() ? currentFilePath : path.dirname(currentFilePath);
       fileUrl = fileHead + path.join(currentFileDir, mediaFilePath);
     }
-    if (!isMac()) {
-      fileUrl = fileUrl.replace(/\\/g, '/');
-    }
+    fileUrl = normalizePath(fileUrl);
     // console.log('fileUrl: ', fileUrl);
     // Note: for ipcMain.on, use event.returnValue to return value synchronously, instead of returning the value directly.
     event.returnValue = fileUrl;

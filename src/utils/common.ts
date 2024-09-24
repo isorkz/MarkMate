@@ -20,7 +20,13 @@ export function isMac(): boolean {
 }
 
 export function getFileName(path: string): string {
-  const delimiter = isMac() ? '/' : '\\';
+  // const delimiter = isMac() ? '/' : '\\';
+  // let fileName = path.split(delimiter).pop() || '';
+  // if (fileName.includes('.')) {
+  //   // remove file extension
+  //   fileName = fileName.split('.').slice(0, -1).join('.');
+  // }
+  const delimiter = '/';
   let fileName = path.split(delimiter).pop() || '';
   if (fileName.includes('.')) {
     // remove file extension
@@ -30,32 +36,35 @@ export function getFileName(path: string): string {
 }
 
 export function getFolderPath(rootDir: string, filePath: string): string {
-
-  const delimiter = isMac() ? '/' : '\\';
+  // const delimiter = isMac() ? '/' : '\\';
+  // const fileName = filePath.split(delimiter).pop() || '';
+  // if (isMac()) {
+  //   // rootDir: /path/md
+  //   // filePath: /path/md/dir/test/1.md
+  //   // return: dir / test
+  //   return filePath.replace(rootDir, '').replace(fileName, '').replace(/^\//, '').replace(/\/$/, '').replace(/\//g, ' / ');
+  // } else {
+  //   // rootDir: C:\\path\\md
+  //   // filePath: C:\\path\\md\\dir\\test\\1.md
+  //   // return: dir / test
+  //   return filePath.replace(rootDir, '').replace(fileName, '').replace(/^\\/, '').replace(/\\$/, '').replace(/\\/g, ' / ');
+  // }
+  const delimiter = '/';
   const fileName = filePath.split(delimiter).pop() || '';
-  if (isMac()) {
-    // rootDir: /path/md
-    // filePath: /path/md/dir/test/1.md
-    // return: dir / test
-    return filePath.replace(rootDir, '').replace(fileName, '').replace(/^\//, '').replace(/\/$/, '').replace(/\//g, ' / ');
-  } else {
-    // rootDir: C:\\path\\md
-    // filePath: C:\\path\\md\\dir\\test\\1.md
-    // return: dir / test
-    return filePath.replace(rootDir, '').replace(fileName, '').replace(/^\\/, '').replace(/\\$/, '').replace(/\\/g, ' / ');
-  }
+  return filePath.replace(rootDir, '').replace(fileName, '').replace(/^\//, '').replace(/\/$/, '').replace(/\//g, ' / ');
 }
 
 export function getTopBarTitle(rootDir: string, filePath: string): string {
-  if (isMac()) {
-    // rootDir: /path/md
-    // filePath: /path/md/dir/test/1.md
-    // return: dir / test / 1
-    return filePath.replace(rootDir, '').replace(/^\//, '').replace(/\.md$/, '').replace(/\//g, ' / ');
-  } else {
-    // rootDir: C:\\path\\md
-    // filePath: C:\\path\\md\\dir\\test\\1.md
-    // return: dir / test / 1
-    return filePath.replace(rootDir, '').replace(/^\\/, '').replace(/\.md$/, '').replace(/\\/g, ' / ');
-  }
+  // if (isMac()) {
+  //   // rootDir: /path/md
+  //   // filePath: /path/md/dir/test/1.md
+  //   // return: dir / test / 1
+  //   return filePath.replace(rootDir, '').replace(/^\//, '').replace(/\.md$/, '').replace(/\//g, ' / ');
+  // } else {
+  //   // rootDir: C:\\path\\md
+  //   // filePath: C:\\path\\md\\dir\\test\\1.md
+  //   // return: dir / test / 1
+  //   return filePath.replace(rootDir, '').replace(/^\\/, '').replace(/\.md$/, '').replace(/\\/g, ' / ');
+  // }
+  return filePath.replace(rootDir, '').replace(/^\//, '').replace(/\.md$/, '').replace(/\//g, ' / ');
 }

@@ -75,10 +75,11 @@ const useStore = create<MStore>()(
   persist(
     (set, get) => ({
       // rootDir: undefined,
-      rootDir: import.meta.env.VITE_APP_PATH,
+      rootDir: import.meta.env.VITE_APP_PATH.replace(/\\/g, '/'),
       setRootDir: (rootDir: string | undefined) => set({ rootDir: rootDir }),
 
-      tabs: [new MEditor(InitTabId, import.meta.env.VITE_APP_PATH)],
+      // for rootDir, always use '/'
+      tabs: [new MEditor(InitTabId, import.meta.env.VITE_APP_PATH.replace(/\\/g, '/'))],
       setTabs: (tabs: MEditor[]) => set({ tabs: tabs }),
 
       activeTabIndex: 0,

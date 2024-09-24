@@ -65,9 +65,18 @@ app.on('activate', () => {
   // dock icon is clicked and there are no other windows open.
   if (BrowserWindow.getAllWindows().length === 0) {
     createWindow()
-
   }
 })
+
+// app.whenReady().then(async () => {
+//   // 有时候遇到每次打开都报错的异常情况, 可以通过清空缓存解决
+//   await session.defaultSession.clearCache();
+//   await session.defaultSession.clearStorageData();
+
+//   createWindow();
+//   registerIpcHandlers(); // 设置 IPC 处理程序
+//   registerMenus();
+// });
 
 app.whenReady().then(() => {
   createWindow();
