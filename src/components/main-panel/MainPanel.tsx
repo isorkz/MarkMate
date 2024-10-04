@@ -63,8 +63,21 @@ const MainPanel = () => {
           throw new Error('markdownSource is undefined.')
         }
         updateSourceContent(markdownSource)
-        window.api.saveFile(tabsRef.current[activeTabIndexRef.current].filePath, markdownSource).then(() => {
+
+        const remoteRepo = import.meta.env.VITE_APP_GIT_REMOTE_REPO;
+        window.api.saveFile(tabsRef.current[activeTabIndexRef.current].filePath, markdownSource, rootDir, remoteRepo).then(() => {
           saveTab();
+
+          // Sync to the remote repository
+          window.api.gitSync(rootDir, remoteRepo).then(() => {
+            console.log('git sync success')
+          }).catch((error: any) => {
+            console.error('git sync error: ', error)
+            toast.error('Failed to sync up the remote repository: ', error);
+          })
+        }).catch((error: any) => {
+          console.error('failed to save file: ', error)
+          toast.error(`Failed to save file ${tabsRef.current[activeTabIndexRef.current].filePath}. ${error}`);
         })
       } else {
         throw new Error('filePath is empty.')

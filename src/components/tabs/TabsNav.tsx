@@ -13,7 +13,7 @@ interface TabButtonProps {
   tabId: string;
 };
 
-const ConfirmModal = ({ showModal, setShowModal, tabIndex }: { showModal: boolean, setShowModal: Dispatch<SetStateAction<boolean>>, tabIndex: number }) => {
+const ConfirmModal = ({ showModal, setShowModal, tabIndex, rootDir }: { showModal: boolean, setShowModal: Dispatch<SetStateAction<boolean>>, tabIndex: number, rootDir: string | undefined }) => {
   const tabs = useStore((state) => state.tabs);
   const removeTabByIndex = useStore((state) => state.removeTabByIndex);
   const updateSourceContent = useStore((state) => state.updateSourceContent);
@@ -31,8 +31,21 @@ const ConfirmModal = ({ showModal, setShowModal, tabIndex }: { showModal: boolea
           throw new Error('markdownSource is undefined.')
         }
         updateSourceContent(markdownSource)
-        window.api.saveFile(tabs[tabIndex].filePath, markdownSource).then(() => {
+
+        const remoteRepo = import.meta.env.VITE_APP_GIT_REMOTE_REPO;
+        window.api.saveFile(tabs[tabIndex].filePath, markdownSource, rootDir, remoteRepo).then(() => {
           removeTabByIndex(tabIndex)
+
+          // Sync to the remote repository
+          window.api.gitSync(rootDir, remoteRepo).then(() => {
+            console.log('git sync success')
+          }).catch((error: any) => {
+            console.error('git sync error: ', error)
+            toast.error('Failed to sync up the remote repository: ', error);
+          })
+        }).catch((error: any) => {
+          console.error('failed to save file: ', error)
+          toast.error(`Failed to save file ${tabs[tabIndex].filePath}. ${error}`);
         })
       } else {
         throw new Error('filePath is empty.')
@@ -75,6 +88,7 @@ const TabButton = ({
   const [showConfirmModal, setShowConfirmModal] = useState<boolean>(false);
 
   const activeTabId = useStore((state) => state.activeTabId);
+  const rootDir = useStore((state) => state.rootDir);
   const tabs = useStore((state) => state.tabs);
   const setActiveTabId = useStore((state) => state.setActiveTabId);
   const removeTabByIndex = useStore((state) => state.removeTabByIndex);
@@ -114,7 +128,7 @@ const TabButton = ({
         </div>
       </div>
 
-      {showConfirmModal && <ConfirmModal showModal={showConfirmModal} setShowModal={setShowConfirmModal} tabIndex={tabIndex} />}
+      {showConfirmModal && <ConfirmModal showModal={showConfirmModal} setShowModal={setShowConfirmModal} tabIndex={tabIndex} rootDir={rootDir} />}
     </>
   )
 }

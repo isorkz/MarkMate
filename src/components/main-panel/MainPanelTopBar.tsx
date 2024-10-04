@@ -57,6 +57,7 @@ const MainPanelTopBar = ({ title, changed }: TopBarProps) => {
     let intervalId: NodeJS.Timeout;
 
     const checkGitStatus = async () => {
+      console.log('checkGitStatus: ', rootDir);
       window.api.gitStatus(rootDir).then((status: any) => {
         setSyncStatus(status);
       }).catch((error: any) => {

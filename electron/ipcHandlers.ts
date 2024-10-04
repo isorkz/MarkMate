@@ -173,12 +173,20 @@ export const registerIpcHandlers = (): void => {
   ipcMain.handle('git-sync', async (event, rootDir: string, remoteRepo: string) => {
     try {
       const simpleGit = git(rootDir);
-      let pullResult = await simpleGit.pull(remoteRepo, 'main');
-      // console.log('pullResult: ', pullResult);
-      await simpleGit.add('./*');
-      await simpleGit.commit('update');
-      const pushResult = await simpleGit.push(remoteRepo);
-      // console.log('pushResult: ', pushResult);
+
+      // Check current status
+      const status = await simpleGit.status();
+      if (status.files.length > 0) {
+        // If there are changes, commit and push
+        await simpleGit.add('./*');
+        await simpleGit.commit('Update');
+      }
+
+      // Pull latest changes with rebase
+      await simpleGit.pull(remoteRepo, 'main', { '--rebase': 'true' });
+
+      // Push local commits to origin
+      await simpleGit.push(remoteRepo, 'main');
     } catch (error) {
       throw error;
     }
@@ -188,7 +196,7 @@ export const registerIpcHandlers = (): void => {
     try {
       const simpleGit = git(rootDir);
       let statusResult = await simpleGit.status();
-      // console.log('statusResult: ', statusResult);
+      console.log('statusResult: ', statusResult);
       return statusResult.files.length === 0 ? 'up-to-date' : 'out-of-date'
     } catch (error) {
       throw error;
