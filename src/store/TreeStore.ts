@@ -222,7 +222,7 @@ const useTreeStore = create<TreeStore>()(
 
           const dfs = (node: TreeNode) => {
             if (node.path === path) {
-              if (node.children) {
+              if (node.children && node.children.length > 0) {
                 node.children.forEach(child => {
                   if (child.name === newNode.name) {
                     throw new Error(`Name \'${newNode.name}\' already exists in ${path}`)
@@ -230,6 +230,9 @@ const useTreeStore = create<TreeStore>()(
                 })
                 newNode.index = node.children[node.children.length - 1].index + 1
                 node.children.push(newNode)
+                return
+              } else {
+                node.children = [newNode]
                 return
               }
             } else if (node.children) {
