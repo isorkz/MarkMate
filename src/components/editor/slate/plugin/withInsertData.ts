@@ -89,63 +89,72 @@ const insertImage = (editor: Editor, url: string) => {
 }
 
 const parseHtml = (html: string) => {
-    const domParser = new DOMParser();
-    const doc = domParser.parseFromString(html, 'text/html');
+  const domParser = new DOMParser();
+  const doc = domParser.parseFromString(html, 'text/html');
 
-    const traverse = (node: Node): any => {
-      // console.log('traverse node:', node)
-      if (node.nodeType === Node.TEXT_NODE) {
-        const text = node.textContent || '';
-        // Filter out text nodes that only contain whitespace
-        if (text.trim() === '') {
-            return null;
-        }
-        return { text };
-    }
-      if (node.nodeType !== Node.ELEMENT_NODE) {
+  const traverse = (node: Node): any => {
+    // console.log('traverse node:', node)
+    if (node.nodeType === Node.TEXT_NODE) {
+      const text = node.textContent || '';
+      // Filter out text nodes that only contain whitespace
+      if (text.trim() === '') {
         return null;
       }
-      const element = node as HTMLElement;
-      let children: any[] = [];
-      element.childNodes.forEach(child => {
-        const childNode = traverse(child);
-        if (childNode) {
-          if (childNode.text !== undefined || childNode.type === 'image') {
-              children.push(childNode);
-          } else {
-              children = children.concat(childNode.children || []);
-          }
+      return { text };
+    }
+    if (node.nodeType !== Node.ELEMENT_NODE) {
+      return null;
+    }
+    const element = node as HTMLElement;
+    let children: any[] = [];
+    element.childNodes.forEach(child => {
+      const childNode = traverse(child);
+      if (childNode) {
+        if (childNode.text !== undefined || childNode.type === 'image') {
+          children.push(childNode);
+        } else {
+          children = children.concat(childNode.children || []);
+        }
       }
-      });
-      // console.log('element: ', element)
-      switch (element.tagName.toLowerCase()) {
-        case 'p':
-          return { type: 'paragraph', children };
-        case 'strong':
-        case 'b':
-          return { text: children.map((c) => c.text).join(''), bold: true };
-        case 'em':
-        case 'i':
-          return { text: children.map((c) => c.text).join(''), italic: true };
-        case 'a':
-          return { 
-            text: children.map((c) => c.text).join(''),
-            url: element.getAttribute('href') || ''
+    });
+    // console.log('element: ', element)
+    // console.log('element.tagName: ', element.tagName)
+    switch (element.tagName.toLowerCase()) {
+      case 'p':
+        return { type: 'paragraph', children };
+      case 'strong':
+      case 'b':
+        return { text: children.map((c) => c.text).join(''), bold: true };
+      case 'em':
+      case 'i':
+        return { text: children.map((c) => c.text).join(''), italic: true };
+      case 'a':
+        return {
+          text: children.map((c) => c.text).join(''),
+          url: element.getAttribute('href') || ''
         };
-        case 'img':
-          return { type: 'image', url: element.getAttribute('src') || '', children: [{ text: '' }] };
-        case 'span':
-          return { text: node.textContent || ''}
-        // handle other elements
-        default:
-          return { children };
-      }
-    };
+      case 'img':
+        return { type: 'image', url: element.getAttribute('src') || '', children: [{ text: '' }] };
+      case 'span':
+        return { text: node.textContent || '' }
+      case 'h1':
+        return { type: 'head', children: [{ text: node.textContent || '' }], level: 1 };
+      case 'h2':
+        return { type: 'head', children: [{ text: node.textContent || '' }], level: 2 };
+      case 'h3':
+        return { type: 'head', children: [{ text: node.textContent || '' }], level: 3 };
+      case 'h4':
+        return { type: 'head', children: [{ text: node.textContent || '' }], level: 4 };
+      // handle other elements
+      default:
+        return { children };
+    }
+  };
 
-    const slateNodes = Array.from(doc.body.childNodes)
-        .map(traverse)
-        .filter(node => node !== null);
-    
-    console.log('slateNodes: ', slateNodes)
-    return slateNodes;
+  const slateNodes = Array.from(doc.body.childNodes)
+    .map(traverse)
+    .filter(node => node !== null);
+
+  console.log('slateNodes: ', slateNodes)
+  return slateNodes;
 }
