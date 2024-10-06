@@ -1,4 +1,4 @@
-import { Editor, Transforms, Element as SlateElement } from 'slate'
+import { Editor, Transforms, Element as SlateElement, Text as SlateText } from 'slate'
 import { CustomText, DefaultParagraphElement, ImageElement } from '../Element';
 import { isValidUrl } from '../../../../utils/common';
 
@@ -53,7 +53,8 @@ export const withInsertData = (editor: Editor, rootDir: string | undefined, curr
     // If the html is not pasted from slate editor, parse it to slate nodes.
     // Otherwise, use the default insertData method.
     if (html && !html.includes('data-slate-')) {
-      const slateNodes = parseHtml(html)
+      let slateNodes = parseHtml(html)
+      slateNodes = validateSlateNodes(slateNodes)
       Transforms.insertFragment(editor, slateNodes);
       return
     }
@@ -171,4 +172,35 @@ const parseHtml = (html: string) => {
 
   console.log('slateNodes: ', slateNodes)
   return slateNodes;
+}
+
+// sometimes the parseHtml() gets the invalid results, like:
+// [
+//   {
+//     "children": [
+//       {
+//         "text": "xxx"
+//       }
+//     ]
+//   }
+// ]
+//
+// it should be:
+// [
+//   {
+//     "text": "xxx"
+//   }
+// ]
+const validateSlateNodes = (slateNodes: any): any[] => {
+  let newSlateNodes: any[] = []
+  slateNodes.forEach((n: any) => {
+    if (SlateElement.isElement(n) && n.type !== undefined || SlateText.isText(n)) {
+      newSlateNodes.push(n)
+    } else {
+      if (n.children && n.children.length > 0) {
+        newSlateNodes.push(...validateSlateNodes(n.children))
+      }
+    }
+  });
+  return newSlateNodes;
 }
