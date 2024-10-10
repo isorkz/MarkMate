@@ -2,15 +2,11 @@ import { Text } from 'slate'
 
 // ancestorNode is the most outer node of the current node, which is the direct child of the markdown AST root node.
 export const slateNodesToMarkdownSource = (nodes: any[], preStr: string = '', ancestorNode: any = undefined, parentNode: any = undefined) => {
-  try {
-    let markdownSource = ''
-    for (const node of nodes) {
-      markdownSource += parseSlateNodeToMarkdownSource(node, preStr, ancestorNode)
-    }
-    return markdownSource
-  } catch (error) {
-    console.error('failed to slateNodesToMarkdownSource: ', error)
+  let markdownSource = ''
+  for (const node of nodes) {
+    markdownSource += parseSlateNodeToMarkdownSource(node, preStr, ancestorNode)
   }
+  return markdownSource
 }
 
 // ancestorNode is the most outer node of the current node, which is the direct child of the markdown AST root node.
@@ -84,7 +80,7 @@ const parseSlateNodeToMarkdownSource = (node: any, preStr: string = '', ancestor
     case 'table':
       return parseTable(node)
     default:
-      throw new Error('Unknown node type in parseSlateNodeToMarkdownSource: ' + node.type)
+      throw new Error('Unknown node type in parseSlateNodeToMarkdownSource: node.type=' + node.type + ', node=' + JSON.stringify(node))
     // not support footnoteReference, footnoteDefinition, html
   }
 }

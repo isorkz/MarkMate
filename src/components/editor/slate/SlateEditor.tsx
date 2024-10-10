@@ -34,13 +34,18 @@ const SlateEditor = () => {
     updateSlateNodes(value)
 
     // update the source content
-    const markdownSource = slateNodesToMarkdownSource(activeEditor.slateNodes)
-    if (!markdownSource) return
-    updateSourceContent(markdownSource)
+    try {
+      const markdownSource = slateNodesToMarkdownSource(activeEditor.slateNodes)
+      if (!markdownSource) return
+      updateSourceContent(markdownSource)
 
-    // update the cache
-    if (activeEditor.filePath) {
-      slateNodesCache.set(activeEditor.filePath, value)
+      // update the cache
+      if (activeEditor.filePath) {
+        slateNodesCache.set(activeEditor.filePath, value)
+      }
+    }
+    catch (error) {
+      console.error('Failed to onValueChange: ', error)
     }
   }
 
