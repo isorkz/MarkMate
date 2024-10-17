@@ -5,6 +5,10 @@ export const slateNodesToMarkdownSource = (nodes: any[], preStr: string = '', an
   let markdownSource = ''
   for (const node of nodes) {
     markdownSource += parseSlateNodeToMarkdownSource(node, preStr, ancestorNode)
+
+    if (node.type === 'list') {
+      markdownSource += '\n'
+    }
   }
   return markdownSource
 }
@@ -65,8 +69,8 @@ const parseSlateNodeToMarkdownSource = (node: any, preStr: string = '', ancestor
           markdownSource += checkedPrefix + parseSlateNodeToMarkdownSource(child, preStr, ancestorNode, node)
 
           // Add new empty line for each child. Generally, the children including two nodes: one paragraph and one list.
-          let next_child = i < node.children.length - 1 ? node.children[i + 1] : undefined
-          if (!next_child || next_child.type === 'list') markdownSource += '\n'
+          // let next_child = i < node.children.length - 1 ? node.children[i + 1] : undefined
+          // if (!next_child || next_child.type === 'list') markdownSource += '\n'
         }
       }
       return markdownSource
