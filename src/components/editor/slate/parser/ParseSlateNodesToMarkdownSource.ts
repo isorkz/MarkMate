@@ -53,7 +53,8 @@ const parseSlateNodeToMarkdownSource = (node: any, preStr: string = '', ancestor
       }
       return markdownSource
     case 'list-item':
-      for (let child of node.children) {
+      for (let i = 0; i < node.children.length; i++) {
+        let child = node.children[i]
         if (child.type === 'list') {
           markdownSource += parseSlateNodeToMarkdownSource(child, preStr + '  ', ancestorNode, node)
         } else {
@@ -62,9 +63,13 @@ const parseSlateNodeToMarkdownSource = (node: any, preStr: string = '', ancestor
             checkedPrefix = node.checked ? '[x] ' : '[ ] '
           }
           markdownSource += checkedPrefix + parseSlateNodeToMarkdownSource(child, preStr, ancestorNode, node)
+
+          // Add new empty line for each child. Generally, the children including two nodes: one paragraph and one list.
+          let next_child = i < node.children.length - 1 ? node.children[i + 1] : undefined
+          if (!next_child || next_child.type === 'list') markdownSource += '\n'
         }
       }
-      return markdownSource + '\n'
+      return markdownSource
     case 'code':
       const language = node.language !== undefined && node.language !== null ? node.language : ''
       return '```' + language + '\n' + slateNodesToMarkdownSource(node.children, preStr, ancestor, node) + '```\n\n'
