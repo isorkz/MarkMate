@@ -22,7 +22,7 @@ export const registerMenus = (): void => {
       menuTemplate.push({
         label: 'Open in New Tab',
         click: () => {
-          e.sender.send('tree-command-openfile', { fileId: params.fileId, filePath: params.filePath })
+          e.sender.send('tree-command-openfile-in-newtab', { fileId: params.fileId, filePath: params.filePath })
         }
       });
 

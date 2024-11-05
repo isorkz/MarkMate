@@ -34,12 +34,14 @@ export class MEditor {
   // It must have for remove tab scenarios, otherwise, the tab content could be rendered unexpectedly.
   // (This id is not the same as fileId, because for new tabs without saving, the fileId is undefined.)
   id: string;
+  lastModifiedTime: Date;
 
-  constructor(id: string, rootDir: string | undefined, fileId: string | undefined = undefined, filePath: string | undefined = undefined, sourceContent: string = '', slateNodes: any[] = []) {
+  constructor(id: string, rootDir: string | undefined, fileId: string | undefined = undefined, filePath: string | undefined = undefined, sourceContent: string = '', lastModifiedTime: Date = new Date(), slateNodes: any[] = []) {
     this.id = id;
     this.rootDir = rootDir;
     this.fileId = fileId;
     this.filePath = filePath;
+    this.lastModifiedTime = lastModifiedTime;
     this.sourceContent = sourceContent;
     this.editor = withInsertData(withMarkdownShortcuts(withReact(withHistory(createEditor()))), rootDir, filePath);
 

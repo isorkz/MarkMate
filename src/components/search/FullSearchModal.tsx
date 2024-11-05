@@ -67,14 +67,15 @@ const FullSearch = ({ showFullSearchModal, setShowFullSearchModal }: FullSearchM
     if (index >= 0) {
       setActiveTabId(tabs[index].id)
     } else {
-      window.api.readFile(filePath, (err: any, data: any) => {
+      window.api.readFile(filePath, (err: any, result: any) => {
         if (err) {
           console.error(err);
         } else {
+          const lastModifiedTime = new Date(result.lastModifiedTime);
           if (getActiveTab().changed) {
-            newTab(fileId, filePath, data)
+            newTab(fileId, filePath, result.content, lastModifiedTime)
           } else {
-            setActiveTab(fileId, filePath, data)
+            setActiveTab(fileId, filePath, result.content, lastModifiedTime)
             // Reset the slate nodes when switching to another tab, and clear the history.
             SlateEditorUtils.resetSlateNodes(getActiveTab().editor, getActiveTab().slateNodes, true);
           }

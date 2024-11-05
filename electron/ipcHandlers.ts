@@ -36,18 +36,38 @@ const getImageFileName = (): string => {
 // 在主进程中执行需要Node.js原生模块的操作, 比如fs，然后将结果发送到渲染进程。
 export const registerIpcHandlers = (): void => {
   ipcMain.handle('read-file', async (event, path: string) => {
-    return fs.promises.readFile(path, 'utf8');
+    const data = await fs.promises.readFile(path, 'utf8');
+    const stats = await fs.promises.stat(path);
+    return {
+      content: data,
+      lastModifiedTime: stats.mtime,
+    };
   });
 
   ipcMain.handle('read-dir-tree', async (event, path: string) => {
+    async function addModificationTimeToTree(tree: any) {
+      for (const item of tree.children) {
+        if (!item.children) {
+          const stats = await fs.promises.stat(item.path);
+          item.lastModifiedTime = stats.mtime;
+        } else {
+          await addModificationTimeToTree(item);
+        }
+      }
+    }
+
     // Filter by both md files and hidden folders
-    return dirTree(path, {
+    const options = {
       extensions: /\.md$/,
       // Custom filter function to exclude hidden folders and files
       // If normalizePath is true, use '/' for all paths in both mac and windows
       normalizePath: true, // Normalize the paths for cross-platform compatibility
       exclude: /(^|\/)\.[^\/\.]/, // Exclude hidden files and folders
-    });
+    };
+
+    const tree = dirTree(path, options);
+    await addModificationTimeToTree(tree);
+    return tree;
   });
 
   ipcMain.handle('save-file', async (event, path: string, content: string) => {

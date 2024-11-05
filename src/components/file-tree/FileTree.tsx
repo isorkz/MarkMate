@@ -42,6 +42,7 @@ const FileTree = () => {
         path: editingNodeRef.current.path,
         type: 'file',
         index: 1, // temporary index
+        lastModifiedTime: new Date(),
       }
       try {
         pushTreeNode(editingNodeRef.current.path, newNode);
@@ -61,11 +62,12 @@ const FileTree = () => {
       setActiveTabId(tabs[index].id)
     } else {
       // window.api defined in preload.ts, and implemented in ipcHandler.ts
-      window.api.readFile(params.filePath, (err: any, data: any) => {
+      window.api.readFile(params.filePath, (err: any, result: any) => {
         if (err) {
           console.error(err);
         } else {
-          newTab(params.fileId, params.filePath, data)
+          const lastModifiedTime = new Date(result.lastModifiedTime);
+          newTab(params.fileId, params.filePath, result.content, lastModifiedTime)
         }
       })
     }
@@ -101,7 +103,7 @@ const FileTree = () => {
   useEffect(() => {
     window.ipcRenderer.on('tree-command-rename', renameFile);
     window.ipcRenderer.on('tree-command-newfile', newFile);
-    window.ipcRenderer.on('tree-command-openfile', openFile);
+    window.ipcRenderer.on('tree-command-openfile-in-newtab', openFile);
     window.ipcRenderer.on('tree-command-favorite', toggleFavoriteFile);
     window.ipcRenderer.on('tree-command-unfavorite', toggleFavoriteFile);
     window.ipcRenderer.on('tree-command-delete', deleteFile);
@@ -109,7 +111,7 @@ const FileTree = () => {
     return () => {
       window.ipcRenderer.removeAllListeners('tree-command-rename')
       window.ipcRenderer.removeAllListeners('tree-command-newfile')
-      window.ipcRenderer.removeAllListeners('tree-command-openfile')
+      window.ipcRenderer.removeAllListeners('tree-command-openfile-in-newtab')
       window.ipcRenderer.removeAllListeners('tree-command-favorite')
       window.ipcRenderer.removeAllListeners('tree-command-unfavorite')
       window.ipcRenderer.removeAllListeners('tree-command-delete')
