@@ -66,14 +66,15 @@ const TreeItem = ({
         setActiveTabId(tabs[index].id)
       } else {
         // window.api defined in preload.ts, and implemented in ipcHandler.ts
-        window.api.readFile(node.path, (err: any, data: any) => {
+        window.api.readFile(node.path, (err: any, result: any) => {
           if (err) {
             console.error(err);
           } else {
+            const lastModifiedTime = new Date(result.lastModifiedTime);
             if (getActiveTab().changed) {
-              newTab(node.id, node.path, data)
+              newTab(node.id, node.path, result.content, lastModifiedTime)
             } else {
-              setActiveTab(node.id, node.path, data)
+              setActiveTab(node.id, node.path, result.content, lastModifiedTime)
               // Reset the slate nodes when switching to another tab, and clear the history.
               SlateEditorUtils.resetSlateNodes(getActiveTab().editor, getActiveTab().slateNodes, true);
             }

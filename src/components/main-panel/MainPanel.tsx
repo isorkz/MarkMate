@@ -122,7 +122,7 @@ const MainPanel = () => {
 
   return (
     <div className='flex flex-col w-full h-full overflow-x-hidden'>
-      <MainPanelTopBar title={getTopbarTitle()} changed={tabs[activeTabIndex].changed} />
+      <MainPanelTopBar title={getTopbarTitle()} changed={tabs[activeTabIndex].changed} lastModifiedTime={tabs[activeTabIndex].lastModifiedTime} />
 
       <div className='relative'>
         <TabsNav />

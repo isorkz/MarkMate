@@ -7,4 +7,5 @@ export type TreeNode = {
   isOpened?: boolean;
   index: number;
   favorite?: boolean;
+  lastModifiedTime?: Date;
 };

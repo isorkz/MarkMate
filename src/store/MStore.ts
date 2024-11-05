@@ -19,12 +19,12 @@ interface MStore {
   setActiveTabId: (id: string) => void;
 
   // open a file in the current active tab (update the tab content)
-  setActiveTab: (fileId: string, filePath: string, content: string) => void;
+  setActiveTab: (fileId: string, filePath: string, content: string, lastModifiedTime: Date) => void;
   getActiveTab: () => MEditor;
   getActiveFilePath: () => string | undefined;
 
   // open a file in a new tab
-  newTab: (fileId: string, filePath: string, content: string) => void;
+  newTab: (fileId: string, filePath: string, content: string, lastModifiedTime: Date) => void;
   // new a empty tab
   newEmptyTab: () => void;
   removeTabByIndex: (tabIndex: number) => void;
@@ -59,7 +59,10 @@ const customStorage: PersistStorage<MStore> = {
     const tabs = state.state.tabs;
     // Recreate the editor
     if (tabs) {
-      const newTabs: MEditor[] = tabs.map((tab: any) => new MEditor(tab.id, rootDir, tab.fileId, tab.filePath, tab.sourceContent, tab.slateNodes));
+      const newTabs: MEditor[] = tabs.map((tab: any) => {
+        const lastModifiedTime = new Date(tab.lastModifiedTime);
+        return new MEditor(tab.id, rootDir, tab.fileId, tab.filePath, tab.sourceContent, lastModifiedTime, tab.slateNodes)
+      });
       state.state.tabs = newTabs;
     }
     return state;
@@ -93,12 +96,13 @@ const useStore = create<MStore>()(
       getActiveFilePath: () =>
         get().tabs[get().activeTabIndex].filePath,
 
-      setActiveTab: (fileId: string, filePath: string, content: string) =>
+      setActiveTab: (fileId: string, filePath: string, content: string, lastModifiedTime: Date) =>
         set((state) => {
           const newTabs = [...state.tabs];
           newTabs[state.activeTabIndex].changed = false;
           newTabs[state.activeTabIndex].fileId = fileId;
           newTabs[state.activeTabIndex].filePath = filePath;
+          newTabs[state.activeTabIndex].lastModifiedTime = lastModifiedTime;
           newTabs[state.activeTabIndex].sourceContent = content;
           newTabs[state.activeTabIndex].slateNodes = markdownSourceToMEditorNodes(content) || DefaultEmptySlateNodes();
 
@@ -108,9 +112,9 @@ const useStore = create<MStore>()(
           };
         }),
 
-      newTab: (fileId: string, filePath: string, content: string) =>
+      newTab: (fileId: string, filePath: string, content: string, lastModifiedTime: Date) =>
         set((state) => {
-          const newTab = new MEditor(nanoid(), state.rootDir, fileId, filePath, content);
+          const newTab = new MEditor(nanoid(), state.rootDir, fileId, filePath, content, lastModifiedTime);
           const newTabs = [...state.tabs, newTab];
           return {
             ...state,
@@ -151,38 +155,38 @@ const useStore = create<MStore>()(
           };
         }),
 
-        removeTabByFilePath: (filePath: string) =>
-          set((state) => {
-            const tabIndex = state.tabs.findIndex((tab) => tab.filePath === filePath);
-            if (tabIndex < 0) {
-              return {};
-            }
+      removeTabByFilePath: (filePath: string) =>
+        set((state) => {
+          const tabIndex = state.tabs.findIndex((tab) => tab.filePath === filePath);
+          if (tabIndex < 0) {
+            return {};
+          }
 
-            const newTabs = state.tabs.filter((_, index) => index !== tabIndex);
-            if (newTabs.length === 0) {
-              return {
-                ...state,
-                tabs: [new MEditor(InitTabId, state.rootDir)],
-                activeTabId: InitTabId,
-                activeTabIndex: 0
-              };
-            }
-
-            let newActiveTabIndex = state.activeTabIndex;
-            if (state.activeTabIndex === tabIndex) {
-              newActiveTabIndex = 0;
-            } else {
-              if (state.activeTabIndex > tabIndex) {
-                newActiveTabIndex = state.activeTabIndex - 1;
-              }
-            }
+          const newTabs = state.tabs.filter((_, index) => index !== tabIndex);
+          if (newTabs.length === 0) {
             return {
               ...state,
-              tabs: newTabs,
-              activeTabId: newTabs[newActiveTabIndex].id,
-              activeTabIndex: newActiveTabIndex
+              tabs: [new MEditor(InitTabId, state.rootDir)],
+              activeTabId: InitTabId,
+              activeTabIndex: 0
             };
-          }),
+          }
+
+          let newActiveTabIndex = state.activeTabIndex;
+          if (state.activeTabIndex === tabIndex) {
+            newActiveTabIndex = 0;
+          } else {
+            if (state.activeTabIndex > tabIndex) {
+              newActiveTabIndex = state.activeTabIndex - 1;
+            }
+          }
+          return {
+            ...state,
+            tabs: newTabs,
+            activeTabId: newTabs[newActiveTabIndex].id,
+            activeTabIndex: newActiveTabIndex
+          };
+        }),
 
       setActiveTabId: (id: string) =>
         set((state) => {
@@ -223,6 +227,7 @@ const useStore = create<MStore>()(
         set((state) => {
           const newTabs = [...state.tabs];
           newTabs[state.activeTabIndex].changed = false;
+          newTabs[state.activeTabIndex].lastModifiedTime = new Date();
           return {
             ...state,
             tabs: newTabs

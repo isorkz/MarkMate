@@ -1,6 +1,7 @@
 import toast from "react-hot-toast";
 import useStore from "../../store/MStore";
 import useTreeStore from "../../store/TreeStore";
+import { getFormatDateStr } from '../../utils/common'
 import { LayoutSplitIcon, RefreshIcon, SyncFailedIcon, SyncOutOfDateIcon, SyncUpToDateIcon, SyncingIcon, TocIcon } from "../icons";
 import { FunctionComponent, useEffect, MouseEvent } from "react";
 
@@ -22,9 +23,10 @@ const MenuButton: React.FC<MenuItemProps> = ({ icon: Icon, className, onClick })
 interface TopBarProps {
   title: string;
   changed: boolean;
+  lastModifiedTime: Date;
 };
 
-const MainPanelTopBar = ({ title, changed }: TopBarProps) => {
+const MainPanelTopBar = ({ title, changed, lastModifiedTime }: TopBarProps) => {
   const showLeftSidebar = useStore((state) => state.showLeftSidebar);
   const toggleTocPanel = useStore((state) => state.toggleTocPanel);
   const toggleMarkdownSourceEditor = useStore((state) => state.toggleMarkdownSourceEditor);
@@ -107,11 +109,20 @@ const MainPanelTopBar = ({ title, changed }: TopBarProps) => {
       </div>
 
       <div className='flex w-full justify-between'>
-        {/* draggable part */}
-        {/* flex-grow: grow to take the remaining space */}
-        <div className='flex flex-grow items-center' style={{ WebkitAppRegion: 'drag' } as any}>
-          <div className='text-gray-500 text-sm font-medium'>
-            {title} {changed && '*'}
+        <div className='flex w-full justify-between'>
+          {/* draggable part */}
+          {/* flex-grow: grow to take the remaining space */}
+          <div className='flex flex-grow items-center' style={{ WebkitAppRegion: 'drag' } as any}>
+            <div className='text-gray-500 text-sm font-medium'>
+              {title} {changed && '*'}
+            </div>
+          </div>
+
+          {/* Show edited datetime */}
+          <div className='flex items-center' style={{ WebkitAppRegion: 'drag' } as any}>
+            <div className='text-gray-400 text-sm font-normal mx-8'>
+              Edited {getFormatDateStr(lastModifiedTime)}
+            </div>
           </div>
         </div>
 
