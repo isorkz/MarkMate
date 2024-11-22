@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from 'zustand/middleware'
-import { TreeNode } from "../models/FileTree";
+import { FileTreeNode } from "../models/FileTree";
 import { Descendant } from "slate";
 import { nanoid } from 'nanoid'
 
@@ -25,7 +25,7 @@ type SyncStatus = 'up-to-date' | 'syncing' | 'out-of-date' | 'failed'
 //     },
 //   ]
 // }
-const updateTreeIndex = (children: TreeNode[], oldTreeMap: Map<string, TreeNode>) => {
+const updateTreeIndex = (children: FileTreeNode[], oldTreeMap: Map<string, FileTreeNode>) => {
   // If the old node has index, then use it, otherwise, set it to -1
   for (const child of children) {
     const oldChildNode = oldTreeMap.get(child.path.toLowerCase())
@@ -49,7 +49,7 @@ const updateTreeIndex = (children: TreeNode[], oldTreeMap: Map<string, TreeNode>
   }
 }
 
-const updateTree = (node: TreeNode, oldTreeMap: Map<string, TreeNode>) => {
+const updateTree = (node: FileTreeNode, oldTreeMap: Map<string, FileTreeNode>) => {
   if (!node) {
     return
   }
@@ -71,7 +71,7 @@ const updateTree = (node: TreeNode, oldTreeMap: Map<string, TreeNode>) => {
   }
 }
 
-const openFileItemByDfs = (node: TreeNode | undefined, openedFile: string | undefined): boolean => {
+const openFileItemByDfs = (node: FileTreeNode | undefined, openedFile: string | undefined): boolean => {
   if (node && openedFile) {
     if (node.path === openedFile) {
       node.isOpened = true
@@ -90,7 +90,7 @@ const openFileItemByDfs = (node: TreeNode | undefined, openedFile: string | unde
   return false
 }
 
-const treeToMapByPath = (node: TreeNode | undefined, treeMap: Map<string, TreeNode>) => {
+const treeToMapByPath = (node: FileTreeNode | undefined, treeMap: Map<string, FileTreeNode>) => {
   if (!node) {
     return
   }
@@ -104,7 +104,7 @@ const treeToMapByPath = (node: TreeNode | undefined, treeMap: Map<string, TreeNo
   }
 }
 
-const treeToMapById = (node: TreeNode | undefined, treeMap: Map<string, TreeNode>) => {
+const treeToMapById = (node: FileTreeNode | undefined, treeMap: Map<string, FileTreeNode>) => {
   if (!node) {
     return
   }
@@ -118,18 +118,18 @@ const treeToMapById = (node: TreeNode | undefined, treeMap: Map<string, TreeNode
   }
 }
 
-const loadFileTree = (treeData: any, oldTree: TreeNode | undefined): TreeNode => {
+const loadFileTree = (treeData: any, oldTree: FileTreeNode | undefined): FileTreeNode => {
   const newTree = JSON.parse(JSON.stringify(treeData))
 
-  // key: file path, value: TreeNode
-  let oldTreeMap = new Map<string, TreeNode>()
+  // key: file path, value: FileTreeNode
+  let oldTreeMap = new Map<string, FileTreeNode>()
   treeToMapByPath(oldTree, oldTreeMap)
 
   updateTree(newTree, oldTreeMap)
   return newTree
 }
 
-const getFavoriteFiles = (node: TreeNode, favoriteFiles: TreeNode[]) => {
+const getFavoriteFiles = (node: FileTreeNode, favoriteFiles: FileTreeNode[]) => {
   if (node.children) {
     for (const child of node.children) {
       getFavoriteFiles(child, favoriteFiles)
@@ -142,17 +142,17 @@ const getFavoriteFiles = (node: TreeNode, favoriteFiles: TreeNode[]) => {
 }
 
 interface TreeStore {
-  fileTree: TreeNode | undefined;
-  setFileTree: (fileTree: TreeNode | undefined) => void;
+  fileTree: FileTreeNode | undefined;
+  setFileTree: (fileTree: FileTreeNode | undefined) => void;
 
-  // key: id, value: TreeNode
-  treeNodeMap: Map<string, TreeNode>;
+  // key: id, value: FileTreeNode
+  treeNodeMap: Map<string, FileTreeNode>;
 
-  favoriteFiles: TreeNode[];
+  favoriteFiles: FileTreeNode[];
 
   loadTree: (rootDir: string | undefined, activeFilePath: string | undefined) => void;
 
-  pushTreeNode: (path: string, newNode: TreeNode) => void;
+  pushTreeNode: (path: string, newNode: FileTreeNode) => void;
   removeTreeNode: (id: string) => void;
   toggleFavoriteTreeNode: (id: string) => void;
 
@@ -168,15 +168,15 @@ interface TreeStore {
   setSyncStatus: (syncStatus: SyncStatus) => void;
 
   // The current editing node, such as rename, delete, etc.
-  editingNode: TreeNode | undefined;
-  setEditingNode: (node: TreeNode | undefined) => void;
+  editingNode: FileTreeNode | undefined;
+  setEditingNode: (node: FileTreeNode | undefined) => void;
   editingMode: EditingMode
   setEditingMode: (mode: EditingMode) => void;
 
-  dragSrc: TreeNode | undefined;
-  setDragSrc: (dragSrc: TreeNode | undefined) => void;
-  dragDes: { node: TreeNode; mode: 'top' | 'bottom' } | undefined;
-  setDragDes: (dragDes: { node: TreeNode; mode: 'top' | 'bottom' } | undefined) => void;
+  dragSrc: FileTreeNode | undefined;
+  setDragSrc: (dragSrc: FileTreeNode | undefined) => void;
+  dragDes: { node: FileTreeNode; mode: 'top' | 'bottom' } | undefined;
+  setDragDes: (dragDes: { node: FileTreeNode; mode: 'top' | 'bottom' } | undefined) => void;
   move: () => void;
 }
 
@@ -185,9 +185,9 @@ const useTreeStore = create<TreeStore>()(
   persist(
     (set, get) => ({
       fileTree: undefined,
-      setFileTree: (fileTree: TreeNode | undefined) => set({ fileTree: fileTree }),
+      setFileTree: (fileTree: FileTreeNode | undefined) => set({ fileTree: fileTree }),
 
-      treeNodeMap: new Map<string, TreeNode>(),
+      treeNodeMap: new Map<string, FileTreeNode>(),
 
       favoriteFiles: [],
 
@@ -201,7 +201,7 @@ const useTreeStore = create<TreeStore>()(
             state.slateNodesCache.clear()
             state.treeNodeMap.clear()
             treeToMapById(newFileTree, state.treeNodeMap)
-            const favoriteFiles: TreeNode[] = []
+            const favoriteFiles: FileTreeNode[] = []
             getFavoriteFiles(newFileTree, favoriteFiles)
             return { fileTree: newFileTree, favoriteFiles: favoriteFiles }
           });
@@ -215,12 +215,12 @@ const useTreeStore = create<TreeStore>()(
       syncStatus: 'out-of-date',
       setSyncStatus: (syncStatus: SyncStatus) => set({ syncStatus: syncStatus }),
 
-      pushTreeNode: (path: string, newNode: TreeNode) =>
+      pushTreeNode: (path: string, newNode: FileTreeNode) =>
         set((state) => {
           // return {} means nothing needs to re-render
           if (!state.fileTree) return {};
 
-          const dfs = (node: TreeNode) => {
+          const dfs = (node: FileTreeNode) => {
             if (node.path === path) {
               if (node.children && node.children.length > 0) {
                 node.children.forEach(child => {
@@ -250,7 +250,7 @@ const useTreeStore = create<TreeStore>()(
           // return {} means nothing needs to re-render
           if (!state.fileTree) return {};
 
-          const dfs = (node: TreeNode) => {
+          const dfs = (node: FileTreeNode) => {
             if (node.children) {
               node.children = node.children.filter((n) => n.id !== id);
               node.children.forEach(dfs);
@@ -296,7 +296,7 @@ const useTreeStore = create<TreeStore>()(
           // return {} means nothing needs to re-render
           if (!state.fileTree) return {};
 
-          const dfs = (node: TreeNode) => {
+          const dfs = (node: FileTreeNode) => {
             if (node.children) {
               node.children = node.children.filter((n) => n.name !== '');
               node.children.forEach(dfs);
@@ -308,16 +308,16 @@ const useTreeStore = create<TreeStore>()(
         }),
 
       editingNode: undefined,
-      setEditingNode: (node: TreeNode | undefined) => set({ editingNode: node }),
+      setEditingNode: (node: FileTreeNode | undefined) => set({ editingNode: node }),
 
       editingMode: undefined,
       setEditingMode: (mode: EditingMode) => set({ editingMode: mode }),
 
       dragSrc: undefined,
-      setDragSrc: (dragSrc: TreeNode | undefined) => set({ dragSrc: dragSrc }),
+      setDragSrc: (dragSrc: FileTreeNode | undefined) => set({ dragSrc: dragSrc }),
 
       dragDes: undefined,
-      setDragDes: (dragDes: { node: TreeNode; mode: 'top' | 'bottom' } | undefined) => set({ dragDes: dragDes }),
+      setDragDes: (dragDes: { node: FileTreeNode; mode: 'top' | 'bottom' } | undefined) => set({ dragDes: dragDes }),
 
       move: () =>
         set((state) => {

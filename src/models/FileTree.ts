@@ -1,9 +1,9 @@
-export type TreeNode = {
+export type FileTreeNode = {
   id: string;
   name: string;
   path: string;
   type: 'file' | 'folder';
-  children?: TreeNode[];
+  children?: FileTreeNode[];
   isOpened?: boolean;
   index: number;
   favorite?: boolean;

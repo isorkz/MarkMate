@@ -1,5 +1,5 @@
 import { Descendant, Node, Element as SlateElement } from "slate"
-import { TreeNode } from "../../models/FileTree"
+import { FileTreeNode } from "../../models/FileTree"
 import { markdownSourceToMEditorNodes } from "../../components/editor/slate/parser/ParseMarkdownSourceToSlateNodes"
 import { getFileName } from "../common"
 import { FullSearchResult } from "../../models/Search"
@@ -57,7 +57,7 @@ const searchFile = (fileId: string, filePath: string, slateNodes: Descendant[], 
   }
 }
 
-const fullSearchOnFileTree = async (slateNodesCache: Map<string, Descendant[]>, node: TreeNode | undefined, searchText: string, searchResults: FullSearchResult[]) => {
+const fullSearchOnFileTree = async (slateNodesCache: Map<string, Descendant[]>, node: FileTreeNode | undefined, searchText: string, searchResults: FullSearchResult[]) => {
   if (!node) {
     return
   }
@@ -90,7 +90,7 @@ const fullSearchOnFileTree = async (slateNodesCache: Map<string, Descendant[]>, 
 }
 
 export class FullSearchUtils {
-  static fullSearch = async (slateNodesCache: Map<string, Descendant[]>, treeNode: TreeNode, searchText: string): Promise<FullSearchResult[]> => {
+  static fullSearch = async (slateNodesCache: Map<string, Descendant[]>, treeNode: FileTreeNode, searchText: string): Promise<FullSearchResult[]> => {
     let searchResults: FullSearchResult[] = []
     await fullSearchOnFileTree(slateNodesCache, treeNode, searchText, searchResults)
     return searchResults

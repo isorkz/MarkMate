@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import useStore from '../../store/MStore'
 import useTreeStore from '../../store/TreeStore'
-import { TreeNode } from '../../models/FileTree'
+import { FileTreeNode } from '../../models/FileTree'
 import TreeItem from './TreeItem';
 import { toast } from 'react-hot-toast';
 import { nanoid } from 'nanoid'
@@ -36,7 +36,7 @@ const FileTree = () => {
 
   const newFile = (event: any, params: { dirPath: string }) => {
     if (editingNodeRef.current) {
-      const newNode: TreeNode = {
+      const newNode: FileTreeNode = {
         id: nanoid(),
         name: '',
         path: editingNodeRef.current.path,
@@ -57,7 +57,7 @@ const FileTree = () => {
 
   const newFolder = (event: any, params: { dirPath: string }) => {
     if (editingNodeRef.current) {
-      const newNode: TreeNode = {
+      const newNode: FileTreeNode = {
         id: nanoid(),
         name: '',
         path: editingNodeRef.current.path,

@@ -2,15 +2,15 @@ import { useEffect, useRef, MutableRefObject } from 'react';
 import { ChevronRightIcon, ChevronDownIcon, DocumentIcon } from '../icons'
 import useStore from '../../store/MStore'
 import useTreeStore from '../../store/TreeStore'
-import { TreeNode } from '../../models/FileTree'
+import { FileTreeNode } from '../../models/FileTree'
 import toast from 'react-hot-toast';
 import { SlateEditorUtils } from '../editor/slate/SlateEditorUtils';
 import useSearchStore from '../../store/SearchStore';
 
 interface TreeNodeProps {
-  node: TreeNode;
+  node: FileTreeNode;
   level?: number;
-  editingNodeRef: MutableRefObject<TreeNode | undefined>;
+  editingNodeRef: MutableRefObject<FileTreeNode | undefined>;
 };
 
 const TreeItem = ({
