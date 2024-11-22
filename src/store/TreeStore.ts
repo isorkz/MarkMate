@@ -4,7 +4,7 @@ import { TreeNode } from "../models/FileTree";
 import { Descendant } from "slate";
 import { nanoid } from 'nanoid'
 
-type EditingMode = 'rename' | 'newfile' | undefined
+type EditingMode = 'rename' | 'newfile' | 'newfolder' | undefined
 
 type SyncStatus = 'up-to-date' | 'syncing' | 'out-of-date' | 'failed'
 

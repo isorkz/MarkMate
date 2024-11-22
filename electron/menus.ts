@@ -16,6 +16,13 @@ export const registerMenus = (): void => {
           e.sender.send('tree-command-newfile', { filePath: params.filePath })
         }
       });
+
+      menuTemplate.push({
+        label: 'New Folder',
+        click: () => {
+          e.sender.send('tree-command-newfolder', { filePath: params.filePath })
+        }
+      });
     }
 
     if (params.type === 'file') {

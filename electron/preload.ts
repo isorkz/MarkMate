@@ -18,8 +18,11 @@ contextBridge.exposeInMainWorld('api', {
   renameFile: (filePath: string, newFileName: string) => {
     return ipcRenderer.invoke('rename-file', filePath, newFileName);
   },
-  newFile: (filePath: string, newFileName: string) => {
-    return ipcRenderer.invoke('new-file', filePath, newFileName);
+  newFile: (dirPath: string, newFileName: string) => {
+    return ipcRenderer.invoke('new-file', dirPath, newFileName);
+  },
+  newFolder: (dirPath: string, newFolderName: string) => {
+    return ipcRenderer.invoke('new-folder', dirPath, newFolderName);
   },
   deleteFile: (filePath: string) => {
     return ipcRenderer.invoke('delete-file', filePath);

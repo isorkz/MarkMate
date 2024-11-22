@@ -55,6 +55,28 @@ const FileTree = () => {
     }
   }
 
+  const newFolder = (event: any, params: { dirPath: string }) => {
+    if (editingNodeRef.current) {
+      const newNode: TreeNode = {
+        id: nanoid(),
+        name: '',
+        path: editingNodeRef.current.path,
+        type: 'folder',
+        index: 1, // temporary index
+        lastModifiedTime: new Date(),
+        children: [],
+      }
+      try {
+        pushTreeNode(editingNodeRef.current.path, newNode);
+        setEditingNode(newNode);
+        setEditingMode('newfolder')
+      } catch (err) {
+        console.error(`Failed to create new folder in ${editingNodeRef.current.path}. ${err}`)
+        toast.error(`Failed to create new folder in ${editingNodeRef.current.path}. ${err}`);
+      }
+    }
+  }
+
   const openFile = (event: any, params: { fileId: string, filePath: string }) => {
     // If the file is already opened in the tabs, only activate the tab.
     const index = tabs.findIndex((tab) => tab.filePath === params.filePath);
@@ -103,6 +125,7 @@ const FileTree = () => {
   useEffect(() => {
     window.ipcRenderer.on('tree-command-rename', renameFile);
     window.ipcRenderer.on('tree-command-newfile', newFile);
+    window.ipcRenderer.on('tree-command-newfolder', newFolder);
     window.ipcRenderer.on('tree-command-openfile-in-newtab', openFile);
     window.ipcRenderer.on('tree-command-favorite', toggleFavoriteFile);
     window.ipcRenderer.on('tree-command-unfavorite', toggleFavoriteFile);
@@ -111,6 +134,7 @@ const FileTree = () => {
     return () => {
       window.ipcRenderer.removeAllListeners('tree-command-rename')
       window.ipcRenderer.removeAllListeners('tree-command-newfile')
+      window.ipcRenderer.removeAllListeners('tree-command-newfolder')
       window.ipcRenderer.removeAllListeners('tree-command-openfile-in-newtab')
       window.ipcRenderer.removeAllListeners('tree-command-favorite')
       window.ipcRenderer.removeAllListeners('tree-command-unfavorite')

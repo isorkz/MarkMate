@@ -147,12 +147,33 @@ const TreeItem = ({
     }
   }
 
+  const handleNewFolder = () => {
+    if (editingNode && editingMode && editingMode === 'newfolder' && editingNode.name && editingNode.path === node.path) {
+      let newFolderName = editingNode.name;
+      window.api.newFolder(node.path, newFolderName).then((newFolderPath: any) => {
+        // Re-render file tree
+        node.name = newFolderName;
+        node.path = newFolderPath;
+        const newTree = JSON.parse(JSON.stringify(fileTree));
+        setFileTree(newTree);
+        console.log('Created new folder:', newFolderPath)
+      }).catch((err: any) => {
+        console.error(`Failed to create new folder: ${node.path}/${newFolderName}. ${err}`)
+        toast.error(`Failed to create new folder: ${node.path}/${newFolderName}. ${err}`);
+      }).finally(() => {
+        cancelEdit()
+      })
+    }
+  }
+
   const handleEdit = () => {
     if (editingNode && editingMode) {
       if (editingMode === 'rename') {
         handleRename()
       } else if (editingMode === 'newfile') {
         handleNewFile()
+      } else if (editingMode === 'newfolder') {
+        handleNewFolder()
       }
     }
   }
@@ -217,7 +238,7 @@ const TreeItem = ({
         >
           {node.type === 'folder' && (node.isOpened ? <ChevronDownIcon className="w-4 h-4 mr-1.5" /> : <ChevronRightIcon className="w-4 h-4 mr-1.5" />)}
           {node.type !== 'folder' && <DocumentIcon className="w-4 h-4 mr-1.5 text-gray-400" />}
-          {editingNode && ((editingMode === 'rename' && editingNode && editingNode.path === node.path) || (editingMode === 'newfile' && node.name === '')) ? (
+          {editingNode && ((editingMode === 'rename' && editingNode && editingNode.path === node.path) || ((editingMode === 'newfile' || editingMode === 'newfolder') && node.name === '')) ? (
             <input type="text"
               className='bg-transparent border-b border-gray-300 focus:border-gray-300 focus:outline-none'
               ref={inputRef}

@@ -76,10 +76,6 @@ export const registerIpcHandlers = (): void => {
 
   ipcMain.handle('rename-file', async (event, filePath: string, newFileName: string) => {
     console.log('[rename-file] filePath:', filePath, ", newFileName:", newFileName);
-    const stats = await fs.promises.stat(filePath);
-    if (!stats.isFile()) {
-      throw new Error('filePath must be a file');
-    }
 
     const dir = path.dirname(filePath);
     let newFilePath = path.join(dir, newFileName);
@@ -124,6 +120,41 @@ export const registerIpcHandlers = (): void => {
       return newFilePath;
     } catch (err) {
       console.error('An error occurred while creating the file:', newFilePath, err);
+      throw err;
+    }
+  });
+
+  ipcMain.handle('new-folder', async (event, dirPath: string, newFolderName: string) => {
+    console.log('[new-folder] dirPath:', dirPath, ", newFolderName:", newFolderName);
+    if (!dirPath || !newFolderName) {
+      throw new Error('Invalid dirPath or newFolderName');
+    }
+
+    const stats = await fs.promises.stat(dirPath);
+    if (!stats.isDirectory()) {
+      throw new Error('dirPath must be a directory');
+    }
+
+    let newFolderPath = path.join(dirPath, newFolderName);
+    try {
+      // Check if the file already exists
+      await fs.promises.access(newFolderPath);
+      throw new Error('Folder already exists: ' + newFolderPath);
+    } catch (err) {
+      if (err.code !== 'ENOENT') {
+        // If the error is not 'ENOENT' (meaning the file does not exist), re-throw the error
+        throw err;
+      }
+    }
+
+    try {
+      // Create the folder
+      await fs.promises.mkdir(newFolderPath);
+      newFolderPath = normalizePath(newFolderPath);
+      console.log('[new-folder] create success: ', newFolderPath);
+      return newFolderPath;
+    } catch (err) {
+      console.error('An error occurred while creating the folder:', newFolderName, err);
       throw err;
     }
   });
