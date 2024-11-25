@@ -1,21 +1,30 @@
 import { useEffect } from 'react';
+import { nanoid } from 'nanoid'
 import './App.css'
 import MainPanel from './components/main-panel/MainPanel'
 import LeftSidebar from './components/sidebar/LeftSidebar'
-import RightSidebar from './components/sidebar/RightSidebar'
 import { Toaster } from 'react-hot-toast';
 import useStore from './store/MStore';
+import { FileTreeNode } from './models/FileTree';
 
 function App() {
-  const newEmptyTab = useStore((state) => state.newEmptyTab);
+  const newTab = useStore((state) => state.newTab);
 
-  const onNewTab = () => {
-    newEmptyTab();
+  const onNewEmptyTab = () => {
+    const newNode: FileTreeNode = {
+      id: nanoid(),
+      name: '',
+      path: '',  // temporary path, should be updated with file name
+      type: 'file',
+      index: 1, // temporary index
+      lastModifiedTime: new Date(),
+    }
+    newTab(newNode, '');
   }
 
   useEffect(() => {
     // Add a listener to receive the 'new-tab' event from main process.
-    window.ipcRenderer.on('new-tab', onNewTab)
+    window.ipcRenderer.on('new-tab', onNewEmptyTab)
 
     // Specify how to clean up after this effect
     return () => {
@@ -35,9 +44,6 @@ function App() {
 
       {/* Main panel */}
       <MainPanel />
-
-      {/* Right sidebar */}
-      {/* <RightSidebar /> */}
     </div>
   )
 }

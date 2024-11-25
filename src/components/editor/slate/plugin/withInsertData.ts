@@ -1,9 +1,10 @@
 import { Editor, Transforms, Element as SlateElement, Text as SlateText } from 'slate'
 import { CustomText, DefaultParagraphElement, ImageElement } from '../Element';
 import { isValidUrl } from '../../../../utils/common';
+import { FileTreeNode } from '../../../../models/FileTree';
 
-// TODO: handle if rootDir / currentFilePath is undefined
-export const withInsertData = (editor: Editor, rootDir: string | undefined, currentFilePath: string | undefined) => {
+// TODO: handle if rootDir / fileNode is undefined
+export const withInsertData = (editor: Editor, rootDir: string | undefined, fileNode: FileTreeNode | undefined) => {
   const { insertData, isVoid } = editor
 
   editor.isVoid = element => {
@@ -29,10 +30,11 @@ export const withInsertData = (editor: Editor, rootDir: string | undefined, curr
           reader.addEventListener('load', () => {
             const url = reader.result
             console.log('[insertData] url: ', url)
+            const currentFilePath = fileNode?.path
+            console.log('[insertData] rootDir: ', rootDir)
+            console.log('[insertData] currentFilePath: ', currentFilePath)
             if (url && rootDir && currentFilePath) {
               // window.api defined in preload.ts, and implemented in ipcHandler.ts
-              console.log('[insertData] rootDir: ', rootDir)
-              console.log('[insertData] currentFilePath: ', currentFilePath)
               window.api.saveImageFile(rootDir, currentFilePath, url).then((imageFile: any) => {
                 console.log('[insertData] saved image file: ', imageFile)
                 insertImage(editor, imageFile)

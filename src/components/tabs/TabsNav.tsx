@@ -1,9 +1,9 @@
 import { Dispatch, SetStateAction, useState } from 'react'
+import { Button, Box, DialogContentText, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material'
+import { toast } from 'react-hot-toast';
 import useStore from '../../store/MStore';
 import useSearchStore from '../../store/SearchStore';
 import { CloseIcon } from '../icons';
-import { Button, Box, DialogContentText, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material'
-import { toast } from 'react-hot-toast';
 import { slateNodesToMarkdownSource } from '../editor/slate/parser/ParseSlateNodesToMarkdownSource';
 import { getFileName } from '../../utils/common';
 
@@ -14,7 +14,7 @@ interface TabButtonProps {
 };
 
 const ConfirmModal = ({ showModal, setShowModal, tabIndex, rootDir }: { showModal: boolean, setShowModal: Dispatch<SetStateAction<boolean>>, tabIndex: number, rootDir: string | undefined }) => {
-  const tabs = useStore((state) => state.tabs);
+  const tab = useStore((state) => state.tabs[tabIndex]);
   const removeTabByIndex = useStore((state) => state.removeTabByIndex);
   const updateSourceContent = useStore((state) => state.updateSourceContent);
 
@@ -25,15 +25,15 @@ const ConfirmModal = ({ showModal, setShowModal, tabIndex, rootDir }: { showModa
 
   const onSaveAndClose = () => {
     try {
-      if (tabs[tabIndex].filePath) {
-        const markdownSource = slateNodesToMarkdownSource(tabs[tabIndex].slateNodes)
+      if (tab.fileNode.path) {
+        const markdownSource = slateNodesToMarkdownSource(tab.slateNodes)
         if (!markdownSource) {
           throw new Error('markdownSource is undefined.')
         }
         updateSourceContent(markdownSource)
 
         const remoteRepo = import.meta.env.VITE_APP_GIT_REMOTE_REPO;
-        window.api.saveFile(tabs[tabIndex].filePath, markdownSource, rootDir, remoteRepo).then(() => {
+        window.api.saveFile(tab.fileNode.path, markdownSource, rootDir, remoteRepo).then(() => {
           removeTabByIndex(tabIndex)
 
           // Sync to the remote repository
@@ -45,7 +45,7 @@ const ConfirmModal = ({ showModal, setShowModal, tabIndex, rootDir }: { showModa
           })
         }).catch((error: any) => {
           console.error('failed to save file: ', error)
-          toast.error(`Failed to save file ${tabs[tabIndex].filePath}. ${error}`);
+          toast.error(`Failed to save file ${tab.fileNode.path}. ${error}`);
         })
       } else {
         throw new Error('filePath is empty.')
@@ -53,7 +53,7 @@ const ConfirmModal = ({ showModal, setShowModal, tabIndex, rootDir }: { showModa
     }
     catch (error) {
       console.error('failed to save file: ', error)
-      toast.error(`Failed to save file ${tabs[tabIndex].filePath}. ${error}`);
+      toast.error(`Failed to save file ${tab.fileNode.path}. ${error}`);
     } finally {
       setShowModal(false)
     }
@@ -87,7 +87,8 @@ const TabButton = ({
 }: TabButtonProps) => {
   const [showConfirmModal, setShowConfirmModal] = useState<boolean>(false);
 
-  const activeTabId = useStore((state) => state.activeTabId);
+  const activeTabIndex = useStore((state) => state.activeTabIndex);
+  const activeTab = useStore((state) => state.tabs[activeTabIndex]);
   const rootDir = useStore((state) => state.rootDir);
   const tabs = useStore((state) => state.tabs);
   const setActiveTabId = useStore((state) => state.setActiveTabId);
@@ -114,7 +115,7 @@ const TabButton = ({
       <div className={'relative z-10 flex flex-row w-full items-center select-none'}>
         <div
           onClick={onClickTab}
-          className={`flex w-full h-8 justify-center items-center rounded-none border-r border-gray-200/80 ${activeTabId == tabId ? 'bg-white' : 'bg-gray-50'}`}>
+          className={`flex w-full h-8 justify-center items-center rounded-none border-r border-gray-200/80 ${activeTab.id == tabId ? 'bg-white' : 'bg-gray-50'}`}>
           <span>{title} {tabs[tabIndex].changed && '*'}</span>
         </div>
 
@@ -122,7 +123,7 @@ const TabButton = ({
         <div className='flex absolute right-1'>
           <button
             onClick={onCloseTab}
-            className={`rounded-md p-[2px] mx-[0.5] my-2 text-neutral-400 focus:outline-none border-none dark:text-white hover:bg-neutral-200 dark:hover:bg-neutral-600 ${activeTabId == tabId ? 'bg-white' : 'bg-gray-50'}`}>
+            className={`rounded-md p-[2px] mx-[0.5] my-2 text-neutral-400 focus:outline-none border-none dark:text-white hover:bg-neutral-200 dark:hover:bg-neutral-600 ${activeTab.id == tabId ? 'bg-white' : 'bg-gray-50'}`}>
             <CloseIcon className='w-5 h-5' />
           </button>
         </div>
@@ -141,7 +142,7 @@ const TabsNav = () => {
     tabs.length > 1 && (
       <div className="flex h-8 justify-center items-center border border-gray-200 bg-gray-50">
         {tabs.map((tab, index) => (
-          <TabButton key={tab.id} title={tab.filePath ? getFileName(tab.filePath) : 'Untitled'} tabIndex={index} tabId={tab.id} />
+          <TabButton key={tab.id} title={tab.fileNode.path !== '' ? getFileName(tab.fileNode.path) : 'Untitled'} tabIndex={index} tabId={tab.id} />
         ))}
       </div>
     )

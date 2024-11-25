@@ -204,7 +204,7 @@ export const registerIpcHandlers = (): void => {
 
   // currentFilePath: the path of the current md document
   // mediaFilePath: the path of the image file
-  ipcMain.on('get-file-url', (event, currentFilePath: string, mediaFilePath: string) => {
+  ipcMain.on('get-imagefile-url', (event, currentFilePath: string, mediaFilePath: string) => {
     let fileUrl = '';
     const fileHead = isMac() ? 'file://' : 'file:///';
     if (path.isAbsolute(mediaFilePath)) {

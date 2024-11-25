@@ -1,9 +1,11 @@
 import { create } from "zustand";
-import { persist, PersistStorage } from 'zustand/middleware'
-import { MEditor } from "../models/MEditor";
-import { markdownSourceToMEditorNodes } from "../components/editor/slate/parser/ParseMarkdownSourceToSlateNodes";
+import { persist, PersistStorage, subscribeWithSelector } from 'zustand/middleware'
 import { nanoid } from 'nanoid'
+import { MEditor } from "../models/MEditor";
+import { FileTreeNode } from "../models/FileTree";
+import { markdownSourceToMEditorNodes } from "../components/editor/slate/parser/ParseMarkdownSourceToSlateNodes";
 import { DefaultEmptySlateNodes } from "../components/editor/slate/Element";
+import { SlateEditorUtils } from "../components/editor/slate/SlateEditorUtils";
 
 const InitTabId = 'default_id_0';
 
@@ -12,29 +14,23 @@ interface MStore {
   setRootDir: (rootDir: string | undefined) => void;
 
   tabs: MEditor[];
-  setTabs: (tabs: MEditor[]) => void;
 
   activeTabIndex: number;
-  activeTabId: string | undefined;
   setActiveTabId: (id: string) => void;
 
-  // open a file in the current active tab (update the tab content)
-  setActiveTab: (fileId: string, filePath: string, content: string, lastModifiedTime: Date) => void;
-  getActiveTab: () => MEditor;
-  getActiveFilePath: () => string | undefined;
-
   // open a file in a new tab
-  newTab: (fileId: string, filePath: string, content: string, lastModifiedTime: Date) => void;
-  // new a empty tab
-  newEmptyTab: () => void;
-  removeTabByIndex: (tabIndex: number) => void;
-  removeTabByFilePath: (filePath: string) => void;
-
+  newTab: (fileNode: FileTreeNode, content: string) => void;
+  // open a file in the current active tab (update the tab content)
+  updateActiveTab: (fileNode: FileTreeNode, content: string) => void;
   updateSourceContent: (sourceContent: string) => void;
   updateSlateNodes: (slateNodes: any[]) => void;
 
+  removeTabByIndex: (tabIndex: number) => void;
+  removeTabByFileId: (fileId: string) => void;
   saveTab: () => void;
-  saveTabs: () => void;
+
+  getTabIdByFileId: (fileId: string) => string | undefined;
+  updateTreeNode: (fileId: string, updatedFields: Partial<FileTreeNode>) => void;
 
   showLeftSidebar: boolean;
   toggleLeftSidebar: () => void;
@@ -60,8 +56,7 @@ const customStorage: PersistStorage<MStore> = {
     // Recreate the editor
     if (tabs) {
       const newTabs: MEditor[] = tabs.map((tab: any) => {
-        const lastModifiedTime = new Date(tab.lastModifiedTime);
-        return new MEditor(tab.id, rootDir, tab.fileId, tab.filePath, tab.sourceContent, lastModifiedTime, tab.slateNodes)
+        return new MEditor(tab.id, rootDir, tab.fileNode, tab.sourceContent, tab.slateNodes)
       });
       state.state.tabs = newTabs;
     }
@@ -77,34 +72,43 @@ const useStore = create<MStore>()(
   // persist: to persist the store in localStorage
   // https://github.com/pmndrs/zustand/blob/main/docs/integrations/persisting-store-data.md
   persist(
+    // subscribeWithSelector(
     (set, get) => ({
-      // rootDir: undefined,
       rootDir: import.meta.env.VITE_APP_PATH.replace(/\\/g, '/'),
       setRootDir: (rootDir: string | undefined) => set({ rootDir: rootDir }),
 
       // for rootDir, always use '/'
       tabs: [new MEditor(InitTabId, import.meta.env.VITE_APP_PATH.replace(/\\/g, '/'))],
-      setTabs: (tabs: MEditor[]) => set({ tabs: tabs }),
 
       activeTabIndex: 0,
-      activeTabId: InitTabId,
 
-      getActiveTab: () => {
-        return get().tabs[get().activeTabIndex]
-      },
+      setActiveTabId: (id: string) =>
+        set((state) => {
+          const newTabIndex = state.tabs.findIndex((item) => item.id === id);
+          if (newTabIndex >= 0) {
+            return {
+              ...state,
+              activeTabIndex: newTabIndex,
+            };
+          }
+          return {}
+        }),
 
-      getActiveFilePath: () =>
-        get().tabs[get().activeTabIndex].filePath,
-
-      setActiveTab: (fileId: string, filePath: string, content: string, lastModifiedTime: Date) =>
+      updateActiveTab: (fileNode: FileTreeNode, content: string) =>
         set((state) => {
           const newTabs = [...state.tabs];
+
+          if (newTabs[state.activeTabIndex].changed) {
+            throw new Error('The current tab has unsaved changes. Please save it first.');
+          }
+
           newTabs[state.activeTabIndex].changed = false;
-          newTabs[state.activeTabIndex].fileId = fileId;
-          newTabs[state.activeTabIndex].filePath = filePath;
-          newTabs[state.activeTabIndex].lastModifiedTime = lastModifiedTime;
+          newTabs[state.activeTabIndex].fileNode = fileNode;
           newTabs[state.activeTabIndex].sourceContent = content;
           newTabs[state.activeTabIndex].slateNodes = markdownSourceToMEditorNodes(content) || DefaultEmptySlateNodes();
+
+          // Reset the slate nodes when switching to another tab, and clear the history.
+          SlateEditorUtils.resetSlateNodes(newTabs[state.activeTabIndex].editor, newTabs[state.activeTabIndex].slateNodes, true);
 
           return {
             ...state,
@@ -112,26 +116,13 @@ const useStore = create<MStore>()(
           };
         }),
 
-      newTab: (fileId: string, filePath: string, content: string, lastModifiedTime: Date) =>
+      newTab: (fileNode: FileTreeNode, content: string) =>
         set((state) => {
-          const newTab = new MEditor(nanoid(), state.rootDir, fileId, filePath, content, lastModifiedTime);
+          const newTab = new MEditor(nanoid(), state.rootDir, fileNode, content);
           const newTabs = [...state.tabs, newTab];
           return {
             ...state,
             tabs: newTabs,
-            activeTabId: newTab.id,
-            activeTabIndex: newTabs.length - 1
-          };
-        }),
-
-      newEmptyTab: () =>
-        set((state) => {
-          const newTab = new MEditor(nanoid(), state.rootDir);
-          const newTabs = [...state.tabs, newTab];
-          return {
-            ...state,
-            tabs: newTabs,
-            activeTabId: newTab.id,
             activeTabIndex: newTabs.length - 1
           };
         }),
@@ -150,14 +141,13 @@ const useStore = create<MStore>()(
           return {
             ...state,
             tabs: newTabs,
-            activeTabId: newTabs[newActiveTabIndex].id,
             activeTabIndex: newActiveTabIndex
           };
         }),
 
-      removeTabByFilePath: (filePath: string) =>
+      removeTabByFileId: (fileId: string) =>
         set((state) => {
-          const tabIndex = state.tabs.findIndex((tab) => tab.filePath === filePath);
+          const tabIndex = state.tabs.findIndex((tab) => tab.fileNode?.id === fileId);
           if (tabIndex < 0) {
             return {};
           }
@@ -167,7 +157,6 @@ const useStore = create<MStore>()(
             return {
               ...state,
               tabs: [new MEditor(InitTabId, state.rootDir)],
-              activeTabId: InitTabId,
               activeTabIndex: 0
             };
           }
@@ -183,22 +172,8 @@ const useStore = create<MStore>()(
           return {
             ...state,
             tabs: newTabs,
-            activeTabId: newTabs[newActiveTabIndex].id,
             activeTabIndex: newActiveTabIndex
           };
-        }),
-
-      setActiveTabId: (id: string) =>
-        set((state) => {
-          const newTabIndex = state.tabs.findIndex((item) => item.id === id);
-          if (newTabIndex >= 0) {
-            return {
-              ...state,
-              activeTabId: id,
-              activeTabIndex: newTabIndex,
-            };
-          }
-          return {}
         }),
 
       updateSourceContent: (sourceContent: string) =>
@@ -223,23 +198,49 @@ const useStore = create<MStore>()(
           };
         }),
 
+      getTabIdByFileId: (fileId: string) => {
+        const tabIndex = get().tabs.findIndex((tab) => tab.fileNode?.id === fileId);
+        if (tabIndex >= 0) {
+          return get().tabs[tabIndex].id;
+        }
+        return undefined;
+      },
+
+      updateTreeNode: (fileId: string, updatedFields: Partial<FileTreeNode>) =>
+        set((state) => {
+          // Update the fileNode in the tab
+          const newTabs = [...state.tabs];
+          const tabIndex = state.tabs.findIndex((tab) => tab.fileNode?.id === fileId);
+          if (tabIndex >= 0) {
+            const fileNode = newTabs[tabIndex].fileNode;
+            if (fileNode) {
+              // Do not allow to update id, type, children
+              const allowedUpdates = { ...updatedFields };
+              delete allowedUpdates.id;
+              delete allowedUpdates.type;
+              delete allowedUpdates.children;
+
+              // Update the node
+              Object.assign(fileNode, updatedFields);
+
+              return {
+                ...state,
+                tabs: newTabs
+              };
+            }
+          }
+
+          return {}
+        }),
+
       saveTab: () =>
         set((state) => {
           const newTabs = [...state.tabs];
           newTabs[state.activeTabIndex].changed = false;
-          newTabs[state.activeTabIndex].lastModifiedTime = new Date();
-          return {
-            ...state,
-            tabs: newTabs
-          };
-        }),
-
-      saveTabs: () =>
-        set((state) => {
-          const newTabs = state.tabs.map(tab => {
-            tab.changed = false;
-            return tab;
-          });
+          const fileNode = newTabs[state.activeTabIndex].fileNode;
+          if (fileNode) {
+            fileNode.lastModifiedTime = new Date();
+          }
           return {
             ...state,
             tabs: newTabs
@@ -294,3 +295,14 @@ const useStore = create<MStore>()(
   ));
 
 export default useStore
+
+// subscribe to the state changes, and the callback will be called when the state changes
+// useStore.subscribe(
+//   (state) => state.tabs[state.activeTabIndex]?.fileNode,
+//   (fileNode: FileTreeNode | undefined) => {
+//     if (fileNode) {
+//       console.log('fileNode updated: ', fileNode)
+//       useTreeStore.getState().updateTreeNode(fileNode.id, fileNode)
+//     }
+//   }
+// );

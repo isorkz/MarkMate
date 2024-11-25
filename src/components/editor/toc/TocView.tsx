@@ -67,7 +67,7 @@ const TocView = ({ tabIndex, tabId }: TocViewProps) => {
       <Divider orientation="vertical" flexItem />
 
       <div className="flex flex-col p-4">
-        <h2 className="text-lg">[TOC] - {activeEditor.filePath ? getFileName(activeEditor.filePath) : 'Untitled'}</h2>
+        <h2 className="text-lg">[TOC] - {activeEditor.fileNode.path ? getFileName(activeEditor.fileNode.path) : 'Untitled'}</h2>
         <div className="flex flex-col m-2 text-sky-500">
           {toc.map((item, index) => (
             <div key={index} className={`${getLevelClass(item.level)} my-1 text-sm`}>

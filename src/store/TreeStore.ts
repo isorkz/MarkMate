@@ -1,171 +1,39 @@
 import { create } from "zustand";
-import { persist, createJSONStorage } from 'zustand/middleware'
+import { persist, createJSONStorage, subscribeWithSelector } from 'zustand/middleware'
 import { FileTreeNode } from "../models/FileTree";
 import { Descendant } from "slate";
-import { nanoid } from 'nanoid'
+import { FileTreeUtils } from "../utils/FileTreeUtils";
 
 type EditingMode = 'rename' | 'newfile' | 'newfolder' | undefined
 
 type SyncStatus = 'up-to-date' | 'syncing' | 'out-of-date' | 'failed'
 
-// The result of readDirTree() looks like:
-// {
-//   "path": "/Users/xxx/md",
-//   "name": "md",
-//   "children": [
-//     {
-//       "path": "/Users/xxx/md/my-folder",
-//       "name": "my-folder",
-//       "children": [
-//         {
-//           "path": "/Users/xxx/md/my-folder/test.md",
-//           "name": "test.md",
-//         }
-//       ]
-//     },
-//   ]
-// }
-const updateTreeIndex = (children: FileTreeNode[], oldTreeMap: Map<string, FileTreeNode>) => {
-  // If the old node has index, then use it, otherwise, set it to -1
-  for (const child of children) {
-    const oldChildNode = oldTreeMap.get(child.path.toLowerCase())
-    child.index = oldChildNode ? oldChildNode.index : -1
-  }
-
-  // sort the children by index, if index is -1, then put it at the end
-  children.sort((a, b) => {
-    if (a.index === -1) {
-      return 1
-    } else if (b.index === -1) {
-      return -1
-    } else {
-      return a.index - b.index
-    }
-  })
-
-  // update the index
-  for (let i = 0; i < children.length; i++) {
-    children[i].index = i + 1
-  }
-}
-
-const updateTree = (node: FileTreeNode, oldTreeMap: Map<string, FileTreeNode>) => {
-  if (!node) {
-    return
-  }
-
-  const oldNode = oldTreeMap.get(node.path.toLowerCase())
-  node.id = oldNode && oldNode.id ? oldNode.id : nanoid()
-  node.favorite = oldNode?.favorite
-
-  if (node.children) {
-    node.type = 'folder'
-
-    updateTreeIndex(node.children, oldTreeMap)
-
-    for (const child of node.children) {
-      updateTree(child, oldTreeMap)
-    }
-  } else {
-    node.type = 'file'
-  }
-}
-
-const openFileItemByDfs = (node: FileTreeNode | undefined, openedFile: string | undefined): boolean => {
-  if (node && openedFile) {
-    if (node.path === openedFile) {
-      node.isOpened = true
-      return true
-    }
-
-    if (node.children) {
-      for (const child of node.children) {
-        if (openFileItemByDfs(child, openedFile)) {
-          node.isOpened = true;
-          return true;
-        }
-      }
-    }
-  }
-  return false
-}
-
-const treeToMapByPath = (node: FileTreeNode | undefined, treeMap: Map<string, FileTreeNode>) => {
-  if (!node) {
-    return
-  }
-
-  treeMap.set(node.path.toLowerCase(), node)
-
-  if (node.children) {
-    for (const child of node.children) {
-      treeToMapByPath(child, treeMap)
-    }
-  }
-}
-
-const treeToMapById = (node: FileTreeNode | undefined, treeMap: Map<string, FileTreeNode>) => {
-  if (!node) {
-    return
-  }
-
-  treeMap.set(node.id, node)
-
-  if (node.children) {
-    for (const child of node.children) {
-      treeToMapById(child, treeMap)
-    }
-  }
-}
-
-const loadFileTree = (treeData: any, oldTree: FileTreeNode | undefined): FileTreeNode => {
-  const newTree = JSON.parse(JSON.stringify(treeData))
-
-  // key: file path, value: FileTreeNode
-  let oldTreeMap = new Map<string, FileTreeNode>()
-  treeToMapByPath(oldTree, oldTreeMap)
-
-  updateTree(newTree, oldTreeMap)
-  return newTree
-}
-
-const getFavoriteFiles = (node: FileTreeNode, favoriteFiles: FileTreeNode[]) => {
-  if (node.children) {
-    for (const child of node.children) {
-      getFavoriteFiles(child, favoriteFiles)
-    }
-  } else {
-    if (node.favorite) {
-      favoriteFiles.push(node)
-    }
-  }
-}
-
 interface TreeStore {
   fileTree: FileTreeNode | undefined;
-  setFileTree: (fileTree: FileTreeNode | undefined) => void;
 
   // key: id, value: FileTreeNode
+  // To speed up the search of a node by id
   treeNodeMap: Map<string, FileTreeNode>;
 
-  favoriteFiles: FileTreeNode[];
+  favoriteNodes: FileTreeNode[];
 
-  loadTree: (rootDir: string | undefined, activeFilePath: string | undefined) => void;
+  // Reload the file tree
+  // 1. keep the current active file opened
+  // 2. keep the index of each node for sorting
+  // 3. keep the favorite status
+  reloadTree: (rootDir: string | undefined, curActiveFilePath: string | undefined) => void;
 
-  pushTreeNode: (path: string, newNode: FileTreeNode) => void;
+  pushTreeNode: (parentId: string, newNode: FileTreeNode) => void;
   removeTreeNode: (id: string) => void;
-  toggleFavoriteTreeNode: (id: string) => void;
+  getTreeNodeById: (id: string) => FileTreeNode | undefined;
+  openTreeNodeByDfs: (id: string) => void;
+  updateTreeNode: (id: string, updatedFields: Partial<FileTreeNode>) => void;
+  toggleFavorite: (id: string) => void;
 
-  openFileItem: (filePath: string) => void;
+  getFileNodeById: (id: string) => FileTreeNode | undefined;
 
+  // Reset the intermediate states, such as editingNode, editingMode, etc.
   reset: () => void;
-
-  // Used in search.
-  // key: file path, value: slate nodes
-  slateNodesCache: Map<string, Descendant[]>;
-
-  syncStatus: SyncStatus;
-  setSyncStatus: (syncStatus: SyncStatus) => void;
 
   // The current editing node, such as rename, delete, etc.
   editingNode: FileTreeNode | undefined;
@@ -178,76 +46,77 @@ interface TreeStore {
   dragDes: { node: FileTreeNode; mode: 'top' | 'bottom' } | undefined;
   setDragDes: (dragDes: { node: FileTreeNode; mode: 'top' | 'bottom' } | undefined) => void;
   move: () => void;
+
+  // TODO: move to another store
+  syncStatus: SyncStatus;
+  setSyncStatus: (syncStatus: SyncStatus) => void;
+
+  // TODO: move to another store
+  // Used in search.
+  // key: file path, value: slate nodes
+  slateNodesCache: Map<string, Descendant[]>;
 }
 
-// stored in memory
 const useTreeStore = create<TreeStore>()(
   persist(
-    (set, get) => ({
+    subscribeWithSelector((set, get) => ({
       fileTree: undefined,
-      setFileTree: (fileTree: FileTreeNode | undefined) => set({ fileTree: fileTree }),
 
       treeNodeMap: new Map<string, FileTreeNode>(),
 
-      favoriteFiles: [],
+      favoriteNodes: [],
 
-      loadTree: (rootDir: string | undefined, activeFilePath: string | undefined) => {
-        if (!rootDir) return;
+      // TODO: move
+      slateNodesCache: new Map(),
+
+      // TODO: move
+      syncStatus: 'out-of-date',
+      setSyncStatus: (syncStatus: SyncStatus) => set({ syncStatus: syncStatus }),
+
+      reloadTree: (rootDir: string | undefined, curActiveFilePath: string | undefined) => {
+        if (!rootDir) return {};
 
         window.api.readDirTree(rootDir).then((treeData: any) => {
-          const newFileTree = loadFileTree(treeData, get().fileTree)
-          openFileItemByDfs(newFileTree, activeFilePath)
+          const oldTree = get().fileTree;
+          const newFileTree = FileTreeUtils.reloadAndMergeTree(treeData, oldTree)
+          FileTreeUtils.openNodeByDfs(newFileTree, curActiveFilePath)
           set(state => {
-            state.slateNodesCache.clear()
             state.treeNodeMap.clear()
-            treeToMapById(newFileTree, state.treeNodeMap)
-            const favoriteFiles: FileTreeNode[] = []
-            getFavoriteFiles(newFileTree, favoriteFiles)
-            return { fileTree: newFileTree, favoriteFiles: favoriteFiles }
+            FileTreeUtils.treeToMapById(newFileTree, state.treeNodeMap)
+            const favoriteNodes: FileTreeNode[] = []
+            FileTreeUtils.getFavoriteNodes(newFileTree, favoriteNodes)
+            return { fileTree: newFileTree, favoriteNodes: favoriteNodes }
           });
         }).catch((err: any) => {
           throw new Error('Failed to read dir tree: ' + err);
         })
       },
 
-      slateNodesCache: new Map(),
-
-      syncStatus: 'out-of-date',
-      setSyncStatus: (syncStatus: SyncStatus) => set({ syncStatus: syncStatus }),
-
-      pushTreeNode: (path: string, newNode: FileTreeNode) =>
+      pushTreeNode: (parentId: string, newNode: FileTreeNode) =>
         set((state) => {
           // return {} means nothing needs to re-render
-          if (!state.fileTree) return {};
+          if (!state.fileTree || !state.treeNodeMap) return {};
 
-          const dfs = (node: FileTreeNode) => {
-            if (node.path === path) {
-              if (node.children && node.children.length > 0) {
-                node.children.forEach(child => {
-                  if (child.name === newNode.name) {
-                    throw new Error(`Name \'${newNode.name}\' already exists in ${path}`)
-                  }
-                })
-                newNode.index = node.children[node.children.length - 1].index + 1
-                node.children.push(newNode)
-                return
-              } else {
-                node.children = [newNode]
-                return
-              }
-            } else if (node.children) {
-              node.children.forEach(dfs);
+          const parentNode = state.treeNodeMap.get(parentId);
+          if (!parentNode) throw new Error(`Failed to find parent node by id: ${parentId}`);
+          if (!parentNode.children) parentNode.children = []
+
+          parentNode.children.forEach(child => {
+            if (child.name === newNode.name) {
+              throw new Error(`Name \'${newNode.name}\' already exists in ${parentNode.path}`)
             }
-          };
+          })
 
-          dfs(state.fileTree);
+          newNode.index = parentNode.children.length > 0 ? parentNode.children[parentNode.children.length - 1].index + 1 : 1
+          parentNode.children.push(newNode)
           state.treeNodeMap.set(newNode.id, newNode);
+
+          // Return a new fileTree object to trigger re-render
           return { fileTree: { ...state.fileTree } };
         }),
 
       removeTreeNode: (id: string) =>
         set((state) => {
-          // return {} means nothing needs to re-render
           if (!state.fileTree) return {};
 
           const dfs = (node: FileTreeNode) => {
@@ -259,41 +128,69 @@ const useTreeStore = create<TreeStore>()(
 
           dfs(state.fileTree);
           state.treeNodeMap.delete(id);
-          state.favoriteFiles = state.favoriteFiles.filter((n) => n.id !== id)
-          return { fileTree: { ...state.fileTree }, favoriteFiles: state.favoriteFiles };
+          state.favoriteNodes = state.favoriteNodes.filter((n) => n.id !== id)
+          return { fileTree: { ...state.fileTree }, favoriteNodes: state.favoriteNodes };
         }),
 
-      toggleFavoriteTreeNode: (id: string) =>
+      getTreeNodeById: (id: string) => {
+        // print the whole map
+        console.log("getTreeNodeById: " + id)
+        console.log(get().treeNodeMap)
+        return get().treeNodeMap.get(id)
+      },
+
+      openTreeNodeByDfs: (id: string) =>
         set((state) => {
-          // return {} means nothing needs to re-render
+          if (!state.fileTree) return {};
+
+          FileTreeUtils.openNodeByDfs(state.fileTree, id)
+          return { fileTree: { ...state.fileTree } };
+        }),
+
+      toggleFavorite: (id: string) =>
+        set((state) => {
           if (!state.fileTree) return {};
 
           let node = state.treeNodeMap.get(id)
-          if (!node) return {}
+          if (!node) throw new Error(`Failed to find tree node by id: ${id}`);
 
           node.favorite = !node.favorite
-          let updatedFavoriteFiles = [...state.favoriteFiles];
+          let updatedFavoriteFiles = [...state.favoriteNodes];
           if (node.favorite) {
             updatedFavoriteFiles.push(node)
           } else {
             updatedFavoriteFiles = updatedFavoriteFiles.filter((n) => n.id !== id)
           }
 
-          return { fileTree: { ...state.fileTree }, favoriteFiles: updatedFavoriteFiles };
+          return { fileTree: { ...state.fileTree }, favoriteNodes: updatedFavoriteFiles };
         }),
 
-      openFileItem: (openedFile: string) =>
+      getFileNodeById: (id: string) => {
+        return get().treeNodeMap.get(id)
+      },
+
+      updateTreeNode: (id: string, updatedFields: Partial<FileTreeNode>) =>
         set((state) => {
-          // return {} means nothing needs to re-render
           if (!state.fileTree) return {};
 
-          openFileItemByDfs(state.fileTree, openedFile)
+          let node = state.treeNodeMap.get(id)
+          if (!node) throw new Error(`Failed to find tree node by id: ${id}`);
+
+          // Do not allow to update id, type, children
+          const allowedUpdates = { ...updatedFields };
+          delete allowedUpdates.id;
+          delete allowedUpdates.type;
+          delete allowedUpdates.children;
+
+          // Update the node
+          Object.assign(node, allowedUpdates);
+
+          // Return a new fileTree object to trigger re-render
           return { fileTree: { ...state.fileTree } };
         }),
 
       reset: () =>
         set((state) => {
-          // return {} means nothing needs to re-render
           if (!state.fileTree) return {};
 
           const dfs = (node: FileTreeNode) => {
@@ -340,12 +237,12 @@ const useTreeStore = create<TreeStore>()(
 
           return { fileTree: { ...state.fileTree } };
         }),
-    }),
+    })),
     {
-      name: 'markmate-store-tree',          // unique name. For debugging, you can find it in Chrome DevTools 'Application' tab
+      name: 'markmate-tree-store',          // unique name. For debugging, you can find it in Chrome DevTools 'Application' tab
       storage: createJSONStorage(() => localStorage),
       // partialize: enables you to pick some of the state's fields to be stored in the storage.
-      partialize: (state) => ({ fileTree: state.fileTree }),
+      partialize: (state) => ({ fileTree: state.fileTree, favoriteNodeIds: state.favoriteNodes }),
     }
   ));
 

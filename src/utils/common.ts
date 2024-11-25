@@ -71,8 +71,9 @@ export function getTopBarTitle(rootDir: string, filePath: string): string {
 
 export function getFormatDateStr(date: Date): string {
   try {
+    const dateTime = new Date(date);
     const now = new Date();
-    const diffInSeconds = Math.abs((now.getTime() - date.getTime()) / 1000);
+    const diffInSeconds = Math.abs((now.getTime() - dateTime.getTime()) / 1000);
 
     // if less than 1 minute
     if (diffInSeconds < 60) {
@@ -89,13 +90,13 @@ export function getFormatDateStr(date: Date): string {
     const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-    const dayName = days[date.getDay()];
-    const monthName = months[date.getMonth()];
-    const day = String(date.getDate()).padStart(2, '0');
-    const year = date.getFullYear();
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    const seconds = String(date.getSeconds()).padStart(2, '0');
+    const dayName = days[dateTime.getDay()];
+    const monthName = months[dateTime.getMonth()];
+    const day = String(dateTime.getDate()).padStart(2, '0');
+    const year = dateTime.getFullYear();
+    const hours = String(dateTime.getHours()).padStart(2, '0');
+    const minutes = String(dateTime.getMinutes()).padStart(2, '0');
+    const seconds = String(dateTime.getSeconds()).padStart(2, '0');
 
     return `${dayName} ${monthName} ${day} ${year} ${hours}:${minutes}:${seconds}`;
   }

@@ -31,9 +31,9 @@ contextBridge.exposeInMainWorld('api', {
   saveImageFile: (rootDir: string, currentFilePath: string, dataUrlContent: string) => {
     return ipcRenderer.invoke('save-image-file', rootDir, currentFilePath, dataUrlContent);
   },
-  getFileUrl: (currentFilePath: string, mediaFilePath: string) => {
+  getImageFileUrl: (currentFilePath: string, mediaFilePath: string) => {
     // sendSync is to return value synchronously, and uses ipcMain.on() for listening
-    return ipcRenderer.sendSync('get-file-url', currentFilePath, mediaFilePath);
+    return ipcRenderer.sendSync('get-imagefile-url', currentFilePath, mediaFilePath);
   },
   gitSync: (rootDir: string, remoteRepo: string) => {
     return ipcRenderer.invoke('git-sync', rootDir, remoteRepo);

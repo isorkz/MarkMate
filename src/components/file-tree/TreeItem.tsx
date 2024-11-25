@@ -1,28 +1,28 @@
 import { useEffect, useRef, MutableRefObject } from 'react';
+import toast from 'react-hot-toast';
 import { ChevronRightIcon, ChevronDownIcon, DocumentIcon } from '../icons'
 import useStore from '../../store/MStore'
 import useTreeStore from '../../store/TreeStore'
 import { FileTreeNode } from '../../models/FileTree'
-import toast from 'react-hot-toast';
-import { SlateEditorUtils } from '../editor/slate/SlateEditorUtils';
 import useSearchStore from '../../store/SearchStore';
 
 interface TreeNodeProps {
   node: FileTreeNode;
   level?: number;
   editingNodeRef: MutableRefObject<FileTreeNode | undefined>;
+  isFavoriteNodeType: boolean;
 };
 
 const TreeItem = ({
   node,
   level = 0,
   editingNodeRef,
+  isFavoriteNodeType,
 }: TreeNodeProps) => {
-  const fileTree = useTreeStore((state) => state.fileTree);
-  const setFileTree = useTreeStore((state) => state.setFileTree);
+  const editingMode = useTreeStore((state) => state.editingMode);
   const editingNode = useTreeStore((state) => state.editingNode);
   const setEditingNode = useTreeStore((state) => state.setEditingNode);
-  const editingMode = useTreeStore((state) => state.editingMode);
+  const updateTreeNode = useTreeStore((state) => state.updateTreeNode);
   const reset = useTreeStore((state) => state.reset);
 
   const dragSrc = useTreeStore((state) => state.dragSrc);
@@ -32,22 +32,30 @@ const TreeItem = ({
   const move = useTreeStore((state) => state.move);
 
   const activeTabIndex = useStore((state) => state.activeTabIndex);
+  const activeTab = useStore((state) => state.tabs[activeTabIndex]);
   const setActiveTabId = useStore((state) => state.setActiveTabId);
-  const getActiveTab = useStore((state) => state.getActiveTab);
-  const setActiveTab = useStore((state) => state.setActiveTab);
-  const tabs = useStore((state) => state.tabs);
-  const setTabs = useStore((state) => state.setTabs);
+  const updateActiveTab = useStore((state) => state.updateActiveTab);
+  const getTabIdByFileId = useStore((state) => state.getTabIdByFileId);
   const newTab = useStore((state) => state.newTab);
+  const updateTreeNodeInTabs = useStore((state) => state.updateTreeNode);
 
   const setShowSearch = useSearchStore((state) => state.setShowSearch);
 
   // To focus the input element when renaming a file.
   const inputRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
-    if (editingMode && (editingMode === 'rename' || editingMode === 'newfile')) {
+    if (editingMode) {
       inputRef.current?.focus();
     }
   }, [editingMode]);
+
+  const setMenuContext = (e: any) => {
+    e.preventDefault();
+    setEditingNode(node)
+    editingNodeRef.current = node
+    // show the menu
+    window.ipcRenderer.send('show-file-tree-menu', { type: node.type, fileId: node.id, filePath: node.path, favorite: node.favorite });
+  }
 
   const handleClick = () => {
     if (editingNode) {
@@ -60,83 +68,49 @@ const TreeItem = ({
     setShowSearch(false)
 
     if (!node.children) {
-      // If the file is already opened in the tabs, only activate the tab.
-      const index = tabs.findIndex((tab) => tab.filePath === node.path);
-      if (index >= 0) {
-        setActiveTabId(tabs[index].id)
-      } else {
-        // window.api defined in preload.ts, and implemented in ipcHandler.ts
-        window.api.readFile(node.path, (err: any, result: any) => {
-          if (err) {
-            console.error(err);
-          } else {
-            const lastModifiedTime = new Date(result.lastModifiedTime);
-            if (getActiveTab().changed) {
-              newTab(node.id, node.path, result.content, lastModifiedTime)
-            } else {
-              setActiveTab(node.id, node.path, result.content, lastModifiedTime)
-              // Reset the slate nodes when switching to another tab, and clear the history.
-              SlateEditorUtils.resetSlateNodes(getActiveTab().editor, getActiveTab().slateNodes, true);
-            }
-          }
-        })
-      }
+      handleClickFile()
     } else {
-      node.isOpened = !node.isOpened;
-      const newTree = JSON.parse(JSON.stringify(fileTree));
-      setFileTree(newTree);
+      handleClickFolder()
     }
   };
 
-  const onContextMenu = (e: any) => {
-    e.preventDefault();
-    setEditingNode(node)
-    editingNodeRef.current = node
-    // show the menu
-    window.ipcRenderer.send('show-file-tree-menu', { type: node.type, fileId: node.id, filePath: node.path, favorite: node.favorite });
-  }
-
-  const handleRename = () => {
-    if (editingNode && editingMode && editingMode === 'rename' && editingNode.name && editingNode.path === node.path && editingNode.name !== node.name) {
-      const dir = node.path.replace(/[^/]+$/, '');
-      const newFilePath = dir + editingNode.name;
-      window.api.renameFile(node.path, editingNode.name).then(() => {
-        console.log('renamed file:', node.path, ' to ', newFilePath)
-        const oldFilePath = node.path;
-        // Re-render file tree
-        node.name = editingNode.name;
-        node.path = newFilePath;
-        const newTree = JSON.parse(JSON.stringify(fileTree));
-        setFileTree(newTree);
-        // update the tab's filePath
-        let newTabs = tabs.map((tab) => {
-          if (tab.filePath === oldFilePath) {
-            tab.filePath = newFilePath;
+  const handleClickFile = () => {
+    // If the file is already opened in the tabs, only activate the tab.
+    // Otherwise, try to open this file in the current active tab.
+    // But, if the current active tab is changed, create a new tab.
+    const tabId = getTabIdByFileId(node.id);
+    if (tabId) {
+      setActiveTabId(tabId)
+    } else {
+      // window.api defined in preload.ts, and implemented in ipcHandler.ts
+      window.api.readFile(node.path, (err: any, result: any) => {
+        if (!err) {
+          if (activeTab.changed) {
+            newTab(node, result.content)
+          } else {
+            updateActiveTab(node, result.content)
           }
-          return tab;
-        })
-        setTabs(newTabs);
-      }).catch((err: any) => {
-        console.error('failed to rename file: ', node.path, ' to ', newFilePath, err)
-        toast.error('failed to rename file: ' + node.path + ' to ' + newFilePath + err);
-      }).finally(() => {
-        cancelEdit()
+        } else {
+          err = `Failed to read file content from ${node.path}. ${err}`;
+          console.error(err);
+          toast.error(err);
+        }
       })
     }
   }
 
-  const handleNewFile = () => {
-    if (editingNode && editingMode && editingMode === 'newfile' && editingNode.name && editingNode.path === node.path) {
+  const handleClickFolder = () => {
+    updateTreeNode(node.id, { isOpened: !node.isOpened })
+  }
+
+  const handleNewFileEnd = () => {
+    if (editingNode && editingMode && editingMode === 'newfile' && editingNode.name && editingNode.id === node.id) {
       let newFileName = editingNode.name;
       if (!newFileName.endsWith('.md')) {
         newFileName += '.md'
       }
       window.api.newFile(node.path, newFileName).then((newFilePath: any) => {
-        // Re-render file tree
-        node.name = newFileName;
-        node.path = newFilePath;
-        const newTree = JSON.parse(JSON.stringify(fileTree));
-        setFileTree(newTree);
+        updateTreeNode(node.id, { name: newFileName, path: newFilePath })
         console.log('Created new file:', newFilePath)
       }).catch((err: any) => {
         console.error(`Failed to create new file: ${node.path}/${newFileName}. ${err}`)
@@ -147,15 +121,11 @@ const TreeItem = ({
     }
   }
 
-  const handleNewFolder = () => {
+  const handleNewFolderEnd = () => {
     if (editingNode && editingMode && editingMode === 'newfolder' && editingNode.name && editingNode.path === node.path) {
       let newFolderName = editingNode.name;
       window.api.newFolder(node.path, newFolderName).then((newFolderPath: any) => {
-        // Re-render file tree
-        node.name = newFolderName;
-        node.path = newFolderPath;
-        const newTree = JSON.parse(JSON.stringify(fileTree));
-        setFileTree(newTree);
+        updateTreeNode(node.id, { name: newFolderName, path: newFolderPath })
         console.log('Created new folder:', newFolderPath)
       }).catch((err: any) => {
         console.error(`Failed to create new folder: ${node.path}/${newFolderName}. ${err}`)
@@ -166,14 +136,32 @@ const TreeItem = ({
     }
   }
 
+  const handleRenameEnd = () => {
+    if (editingNode && editingMode && editingMode === 'rename' && editingNode.name && editingNode.path === node.path && editingNode.name !== node.name) {
+      const dir = node.path.replace(/[^/]+$/, '');
+      let newName = editingNode.name;
+      const newFilePath = dir + newName;
+      window.api.renameFile(node.path, editingNode.name).then(() => {
+        console.log('Renamed: ' + node.path + ' to ', newFilePath)
+        updateTreeNode(node.id, { name: newName, path: newFilePath })
+        updateTreeNodeInTabs(node.id, { name: newName, path: newFilePath })
+      }).catch((err: any) => {
+        console.error('Failed to rename file: ' + node.path + ' to ', newFilePath, err)
+        toast.error('Failed to rename file: ' + node.path + ' to ' + newFilePath + err);
+      }).finally(() => {
+        cancelEdit()
+      })
+    }
+  }
+
   const handleEdit = () => {
     if (editingNode && editingMode) {
-      if (editingMode === 'rename') {
-        handleRename()
-      } else if (editingMode === 'newfile') {
-        handleNewFile()
+      if (editingMode === 'newfile') {
+        handleNewFileEnd()
       } else if (editingMode === 'newfolder') {
-        handleNewFolder()
+        handleNewFolderEnd()
+      } if (editingMode === 'rename') {
+        handleRenameEnd()
       }
     }
   }
@@ -232,13 +220,13 @@ const TreeItem = ({
               : 'border-b'
             : ''
         }>
-        <div className={`flex items-center my-1 hover:bg-neutral-700 ${node.path === tabs[activeTabIndex].filePath && 'bg-neutral-600'}`} style={{ paddingLeft: `${level}em` }}
+        <div className={`flex items-center my-1 hover:bg-neutral-700 ${node.id === activeTab.fileNode.id && 'bg-neutral-600'}`} style={{ paddingLeft: `${level}em` }}
           onClick={handleClick}
-          onContextMenu={onContextMenu}
+          onContextMenu={setMenuContext}
         >
           {node.type === 'folder' && (node.isOpened ? <ChevronDownIcon className="w-4 h-4 mr-1.5" /> : <ChevronRightIcon className="w-4 h-4 mr-1.5" />)}
           {node.type !== 'folder' && <DocumentIcon className="w-4 h-4 mr-1.5 text-gray-400" />}
-          {editingNode && ((editingMode === 'rename' && editingNode && editingNode.path === node.path) || ((editingMode === 'newfile' || editingMode === 'newfolder') && node.name === '')) ? (
+          {!isFavoriteNodeType && editingNode && ((editingMode === 'rename' && editingNode && editingNode.id === node.id) || ((editingMode === 'newfile' || editingMode === 'newfolder') && node.name === '')) ? (
             <input type="text"
               className='bg-transparent border-b border-gray-300 focus:border-gray-300 focus:outline-none'
               ref={inputRef}
@@ -258,7 +246,7 @@ const TreeItem = ({
 
       {node.isOpened && node.children &&
         [...node.children].sort((a, b) => (a.index < b.index) ? -1 : 1).map((childNode) =>
-          <TreeItem node={childNode} level={level + 1} editingNodeRef={editingNodeRef} key={childNode.id} />
+          <TreeItem node={childNode} level={level + 1} editingNodeRef={editingNodeRef} key={childNode.id} isFavoriteNodeType={isFavoriteNodeType} />
         )}
     </div>
   )

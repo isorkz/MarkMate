@@ -1,9 +1,9 @@
+import { FunctionComponent, useEffect, MouseEvent } from "react";
 import toast from "react-hot-toast";
 import useStore from "../../store/MStore";
 import useTreeStore from "../../store/TreeStore";
 import { getFormatDateStr } from '../../utils/common'
 import { LayoutSplitIcon, RefreshIcon, SyncFailedIcon, SyncOutOfDateIcon, SyncUpToDateIcon, SyncingIcon, TocIcon } from "../icons";
-import { FunctionComponent, useEffect, MouseEvent } from "react";
 
 interface MenuItemProps {
   className: string;
@@ -31,14 +31,15 @@ const MainPanelTopBar = ({ title, changed, lastModifiedTime }: TopBarProps) => {
   const toggleTocPanel = useStore((state) => state.toggleTocPanel);
   const toggleMarkdownSourceEditor = useStore((state) => state.toggleMarkdownSourceEditor);
   const rootDir = useStore((state) => state.rootDir);
-  const getActiveFilePath = useStore((state) => state.getActiveFilePath);
+  const activeTabIndex = useStore((state) => state.activeTabIndex);
+  const activeTab = useStore((state) => state.tabs[activeTabIndex]);
 
-  const loadTree = useTreeStore((state) => state.loadTree);
+  const reloadTree = useTreeStore((state) => state.reloadTree);
   const syncStatus = useTreeStore((state) => state.syncStatus);
   const setSyncStatus = useTreeStore((state) => state.setSyncStatus);
 
   const onRefreshFileTree = () => {
-    loadTree(rootDir, getActiveFilePath())
+    reloadTree(rootDir, activeTab.fileNode.path)
   }
 
   const onSyncUp = () => {

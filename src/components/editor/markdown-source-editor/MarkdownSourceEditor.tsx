@@ -27,8 +27,8 @@ const MarkdownSourceEditor = () => {
     activeEditor.editor.selection = null
 
     // update the cache
-    if (activeEditor.filePath) {
-      slateNodesCache.set(activeEditor.filePath, slateNodes)
+    if (activeEditor.fileNode.path) {
+      slateNodesCache.set(activeEditor.fileNode.path, slateNodes)
     }
   }
 

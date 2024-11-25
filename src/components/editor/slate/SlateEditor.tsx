@@ -40,8 +40,8 @@ const SlateEditor = () => {
       updateSourceContent(markdownSource)
 
       // update the cache
-      if (activeEditor.filePath) {
-        slateNodesCache.set(activeEditor.filePath, value)
+      if (activeEditor.fileNode.path) {
+        slateNodesCache.set(activeEditor.fileNode.path, value)
       }
     }
     catch (error) {

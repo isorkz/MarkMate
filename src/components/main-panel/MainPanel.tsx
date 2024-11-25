@@ -1,14 +1,14 @@
-import { useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
+import { toast } from 'react-hot-toast';
 import TabsNav from '../tabs/TabsNav';
 import { EditorPanel } from '../editor/EditorPanel';
 import useStore from '../../store/MStore';
+import useTreeStore from '../../store/TreeStore';
 import useSearchStore from '../../store/SearchStore';
 import Search from '../search/Search';
-import { useEffect, useRef, useState } from 'react';
 import FullSearchModal from '../search/FullSearchModal';
 import MainPanelTopBar from './MainPanelTopBar';
 import { getTopBarTitle } from '../../utils/common';
-import { toast } from 'react-hot-toast';
 import { slateNodesToMarkdownSource } from '../editor/slate/parser/ParseSlateNodesToMarkdownSource';
 
 const MainPanel = () => {
@@ -17,6 +17,8 @@ const MainPanel = () => {
   // When set up the event listeners in useEffect, the value of showFullSearch in onShowFullSearch is fixed and will not change due to the feature of closure.
   // To solve this problem, use useRef to get the latest value of showFullSearch.
   const showFullSearchModalRef = useRef(showFullSearchModal);
+
+  const updateTreeNode = useTreeStore((state) => state.updateTreeNode);
 
   const rootDir = useStore((state) => state.rootDir);
   const tabs = useStore((state) => state.tabs);
@@ -57,7 +59,7 @@ const MainPanel = () => {
   // Triggered by the 'save-file' event, all values should use useRef to get the latest value.
   const onSave = useCallback(() => {
     try {
-      if (tabsRef.current[activeTabIndexRef.current].filePath) {
+      if (tabsRef.current[activeTabIndexRef.current].fileNode.path) {
         const markdownSource = slateNodesToMarkdownSource(tabsRef.current[activeTabIndexRef.current].slateNodes)
         if (!markdownSource) {
           throw new Error('markdownSource is undefined.')
@@ -65,8 +67,9 @@ const MainPanel = () => {
         updateSourceContent(markdownSource)
 
         const remoteRepo = import.meta.env.VITE_APP_GIT_REMOTE_REPO;
-        window.api.saveFile(tabsRef.current[activeTabIndexRef.current].filePath, markdownSource, rootDir, remoteRepo).then(() => {
+        window.api.saveFile(tabsRef.current[activeTabIndexRef.current].fileNode.path, markdownSource, rootDir, remoteRepo).then(() => {
           saveTab();
+          updateTreeNode(tabsRef.current[activeTabIndexRef.current].fileNode.id, { lastModifiedTime: new Date() });
 
           // Sync to the remote repository
           window.api.gitSync(rootDir, remoteRepo).then(() => {
@@ -77,22 +80,22 @@ const MainPanel = () => {
           })
         }).catch((error: any) => {
           console.error('failed to save file: ', error)
-          toast.error(`Failed to save file ${tabsRef.current[activeTabIndexRef.current].filePath}. ${error}`);
+          toast.error(`Failed to save file ${tabsRef.current[activeTabIndexRef.current].fileNode.path}. ${error}`);
         })
       } else {
         throw new Error('filePath is empty.')
       }
     }
     catch (error) {
-      console.error('failed to save file: ', error)
-      toast.error(`Failed to save file ${tabsRef.current[activeTabIndexRef.current].filePath}. ${error}`);
+      console.error('Failed to save file: ', error)
+      toast.error(`Failed to save file ${tabsRef.current[activeTabIndexRef.current].fileNode.path}. ${error}`);
     }
   }, [tabsRef, activeTabIndexRef])
 
   const getTopbarTitle = (): string => {
     if (rootDir && tabs.length > 0) {
-      const filePath = tabs[activeTabIndex].filePath;
-      if (filePath) {
+      const filePath = tabs[activeTabIndex].fileNode.path;
+      if (filePath !== '') {
         return getTopBarTitle(rootDir, filePath);
       }
       else {
@@ -122,7 +125,7 @@ const MainPanel = () => {
 
   return (
     <div className='flex flex-col w-full h-full overflow-x-hidden'>
-      <MainPanelTopBar title={getTopbarTitle()} changed={tabs[activeTabIndex].changed} lastModifiedTime={tabs[activeTabIndex].lastModifiedTime} />
+      <MainPanelTopBar title={getTopbarTitle()} changed={tabs[activeTabIndex].changed} lastModifiedTime={tabs[activeTabIndex].fileNode.lastModifiedTime} />
 
       <div className='relative'>
         <TabsNav />

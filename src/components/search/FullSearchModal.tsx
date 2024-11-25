@@ -1,11 +1,11 @@
 import { Dispatch, MouseEvent, SetStateAction, useCallback, useEffect, useState } from 'react'
+import { toast } from 'react-hot-toast';
 import { ArrowReturnRightIcon, DocumentIcon } from '../icons';
 import useTreeStore from '../../store/TreeStore';
 import { FullSearchUtils } from '../../utils/search/FullSearchUtils';
 import { FullSearchResult } from '../../models/Search';
 import { getFolderPath } from '../../utils/common';
 import useStore from '../../store/MStore';
-import { SlateEditorUtils } from '../editor/slate/SlateEditorUtils';
 
 import LoadingButton from '@mui/lab/LoadingButton';
 import CloseIcon from '@mui/icons-material/Close';
@@ -25,12 +25,11 @@ const FullSearch = ({ showFullSearchModal, setShowFullSearchModal }: FullSearchM
 
   const slateNodesCache = useTreeStore((state) => state.slateNodesCache);
   const fileTree = useTreeStore((state) => state.fileTree);
+  const getFileNodeById = useTreeStore((state) => state.getFileNodeById);
 
   const rootDir = useStore((state) => state.rootDir);
   const setActiveTabId = useStore((state) => state.setActiveTabId);
-  const getActiveTab = useStore((state) => state.getActiveTab);
-  const setActiveTab = useStore((state) => state.setActiveTab);
-  const tabs = useStore((state) => state.tabs);
+  const getTabIdByFileId = useStore((state) => state.getTabIdByFileId);
   const newTab = useStore((state) => state.newTab);
 
   useEffect(() => {
@@ -63,23 +62,24 @@ const FullSearch = ({ showFullSearchModal, setShowFullSearchModal }: FullSearchM
     event.preventDefault();
 
     // If the file is already opened in the tabs, only activate the tab.
-    const index = tabs.findIndex((tab) => tab.filePath === filePath);
-    if (index >= 0) {
-      setActiveTabId(tabs[index].id)
+    // Otherwise, read the file content and create a new tab.
+    const tabId = getTabIdByFileId(fileId);
+    if (tabId) {
+      setActiveTabId(tabId)
     } else {
       window.api.readFile(filePath, (err: any, result: any) => {
-        if (err) {
-          console.error(err);
-        } else {
-          const lastModifiedTime = new Date(result.lastModifiedTime);
-          if (getActiveTab().changed) {
-            newTab(fileId, filePath, result.content, lastModifiedTime)
-          } else {
-            setActiveTab(fileId, filePath, result.content, lastModifiedTime)
-            // Reset the slate nodes when switching to another tab, and clear the history.
-            SlateEditorUtils.resetSlateNodes(getActiveTab().editor, getActiveTab().slateNodes, true);
+        if (!err) {
+          const fileNode = getFileNodeById(fileId);
+          if (fileNode) {
+            newTab(fileNode, result.content)
+            return
           }
+          err = `Failed to find file node by id: ${fileId}`;
+        } else {
+          err = `Failed to read file content from ${filePath}. ${err}`;
         }
+        console.error(err);
+        toast.error(err);
       })
     }
     setShowFullSearchModal(false);

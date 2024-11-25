@@ -15,7 +15,7 @@ export const Image = ({ attributes, children, element }: RenderElementProps) => 
   if (url && !isValidUrl(url)) {
     // If it's local file, get the file url: file:///path/to/file
     const activeEditor = useMEditor()
-    url = window.api.getFileUrl(activeEditor.filePath, url)
+    url = window.api.getImageFileUrl(activeEditor.fileNode.path, url)
   }
 
   return (
