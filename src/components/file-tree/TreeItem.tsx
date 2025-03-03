@@ -81,22 +81,23 @@ const TreeItem = ({
     const tabId = getTabIdByFileId(node.id);
     if (tabId) {
       setActiveTabId(tabId)
-    } else {
-      // window.api defined in preload.ts, and implemented in ipcHandler.ts
-      window.api.readFile(node.path, (err: any, result: any) => {
-        if (!err) {
-          if (activeTab.changed) {
-            newTab(node, result.content)
-          } else {
-            updateActiveTab(node, result.content)
-          }
-        } else {
-          err = `Failed to read file content from ${node.path}. ${err}`;
-          console.error(err);
-          toast.error(err);
-        }
-      })
+      return
     }
+
+    // window.api defined in preload.ts, and implemented in ipcHandler.ts
+    window.api.readFile(node.path, (err: any, result: any) => {
+      if (!err) {
+        if (activeTab.changed) {
+          newTab(node, result.content)
+        } else {
+          updateActiveTab(node, result.content)
+        }
+      } else {
+        err = `Failed to read file content from ${node.path}. ${err}`;
+        console.error(err);
+        toast.error(err);
+      }
+    })
   }
 
   const handleClickFolder = () => {

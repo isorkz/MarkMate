@@ -20,6 +20,7 @@ const FileTree = () => {
   const getFileNodeById = useTreeStore((state) => state.getFileNodeById);
 
   const rootDir = useStore((state) => state.rootDir);
+  const tabs = useStore((state) => state.tabs);
   const activeTabIndex = useStore((state) => state.activeTabIndex);
   const activeTab = useStore((state) => state.tabs[activeTabIndex]);
   const setActiveTabId = useStore((state) => state.setActiveTabId);
@@ -83,23 +84,24 @@ const FileTree = () => {
     const tabId = getTabIdByFileId(params.fileId);
     if (tabId) {
       setActiveTabId(tabId)
-    } else {
-      // window.api defined in preload.ts, and implemented in ipcHandler.ts
-      window.api.readFile(params.filePath, (err: any, result: any) => {
-        if (!err) {
-          const fileNode = getFileNodeById(params.fileId);
-          if (fileNode) {
-            newTab(fileNode, result.content)
-            return;
-          }
-          err = `Failed to find file node by id: ${params.fileId}`;
-        } else {
-          err = `Failed to read file content from ${params.filePath}. ${err}`;
-        }
-        console.error(err);
-        toast.error(err);
-      })
+      return
     }
+
+    // window.api defined in preload.ts, and implemented in ipcHandler.ts
+    window.api.readFile(params.filePath, (err: any, result: any) => {
+      if (!err) {
+        const fileNode = getFileNodeById(params.fileId);
+        if (fileNode) {
+          newTab(fileNode, result.content)
+          return;
+        }
+        err = `Failed to find file node by id: ${params.fileId}`;
+      } else {
+        err = `Failed to read file content from ${params.filePath}. ${err}`;
+      }
+      console.error(err);
+      toast.error(err);
+    })
   }
 
   const deleteFile = async (event: any, params: { fileId: string, filePath: string }) => {
@@ -124,7 +126,7 @@ const FileTree = () => {
     if (filePath) {
       openTreeNodeByDfs(filePath)
     }
-  }, [activeTab?.fileNode.id]);
+  }, [activeTab?.id]);
 
   useEffect(() => {
     reloadTree(rootDir, activeTab?.fileNode.path)

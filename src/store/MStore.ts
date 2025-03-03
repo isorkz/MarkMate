@@ -1,11 +1,8 @@
 import { create } from "zustand";
-import { persist, PersistStorage, subscribeWithSelector } from 'zustand/middleware'
+import { persist, PersistStorage } from 'zustand/middleware'
 import { nanoid } from 'nanoid'
 import { MEditor } from "../models/MEditor";
 import { FileTreeNode } from "../models/FileTree";
-import { markdownSourceToMEditorNodes } from "../components/editor/slate/parser/ParseMarkdownSourceToSlateNodes";
-import { DefaultEmptySlateNodes } from "../components/editor/slate/Element";
-import { SlateEditorUtils } from "../components/editor/slate/SlateEditorUtils";
 
 const InitTabId = 'default_id_0';
 
@@ -96,20 +93,13 @@ const useStore = create<MStore>()(
 
       updateActiveTab: (fileNode: FileTreeNode, content: string) =>
         set((state) => {
-          const newTabs = [...state.tabs];
-
-          if (newTabs[state.activeTabIndex].changed) {
+          if (state.tabs[state.activeTabIndex].changed) {
             throw new Error('The current tab has unsaved changes. Please save it first.');
           }
 
-          newTabs[state.activeTabIndex].changed = false;
-          newTabs[state.activeTabIndex].fileNode = fileNode;
-          newTabs[state.activeTabIndex].sourceContent = content;
-          newTabs[state.activeTabIndex].slateNodes = markdownSourceToMEditorNodes(content) || DefaultEmptySlateNodes();
-
-          // Reset the slate nodes when switching to another tab, and clear the history.
-          SlateEditorUtils.resetSlateNodes(newTabs[state.activeTabIndex].editor, newTabs[state.activeTabIndex].slateNodes, true);
-
+          const newTab = new MEditor(nanoid(), state.rootDir, fileNode, content);
+          const newTabs = [...state.tabs];
+          newTabs[state.activeTabIndex] = newTab;
           return {
             ...state,
             tabs: newTabs

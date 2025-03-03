@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react'
+import { useCallback, useRef, useEffect } from 'react'
 import { Descendant, Transforms, Element as SlateElement } from 'slate'
 import { Editor } from 'slate'
 import { Slate, RenderElementProps, RenderLeafProps, Editable, ReactEditor } from 'slate-react'
@@ -9,6 +9,7 @@ import { SetNodeToDecorations, useDecorate } from '../slate/decorate/SetNodeToDe
 import { useMEditor } from '../../../models/MEditor'
 import useTreeStore from '../../../store/TreeStore'
 import { insertTab } from './plugin/insertTab'
+import { SlateEditorUtils } from './SlateEditorUtils'
 
 const SlateEditor = () => {
   const activeEditor = useMEditor()
@@ -129,6 +130,10 @@ const SlateEditor = () => {
       }
     }
   }
+
+  useEffect(() => {
+    SlateEditorUtils.resetSlateNodes(activeEditor.editor, activeEditor.slateNodes, true)
+  }, [activeEditor.id])
 
   const ShowSlateNodes = () => {
     console.log('slateNodes: ', activeEditor.slateNodes)
