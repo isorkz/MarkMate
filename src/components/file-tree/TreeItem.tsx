@@ -77,7 +77,7 @@ const TreeItem = ({
   const handleClickFile = () => {
     // If the file is already opened in the tabs, only activate the tab.
     // Otherwise, try to open this file in the current active tab.
-    // But, if the current active tab is changed, create a new tab.
+    // But, if the current active tab is pinned, create a new tab.
     const tabId = getTabIdByFileId(node.id);
     if (tabId) {
       setActiveTabId(tabId)
@@ -87,7 +87,7 @@ const TreeItem = ({
     // window.api defined in preload.ts, and implemented in ipcHandler.ts
     window.api.readFile(node.path, (err: any, result: any) => {
       if (!err) {
-        if (activeTab.changed) {
+        if (activeTab.pinned) {
           newTab(node, result.content)
         } else {
           updateActiveTab(node, result.content)

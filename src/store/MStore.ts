@@ -22,9 +22,11 @@ interface MStore {
   updateSourceContent: (sourceContent: string) => void;
   updateSlateNodes: (slateNodes: any[]) => void;
 
+  saveTab: () => void;
+  pinTab: () => void;
+
   removeTabByIndex: (tabIndex: number) => void;
   removeTabByFileId: (fileId: string) => void;
-  saveTab: () => void;
 
   getTabIdByFileId: (fileId: string) => string | undefined;
   updateTreeNode: (fileId: string, updatedFields: Partial<FileTreeNode>) => void;
@@ -171,6 +173,7 @@ const useStore = create<MStore>()(
           const newTabs = [...state.tabs];
           newTabs[state.activeTabIndex].sourceContent = sourceContent;
           newTabs[state.activeTabIndex].changed = true;
+          newTabs[state.activeTabIndex].pinned = true;
           return {
             ...state,
             tabs: newTabs
@@ -182,6 +185,7 @@ const useStore = create<MStore>()(
           const newTabs = [...state.tabs];
           newTabs[state.activeTabIndex].slateNodes = slateNodes;
           newTabs[state.activeTabIndex].changed = true;
+          newTabs[state.activeTabIndex].pinned = true;
           return {
             ...state,
             tabs: newTabs
@@ -231,6 +235,16 @@ const useStore = create<MStore>()(
           if (fileNode) {
             fileNode.lastModifiedTime = new Date();
           }
+          return {
+            ...state,
+            tabs: newTabs
+          };
+        }),
+
+      pinTab: () =>
+        set((state) => {
+          const newTabs = [...state.tabs];
+          newTabs[state.activeTabIndex].pinned = true;
           return {
             ...state,
             tabs: newTabs

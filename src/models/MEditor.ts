@@ -34,6 +34,8 @@ export class MEditor {
   slateNodes: any[];
   // Whether the content in editor has been changed.
   changed: boolean = false;
+  // Whether the tab is a pinned tab.
+  pinned: boolean = false;
 
   constructor(id: string, rootDir: string | undefined, fileNode: FileTreeNode = EmptyFileTreeNode(), sourceContent: string = '', slateNodes: any[] = []) {
     this.id = id;

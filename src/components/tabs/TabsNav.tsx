@@ -89,6 +89,7 @@ const TabButton = ({
 
   const activeTabIndex = useStore((state) => state.activeTabIndex);
   const activeTab = useStore((state) => state.tabs[activeTabIndex]);
+  const pinTab = useStore((state) => state.pinTab);
   const rootDir = useStore((state) => state.rootDir);
   const tabs = useStore((state) => state.tabs);
   const setActiveTabId = useStore((state) => state.setActiveTabId);
@@ -99,6 +100,12 @@ const TabButton = ({
   const onClickTab = () => {
     setActiveTabId(tabId)
     setShowSearch(false)
+  }
+
+  const onDoubleClickTab = () => {
+    if (activeTabIndex === tabIndex) {
+      pinTab();
+    }
   }
 
   const onCloseTab = () => {
@@ -115,8 +122,9 @@ const TabButton = ({
       <div className={'relative z-10 flex flex-row w-full items-center select-none'}>
         <div
           onClick={onClickTab}
+          onDoubleClick={onDoubleClickTab}
           className={`flex w-full h-8 justify-center items-center rounded-none border-r border-gray-200/80 ${activeTab.id == tabId ? 'bg-white' : 'bg-gray-50'}`}>
-          <span>{title} {tabs[tabIndex].changed && '*'}</span>
+          <span className={`${!tabs[tabIndex].pinned ? 'italic' : ''}`}>{title} {tabs[tabIndex].changed && '*'}</span>
         </div>
 
         {/* Close tab button */}
