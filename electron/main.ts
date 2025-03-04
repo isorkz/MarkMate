@@ -3,6 +3,7 @@ import path from 'node:path'
 import { registerIpcHandlers } from './ipcHandlers';
 import { registerMenus } from './menus';
 import { globalShortcut } from 'electron'
+import { installExtension, REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
 
 // The built directory structure
 //
@@ -79,6 +80,11 @@ app.on('activate', () => {
 // });
 
 app.whenReady().then(() => {
+  // For development, install DevTools Extension
+  installExtension(REACT_DEVELOPER_TOOLS)
+    .then((react) => console.log(`Added Extension:  ${react.name}`))
+    .catch((err) => console.log('An error occurred: ', err));
+
   createWindow();
   registerIpcHandlers(); // 设置 IPC 处理程序
   registerMenus();
