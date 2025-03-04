@@ -94,25 +94,25 @@ app.whenReady().then(() => {
 
 // Register shortcuts when window is focused
 app.on('browser-window-focus', () => {
-  globalShortcut.register('CommandOrControl+S', () => {
-    BrowserWindow.getFocusedWindow()?.webContents.send('save-file')
-  })
-  globalShortcut.register('CommandOrControl+P', () => {
-    BrowserWindow.getFocusedWindow()?.webContents.send('full-search')
-  })
-  globalShortcut.register('CommandOrControl+F', () => {
-    BrowserWindow.getFocusedWindow()?.webContents.send('search-doc')
-  })
-  globalShortcut.register('CommandOrControl+/', () => {
-    BrowserWindow.getFocusedWindow()?.webContents.send('toggle-source-editor')
-  })
+  // globalShortcut.register('CommandOrControl+S', () => {
+  //   BrowserWindow.getFocusedWindow()?.webContents.send('save-file')
+  // })
+  // globalShortcut.register('CommandOrControl+P', () => {
+  //   BrowserWindow.getFocusedWindow()?.webContents.send('full-search')
+  // })
+  // globalShortcut.register('CommandOrControl+F', () => {
+  //   BrowserWindow.getFocusedWindow()?.webContents.send('search-doc')
+  // })
+  // globalShortcut.register('CommandOrControl+/', () => {
+  //   BrowserWindow.getFocusedWindow()?.webContents.send('toggle-source-editor')
+  // })
 })
 
 // Unregister shortcuts when window is blurred
 app.on('browser-window-blur', () => {
-  globalShortcut.unregister('CommandOrControl+S')
-  globalShortcut.unregister('CommandOrControl+N')
-  globalShortcut.unregister('CommandOrControl+P')
-  globalShortcut.unregister('CommandOrControl+F')
-  globalShortcut.unregister('CommandOrControl+/')
+  // globalShortcut.unregister('CommandOrControl+S')
+  // globalShortcut.unregister('CommandOrControl+N')
+  // globalShortcut.unregister('CommandOrControl+P')
+  // globalShortcut.unregister('CommandOrControl+F')
+  // globalShortcut.unregister('CommandOrControl+/')
 })
