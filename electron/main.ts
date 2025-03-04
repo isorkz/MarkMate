@@ -1,9 +1,10 @@
 import { app, BrowserWindow } from 'electron'
 import path from 'node:path'
 import { registerIpcHandlers } from './ipcHandlers';
-import { registerMenus } from './menus';
+import { registerFileTreeMenus } from './fileTreeMenus';
 import { globalShortcut } from 'electron'
 import { installExtension, REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
+import { registerAppMenus } from './appMenus';
 
 // The built directory structure
 //
@@ -87,16 +88,14 @@ app.whenReady().then(() => {
 
   createWindow();
   registerIpcHandlers(); // 设置 IPC 处理程序
-  registerMenus();
+  registerAppMenus();
+  registerFileTreeMenus();
 });
 
 // Register shortcuts when window is focused
 app.on('browser-window-focus', () => {
   globalShortcut.register('CommandOrControl+S', () => {
     BrowserWindow.getFocusedWindow()?.webContents.send('save-file')
-  })
-  globalShortcut.register('CommandOrControl+N', () => {
-    BrowserWindow.getFocusedWindow()?.webContents.send('new-tab')
   })
   globalShortcut.register('CommandOrControl+P', () => {
     BrowserWindow.getFocusedWindow()?.webContents.send('full-search')

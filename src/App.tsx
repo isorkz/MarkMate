@@ -6,9 +6,11 @@ import LeftSidebar from './components/sidebar/LeftSidebar'
 import { Toaster } from 'react-hot-toast';
 import useStore from './store/MStore';
 import { FileTreeNode } from './models/FileTree';
+import useTreeStore from './store/TreeStore';
 
 function App() {
   const newTab = useStore((state) => state.newTab);
+  const fileTree = useTreeStore((state) => state.fileTree);
 
   const onNewEmptyTab = () => {
     const newNode: FileTreeNode = {
@@ -22,13 +24,29 @@ function App() {
     newTab(newNode, '');
   }
 
+  const onCloseCurrentTab = () => {
+    // TODO: close the current tab with confirmation
+  }
+
+  const onShowDebugInfo = () => {
+    console.log('fileTree: ', fileTree)
+    const currentEditor = useStore.getState().tabs[useStore.getState().activeTabIndex];
+    if (currentEditor) {
+      console.log('slateNodes: ', currentEditor.slateNodes);
+    }
+  }
+
   useEffect(() => {
     // Add a listener to receive the 'new-tab' event from main process.
     window.ipcRenderer.on('new-tab', onNewEmptyTab)
+    window.ipcRenderer.on('close-tab', onCloseCurrentTab)
+    window.ipcRenderer.on('show-debug-info', onShowDebugInfo)
 
     // Specify how to clean up after this effect
     return () => {
       window.ipcRenderer.removeAllListeners('new-tab')
+      window.ipcRenderer.removeAllListeners('close-tab')
+      window.ipcRenderer.removeAllListeners('show-debug-info')
     }
   }, [])
 

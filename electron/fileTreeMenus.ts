@@ -1,6 +1,6 @@
 import { ipcMain, BrowserWindow, Menu } from 'electron';
 
-export const registerMenus = (): void => {
+export const registerFileTreeMenus = (): void => {
   ipcMain.on('show-file-tree-menu', (e, params: {
     type: 'file' | 'folder',
     fileId: string,
