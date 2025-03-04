@@ -37,10 +37,18 @@ export class MEditor {
   // Whether the tab is a pinned tab.
   pinned: boolean = false;
 
-  constructor(id: string, rootDir: string | undefined, fileNode: FileTreeNode = EmptyFileTreeNode(), sourceContent: string = '', slateNodes: any[] = []) {
+  constructor(
+    id: string,
+    rootDir: string | undefined,
+    fileNode: FileTreeNode = EmptyFileTreeNode(),
+    sourceContent: string = '',
+    slateNodes: any[] = [],
+    pinned: boolean = false
+  ) {
     this.id = id;
     this.rootDir = rootDir;
     this.fileNode = fileNode;
+    this.pinned = pinned;
     this.sourceContent = sourceContent;
     this.editor = withInsertData(withMarkdownShortcuts(withReact(withHistory(createEditor()))), rootDir, fileNode);
 
