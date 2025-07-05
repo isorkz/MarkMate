@@ -4,7 +4,6 @@ import { useEditorStore } from '../../stores/editorStore'
 import { useSettingsStore } from '../../stores/settingsStore'
 import Sidebar from './Sidebar'
 import MainContent from './MainContent'
-import StatusBar from './StatusBar'
 import WorkspaceOpener from '../workspace/WorkspaceOpener'
 
 const AppLayout: React.FC = () => {
@@ -53,12 +52,9 @@ const AppLayout: React.FC = () => {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-white">
-      <div className="flex flex-1 overflow-hidden">
-        {settings.sidebarVisible && <Sidebar />}
-        <MainContent />
-      </div>
-      <StatusBar />
+    <div className="h-screen flex bg-white">
+      {settings.sidebarVisible && <Sidebar />}
+      <MainContent />
     </div>
   )
 }
