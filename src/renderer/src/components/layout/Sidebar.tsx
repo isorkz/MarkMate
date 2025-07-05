@@ -1,8 +1,8 @@
 import React from 'react'
 import { useWorkspaceStore } from '../../stores/workspaceStore'
 import WorkspaceSelector from '../workspace/WorkspaceSelector'
-import FileTree from '../workspace/FileTree'
-import FileSearch from '../workspace/FileSearch'
+import FileTree from '../file/FileTree'
+import FileSearch from '../search/FileSearch'
 
 const Sidebar: React.FC = () => {
   const { currentWorkspace } = useWorkspaceStore()
