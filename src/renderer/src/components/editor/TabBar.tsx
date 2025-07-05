@@ -36,7 +36,7 @@ const Tab: React.FC<TabProps> = ({ tab, onClose, onSelect }) => {
   return (
     <div
       ref={setNodeRef}
-      style={style}
+      style={{ ...style, WebkitAppRegion: 'no-drag' }}
       {...attributes}
       {...listeners}
       className={`
@@ -93,7 +93,7 @@ const TabBar: React.FC = () => {
   }
 
   return (
-    <div className="flex bg-gray-50 border-b border-gray-200 overflow-x-auto">
+    <div className="flex bg-gray-50 border-b border-gray-200 overflow-x-auto" style={{ WebkitAppRegion: 'drag' }}>
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
