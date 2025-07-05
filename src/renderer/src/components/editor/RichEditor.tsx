@@ -9,15 +9,17 @@ import TableCell from '@tiptap/extension-table-cell'
 import TableHeader from '@tiptap/extension-table-header'
 import Link from '@tiptap/extension-link'
 import { createHighlighter } from 'shiki'
-import { useEditorStore } from '../../stores/editorStore'
+import { useEditorStore, Tab } from '../../stores/editorStore'
 import { useSettingsStore } from '../../stores/settingsStore'
 
-const RichEditor: React.FC = () => {
-  const { tabs, activeTabId, updateTabContent } = useEditorStore()
+interface RichEditorProps {
+  tab: Tab
+}
+
+const RichEditor: React.FC<RichEditorProps> = ({ tab }) => {
+  const { updateTabContent } = useEditorStore()
   const { settings } = useSettingsStore()
   const [highlighter, setHighlighter] = useState<any>(null)
-
-  const activeTab = tabs.find(tab => tab.id === activeTabId)
 
   // Initialize Shiki highlighter
   useEffect(() => {
@@ -57,12 +59,10 @@ const RichEditor: React.FC = () => {
         openOnClick: false,
       }),
     ],
-    content: activeTab?.content || '',
+    content: tab?.content || '',
     onUpdate: ({ editor }) => {
-      if (activeTabId) {
-        const content = editor.getHTML()
-        updateTabContent(activeTabId, content)
-      }
+      const content = editor.getHTML()
+      updateTabContent(tab.id, content)
     },
     editorProps: {
       attributes: {
@@ -74,13 +74,13 @@ const RichEditor: React.FC = () => {
 
   // Update editor content when active tab changes
   useEffect(() => {
-    if (editor && activeTab) {
+    if (editor && tab) {
       const currentContent = editor.getHTML()
-      if (currentContent !== activeTab.content) {
-        editor.commands.setContent(activeTab.content, false)
+      if (currentContent !== tab.content) {
+        editor.commands.setContent(tab.content, false)
       }
     }
-  }, [editor, activeTab?.content, activeTab?.id])
+  }, [editor, tab?.content, tab?.id])
 
   // Apply syntax highlighting to code blocks
   useEffect(() => {
@@ -110,9 +110,9 @@ const RichEditor: React.FC = () => {
         }
       })
     }
-  }, [highlighter, editor, activeTab?.content, settings.theme])
+  }, [highlighter, editor, tab?.content, settings.theme])
 
-  if (!activeTab) {
+  if (!tab) {
     return (
       <div className="h-full flex items-center justify-center text-gray-500">
         No file selected

@@ -2,30 +2,20 @@ import React from 'react'
 import { useEditorStore } from '../../stores/editorStore'
 import TitleBar from './TitleBar'
 import TabBar from '../editor/TabBar'
-import SourceEditor from '../editor/SourceEditor'
-import RichEditor from '../editor/RichEditor'
+import Editor from '../editor/Editor'
 
 const MainContent: React.FC = () => {
-  const { showSourceEditor, tabs } = useEditorStore()
+  const { tabs, activeTabId } = useEditorStore()
+
+  const activeTab = tabs.find(tab => tab.id === activeTabId)
 
   return (
     <div className="flex-1 flex flex-col h-full overflow-x-hidden">
       {/* <TitleBar /> */}
       <TabBar />
 
-      {tabs.length > 0 ? (
-        <div className="flex flex-1 overflow-hidden">
-          {showSourceEditor && (
-            <div className="flex-1 border-r border-gray-200 min-w-0">
-              <SourceEditor />
-            </div>
-          )}
-
-          <div className="flex-1 min-w-0">
-            <RichEditor />
-          </div>
-
-        </div>
+      {tabs.length > 0 && activeTab ? (
+        <Editor tab={activeTab} />
       ) : (
         <div className="flex-1 flex items-center justify-center bg-gray-50">
           <div className="text-center text-gray-500">

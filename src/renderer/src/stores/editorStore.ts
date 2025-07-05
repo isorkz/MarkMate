@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-interface Tab {
+export interface Tab {
   id: string;
   fileId: string;
   filePath: string;
