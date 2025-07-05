@@ -52,7 +52,7 @@ const AppLayout: React.FC = () => {
   }
 
   return (
-    <div className="h-screen flex bg-white">
+    <div className="h-screen flex bg-white overflow-x-hidden">
       {settings.sidebarVisible && <Sidebar />}
       <MainContent />
     </div>

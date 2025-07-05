@@ -10,22 +10,22 @@ const MainContent: React.FC = () => {
   const { showTOC, showSourceEditor, tabs } = useEditorStore()
 
   return (
-    <div className="editor-container flex flex-col">
+    <div className="editor-container flex flex-col h-full overflow-x-hidden">
       <TitleBar />
       <TabManager />
-      
+
       {tabs.length > 0 ? (
         <div className="flex flex-1 overflow-hidden">
           {showSourceEditor && (
-            <div className="w-1/2 border-r border-gray-200">
+            <div className="flex-1 border-r border-gray-200 min-w-0">
               <SourceEditor />
             </div>
           )}
-          
-          <div className={`flex-1 ${showSourceEditor ? 'w-1/2' : 'w-full'}`}>
+
+          <div className="flex-1 min-w-0">
             <RichEditor />
           </div>
-          
+
           {showTOC && (
             <div className="w-64 border-l border-gray-200">
               <TOCPanel />

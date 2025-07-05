@@ -1,5 +1,7 @@
 import React, { useEffect } from 'react'
-import { Editor } from '@monaco-editor/react'
+import CodeMirror from '@uiw/react-codemirror'
+import { markdown } from '@codemirror/lang-markdown'
+import { oneDark } from '@codemirror/theme-one-dark'
 import { useEditorStore } from '../../stores/editorStore'
 import { useSettingsStore } from '../../stores/settingsStore'
 import { useWorkspaceStore } from '../../stores/workspaceStore'
@@ -8,11 +10,11 @@ const SourceEditor: React.FC = () => {
   const { tabs, activeTabId, updateTabContent, markTabDirty } = useEditorStore()
   const { settings } = useSettingsStore()
   const { currentWorkspace } = useWorkspaceStore()
-  
+
   const activeTab = tabs.find(tab => tab.id === activeTabId)
 
-  const handleEditorChange = (value: string | undefined) => {
-    if (activeTabId && value !== undefined) {
+  const onChange = (value: string) => {
+    if (activeTabId) {
       updateTabContent(activeTabId, value)
     }
   }
@@ -33,7 +35,7 @@ const SourceEditor: React.FC = () => {
     }
 
     const autoSaveTimer = setTimeout(saveFile, 2000) // Auto-save after 2 seconds of inactivity
-    
+
     return () => clearTimeout(autoSaveTimer)
   }, [activeTab?.content, activeTab?.isDirty, currentWorkspace, markTabDirty])
 
@@ -65,32 +67,30 @@ const SourceEditor: React.FC = () => {
     )
   }
 
-  const theme = settings.theme === 'dark' ? 'vs-dark' : 'light'
-
   return (
-    <div className="h-full flex flex-col">
-      <div className="h-8 bg-gray-100 border-b border-gray-200 flex items-center px-3 text-sm text-gray-600">
-        Source Editor
-      </div>
-      
-      <div className="flex-1">
-        <Editor
-          height="100%"
-          language="markdown"
-          theme={theme}
-          value={activeTab.content}
-          onChange={handleEditorChange}
-          options={{
-            fontSize: settings.fontSize,
-            fontFamily: settings.fontFamily,
-            wordWrap: 'on',
-            lineNumbers: 'on',
-            minimap: { enabled: false },
-            scrollBeyondLastLine: false,
-            automaticLayout: true,
-          }}
-        />
-      </div>
+    <div className="h-full w-full overflow-y-auto overflow-x-hidden">
+      <CodeMirror
+        value={activeTab.content}
+        height="100%"
+        extensions={[markdown()]}
+        theme={settings.theme === 'dark' ? oneDark : undefined}
+        onChange={onChange}
+        basicSetup={{
+          lineNumbers: true,
+          foldGutter: true,
+          dropCursor: false,
+          allowMultipleSelections: false,
+          indentOnInput: true,
+          bracketMatching: true,
+          closeBrackets: true,
+          autocompletion: true,
+          highlightSelectionMatches: false,
+        }}
+        style={{
+          fontSize: `${settings.fontSize}px`,
+          fontFamily: settings.fontFamily,
+        }}
+      />
     </div>
   )
 }
