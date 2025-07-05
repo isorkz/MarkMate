@@ -5,9 +5,19 @@ import { useEditorStore } from '../../stores/editorStore'
 import { Folder, FolderOpen, File, ChevronRight, ChevronDown } from 'lucide-react'
 
 const FileTree: React.FC = () => {
-  const { fileTree, expandedFolders, focusedFile, toggleFolder, setFocusedFile, setFileTree } = useFileSystemStore()
+  const { fileTree, expandedFolders, toggleFolder, setFileTree } = useFileSystemStore()
   const { currentWorkspace } = useWorkspaceStore()
-  const { openFile } = useEditorStore()
+  const { openFile, tabs } = useEditorStore()
+
+  // Helper function to check if a path contains any open files
+  const hasOpenFiles = (nodePath: string, nodeType: string): boolean => {
+    if (nodeType === 'file') {
+      // For files, check if this exact file is open
+      return tabs.some(tab => tab.filePath === nodePath)
+    }
+    // For folders, check if any open tab's file path starts with this folder path
+    return tabs.some(tab => tab.filePath.startsWith(nodePath + '/'))
+  }
 
   // Load file tree for current workspace on startup
   React.useEffect(() => {
@@ -23,21 +33,25 @@ const FileTree: React.FC = () => {
 
   const renderNode = (node: any, depth = 0) => {
     const isExpanded = expandedFolders.has(node.path)
-    const isFocused = focusedFile === node.path
     const isFolder = node.type === 'folder'
+    const hasOpenFile = hasOpenFiles(node.path, node.type)
+    // Check if this file is the currently active tab
+    const isActiveTab = !isFolder && tabs.find(tab => tab.isActive)?.filePath === node.path
+    // Check if this folder contains the currently active tab
+    const hasActiveTab = isFolder && tabs.some(tab => tab.isActive && tab.filePath.startsWith(node.path + '/'))
 
     return (
       <div key={node.path}>
         <div
           className={`
-            flex items-center px-2 py-1 text-sm cursor-pointer rounded-md transition-colors select-none
-            ${isFocused ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-100'}
+            flex items-center px-2 py-1 text-sm cursor-pointer rounded-md transition-colors select-none hover:bg-gray-100
+            ${isActiveTab || hasActiveTab ? 'text-orange-600' :
+              hasOpenFile ? 'text-blue-600' : 'text-gray-700'}
           `}
           onClick={async () => {
             if (isFolder) {
               toggleFolder(node.path)
             } else {
-              setFocusedFile(node.path)
               // Open file in editor
               if (currentWorkspace) {
                 try {
@@ -50,7 +64,7 @@ const FileTree: React.FC = () => {
             }
           }}
         >
-          <div 
+          <div
             className="w-4 flex items-center justify-center mr-1 flex-shrink-0"
             style={{ marginLeft: `${depth * 16}px` }}
           >
@@ -66,14 +80,16 @@ const FileTree: React.FC = () => {
           <div className="flex items-center gap-1.5 min-w-0 flex-1">
             {isFolder ? (
               isExpanded ? (
-                <FolderOpen className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                <FolderOpen className="w-4 h-4 flex-shrink-0" />
               ) : (
-                <Folder className="w-4 h-4 text-gray-500 flex-shrink-0" />
+                <Folder className="w-4 h-4 flex-shrink-0" />
               )
             ) : (
-              <File className="w-4 h-4 text-gray-500 flex-shrink-0" />
+              <File className="w-4 h-4 flex-shrink-0" />
             )}
-            <span className="truncate text-sm min-w-0">{node.name}</span>
+            <span className={`truncate text-sm min-w-0 ${isActiveTab || hasActiveTab || hasOpenFile ? 'font-medium' : ''}`}>
+              {node.name}
+            </span>
           </div>
         </div>
 

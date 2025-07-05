@@ -1,15 +1,5 @@
 import { create } from 'zustand'
-
-interface FileNode {
-  id: string;
-  name: string;
-  path: string;
-  type: 'file' | 'folder';
-  children?: FileNode[];
-  isExpanded?: boolean;
-  lastModified: Date;
-  size?: number;
-}
+import { FileNode } from './fileSystemStore'
 
 interface SearchStore {
   searchQuery: string;

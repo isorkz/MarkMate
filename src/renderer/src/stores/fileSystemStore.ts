@@ -6,7 +6,6 @@ interface FileNode {
   path: string;
   type: 'file' | 'folder';
   children?: FileNode[];
-  isExpanded?: boolean;
   lastModified: Date;
   size?: number;
 }
@@ -14,19 +13,16 @@ interface FileNode {
 interface FileSystemStore {
   fileTree: FileNode[];
   expandedFolders: Set<string>;
-  focusedFile: string | null; // Currently focused/highlighted file in tree
   
   // Actions
   setFileTree: (tree: FileNode[]) => void;
   toggleFolder: (path: string) => void;
-  setFocusedFile: (path: string | null) => void;
   updateFileNode: (path: string, updates: Partial<FileNode>) => void;
 }
 
 export const useFileSystemStore = create<FileSystemStore>((set, get) => ({
   fileTree: [],
   expandedFolders: new Set(),
-  focusedFile: null,
   
   setFileTree: (tree) => set({ fileTree: tree }),
   
@@ -40,8 +36,6 @@ export const useFileSystemStore = create<FileSystemStore>((set, get) => ({
       }
       return { expandedFolders: newExpanded };
     }),
-  
-  setFocusedFile: (path) => set({ focusedFile: path }),
   
   updateFileNode: (path, updates) => {
     const updateNode = (nodes: FileNode[]): FileNode[] => {
