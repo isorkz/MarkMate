@@ -1,5 +1,6 @@
 import React from 'react'
 import { useEditorStore } from '../../stores/editorStore'
+import TitleBar from './TitleBar'
 import TabManager from '../editor/TabManager'
 import SourceEditor from '../editor/SourceEditor'
 import RichEditor from '../editor/RichEditor'
@@ -9,7 +10,8 @@ const MainContent: React.FC = () => {
   const { showTOC, showSourceEditor, tabs } = useEditorStore()
 
   return (
-    <div className="editor-container">
+    <div className="editor-container flex flex-col">
+      <TitleBar />
       <TabManager />
       
       {tabs.length > 0 ? (
