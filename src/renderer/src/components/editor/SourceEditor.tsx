@@ -24,7 +24,7 @@ const SourceEditor: React.FC = () => {
     if (!activeTab || !currentWorkspace) return
 
     const saveFile = async () => {
-      if (activeTab.isDirty) {
+      if (activeTab.hasUnsavedChanges) {
         try {
           await window.electron.ipcRenderer.invoke('file:write', currentWorkspace.path, activeTab.filePath, activeTab.content)
           markTabDirty(activeTab.id, false)
@@ -37,7 +37,7 @@ const SourceEditor: React.FC = () => {
     const autoSaveTimer = setTimeout(saveFile, 2000) // Auto-save after 2 seconds of inactivity
 
     return () => clearTimeout(autoSaveTimer)
-  }, [activeTab?.content, activeTab?.isDirty, currentWorkspace, markTabDirty])
+  }, [activeTab?.content, activeTab?.hasUnsavedChanges, currentWorkspace, markTabDirty])
 
   // Manual save with Ctrl+S
   useEffect(() => {

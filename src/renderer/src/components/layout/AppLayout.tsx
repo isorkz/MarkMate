@@ -4,11 +4,12 @@ import { useEditorStore } from '../../stores/editorStore'
 import { useSettingsStore } from '../../stores/settingsStore'
 import Sidebar from './Sidebar'
 import MainContent from './MainContent'
+import TOCPanel from '../editor/TOCPanel'
 import WorkspaceOpener from '../workspace/WorkspaceOpener'
 
 const AppLayout: React.FC = () => {
   const { currentWorkspace } = useWorkspaceStore()
-  const { toggleTOC, toggleSourceEditor } = useEditorStore()
+  const { toggleTOC, toggleSourceEditor, showTOC } = useEditorStore()
   const { updateSettings, settings } = useSettingsStore()
 
   const toggleSidebar = () => {
@@ -55,6 +56,11 @@ const AppLayout: React.FC = () => {
     <div className="h-screen flex bg-white overflow-x-hidden">
       {settings.sidebarVisible && <Sidebar />}
       <MainContent />
+      {showTOC && (
+        <div className="w-64 border-l border-gray-200">
+          <TOCPanel />
+        </div>
+      )}
     </div>
   )
 }

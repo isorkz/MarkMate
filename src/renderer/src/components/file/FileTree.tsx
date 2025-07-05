@@ -44,7 +44,7 @@ const FileTree: React.FC = () => {
       <div key={node.path}>
         <div
           className={`
-            flex items-center px-2 py-1 text-sm cursor-pointer rounded-md transition-colors select-none hover:bg-gray-100
+            flex items-center px-2 py-1 text-sm cursor-pointer rounded-md transition-colors hover:bg-gray-100
             ${isActiveTab || hasActiveTab ? 'text-orange-600' :
               hasOpenFile ? 'text-blue-600' : 'text-gray-700'}
           `}

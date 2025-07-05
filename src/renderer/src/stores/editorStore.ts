@@ -8,7 +8,7 @@ interface Tab {
   title: string;
   content: string;
   isActive: boolean;
-  isDirty: boolean;
+  hasUnsavedChanges: boolean;
   lastModified: Date;
 }
 
@@ -23,7 +23,7 @@ interface EditorStore {
   closeTab: (tabId: string) => void;
   setActiveTab: (tabId: string) => void;
   updateTabContent: (tabId: string, content: string) => void;
-  markTabDirty: (tabId: string, isDirty: boolean) => void;
+  markTabDirty: (tabId: string, hasUnsavedChanges: boolean) => void;
   reorderTabs: (dragIndex: number, hoverIndex: number) => void;
   saveTabState: (tabId: string, state: Partial<Tab>) => void;
   toggleTOC: () => void;
@@ -52,7 +52,7 @@ export const useEditorStore = create<EditorStore>()(
           title: filePath.split('/').pop() || 'Untitled',
           content,
           isActive: true,
-          isDirty: false,
+          hasUnsavedChanges: false,
           lastModified: new Date()
         };
         
@@ -84,15 +84,15 @@ export const useEditorStore = create<EditorStore>()(
         set(state => ({
           tabs: state.tabs.map(tab => 
             tab.id === tabId 
-              ? { ...tab, content, isDirty: true, lastModified: new Date() }
+              ? { ...tab, content, hasUnsavedChanges: true, lastModified: new Date() }
               : tab
           )
         })),
       
-      markTabDirty: (tabId, isDirty) => 
+      markTabDirty: (tabId, hasUnsavedChanges) => 
         set(state => ({
           tabs: state.tabs.map(tab => 
-            tab.id === tabId ? { ...tab, isDirty } : tab
+            tab.id === tabId ? { ...tab, hasUnsavedChanges } : tab
           )
         })),
       

@@ -11,23 +11,23 @@ interface TOCItem {
 const TOCPanel: React.FC = () => {
   const { tabs, activeTabId } = useEditorStore()
   const [tocItems, setTocItems] = useState<TOCItem[]>([])
-  
+
   const activeTab = tabs.find(tab => tab.id === activeTabId)
 
   useEffect(() => {
     const updateTOC = () => {
       const headings = document.querySelectorAll('.ProseMirror h1, .ProseMirror h2, .ProseMirror h3, .ProseMirror h4, .ProseMirror h5, .ProseMirror h6')
-      
+
       const items: TOCItem[] = Array.from(headings).map((heading, index) => {
         const level = parseInt(heading.tagName.charAt(1))
         const text = heading.textContent || ''
         const id = `heading-${index}`
-        
+
         // Add id to heading if it doesn't have one
         if (!heading.id) {
           heading.id = id
         }
-        
+
         return {
           id: heading.id,
           level,
@@ -35,17 +35,17 @@ const TOCPanel: React.FC = () => {
           element: heading as HTMLElement
         }
       })
-      
+
       setTocItems(items)
     }
 
     // Update TOC when content changes
     updateTOC()
-    
+
     // Create observer to watch for content changes
     const observer = new MutationObserver(updateTOC)
     const proseMirror = document.querySelector('.ProseMirror')
-    
+
     if (proseMirror) {
       observer.observe(proseMirror, {
         childList: true,
@@ -59,9 +59,9 @@ const TOCPanel: React.FC = () => {
 
   const scrollToHeading = (item: TOCItem) => {
     if (item.element) {
-      item.element.scrollIntoView({ 
-        behavior: 'smooth', 
-        block: 'start' 
+      item.element.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
       })
     }
   }
@@ -75,11 +75,11 @@ const TOCPanel: React.FC = () => {
   }
 
   return (
-    <div className="h-full flex flex-col bg-gray-50">
-      <div className="h-8 bg-gray-100 border-b border-gray-200 flex items-center px-3 text-sm text-gray-600">
+    <div className="h-full flex flex-col bg-gray-50 p-4">
+      <h3 className="text-sm font-semibold text-gray-700 mb-4">
         Table of Contents
-      </div>
-      
+      </h3>
+
       <div className="flex-1 overflow-y-auto p-3">
         {tocItems.length === 0 ? (
           <div className="text-gray-500 text-sm text-center py-4">

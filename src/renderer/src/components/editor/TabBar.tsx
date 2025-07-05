@@ -1,4 +1,5 @@
 import React from 'react'
+import { X } from 'lucide-react'
 import { useEditorStore } from '../../stores/editorStore'
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
 import { SortableContext, sortableKeyboardCoordinates, horizontalListSortingStrategy } from '@dnd-kit/sortable'
@@ -9,7 +10,7 @@ interface TabProps {
   tab: {
     id: string
     title: string
-    isDirty: boolean
+    hasUnsavedChanges: boolean
     isActive: boolean
   }
   onClose: (id: string) => void
@@ -38,24 +39,32 @@ const Tab: React.FC<TabProps> = ({ tab, onClose, onSelect }) => {
       style={style}
       {...attributes}
       {...listeners}
-      className={`tab ${tab.isActive ? 'active' : ''} ${tab.isDirty ? 'dirty' : ''}`}
+      className={`
+        flex items-center gap-2 px-4 py-2 border-r border-gray-200 cursor-pointer min-w-0 flex-shrink-0
+            ${tab.isActive ? 'bg-white border-b-2 border-b-blue-500' : 'hover:bg-gray-100'}
+      `}
       onClick={() => onSelect(tab.id)}
     >
-      <span className="truncate max-w-32">{tab.title}</span>
+      <span className="text-sm truncate max-w-32">
+        {tab.title}
+      </span>
+      {tab.hasUnsavedChanges && (
+        <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0" />
+      )}
       <button
-        className="ml-2 hover:bg-gray-200 rounded-full w-4 h-4 flex items-center justify-center text-gray-500 hover:text-gray-700"
+        className="p-1 hover:bg-gray-200 rounded flex-shrink-0"
         onClick={(e) => {
           e.stopPropagation()
           onClose(tab.id)
         }}
       >
-        ×
+        <X className="w-3 h-3 text-gray-500" />
       </button>
     </div>
   )
 }
 
-const TabManager: React.FC = () => {
+const TabBar: React.FC = () => {
   const { tabs, activeTabId, setActiveTab, closeTab, reorderTabs } = useEditorStore()
 
   const sensors = useSensors(
@@ -84,7 +93,7 @@ const TabManager: React.FC = () => {
   }
 
   return (
-    <div className="tab-bar">
+    <div className="flex bg-gray-50 border-b border-gray-200 overflow-x-auto">
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
@@ -105,4 +114,4 @@ const TabManager: React.FC = () => {
   )
 }
 
-export default TabManager
+export default TabBar

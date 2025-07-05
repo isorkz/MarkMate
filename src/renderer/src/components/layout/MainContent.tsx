@@ -1,18 +1,17 @@
 import React from 'react'
 import { useEditorStore } from '../../stores/editorStore'
 import TitleBar from './TitleBar'
-import TabManager from '../editor/TabManager'
+import TabBar from '../editor/TabBar'
 import SourceEditor from '../editor/SourceEditor'
 import RichEditor from '../editor/RichEditor'
-import TOCPanel from '../editor/TOCPanel'
 
 const MainContent: React.FC = () => {
-  const { showTOC, showSourceEditor, tabs } = useEditorStore()
+  const { showSourceEditor, tabs } = useEditorStore()
 
   return (
-    <div className="editor-container flex flex-col h-full overflow-x-hidden">
-      <TitleBar />
-      <TabManager />
+    <div className="flex-1 flex flex-col h-full overflow-x-hidden">
+      {/* <TitleBar /> */}
+      <TabBar />
 
       {tabs.length > 0 ? (
         <div className="flex flex-1 overflow-hidden">
@@ -26,11 +25,6 @@ const MainContent: React.FC = () => {
             <RichEditor />
           </div>
 
-          {showTOC && (
-            <div className="w-64 border-l border-gray-200">
-              <TOCPanel />
-            </div>
-          )}
         </div>
       ) : (
         <div className="flex-1 flex items-center justify-center bg-gray-50">

@@ -8,7 +8,7 @@ const Sidebar: React.FC = () => {
   const { currentWorkspace } = useWorkspaceStore()
 
   return (
-    <div className="sidebar">
+    <div className="w-64 bg-gray-50 border-r border-gray-200 flex flex-col">
       {/* macOS traffic light buttons space */}
       <div className="h-8"></div>
 

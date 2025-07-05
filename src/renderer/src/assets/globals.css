@@ -1,58 +1,17 @@
 @import "tailwindcss";
 
-/* Base styles */
-* {
-  border-color: rgb(229 231 235);
-}
+@layer base {
+  * {
+    @apply box-border;
+  }
 
-body {
-  background-color: white;
-  color: rgb(17 24 39);
-}
+  body {
+    @apply m-0 p-0 font-sans antialiased;
+    @apply bg-white text-gray-900;
+    @apply select-none;
+  }
 
-/* Component styles */
-.sidebar {
-  width: 16rem;
-  background-color: rgb(249 250 251);
-  border-right: 1px solid rgb(229 231 235);
-  display: flex;
-  flex-direction: column;
-}
-
-.editor-container {
-  flex: 1 1 0%;
-  display: flex;
-  flex-direction: column;
-}
-
-.tab-bar {
-  display: flex;
-  background-color: rgb(243 244 246);
-  border-bottom: 1px solid rgb(229 231 235);
-  overflow-x: auto;
-}
-
-.tab {
-  padding: 0.5rem 1rem;
-  font-size: 0.875rem;
-  border-right: 1px solid rgb(229 231 235);
-  background-color: white;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.tab:hover {
-  background-color: rgb(249 250 251);
-}
-
-.tab.active {
-  background-color: rgb(239 246 255);
-  color: rgb(29 78 216);
-}
-
-.tab.dirty::after {
-  content: '●';
-  color: rgb(59 130 246);
+  #root {
+    @apply h-screen w-screen overflow-hidden;
+  }
 }

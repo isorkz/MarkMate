@@ -32,7 +32,7 @@ const TitleBar: React.FC = () => {
 
   return (
     <div
-      className="h-8 bg-gray-100 border-b border-gray-200 flex items-center justify-between px-4 text-sm text-gray-600 select-none"
+      className="h-8 bg-gray-50 border-b border-gray-200 flex items-center justify-between px-4 text-sm text-gray-600"
       style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}
     >
       <div className="flex items-center gap-4">
