@@ -56,14 +56,14 @@ const FileTree: React.FC = () => {
             </span>
           )}
           {!isFolder && <span className="w-3"></span>}
-          
+
           <span className="text-gray-600">
             {isFolder ? '📁' : '📄'}
           </span>
-          
+
           <span className="truncate flex-1">{node.name}</span>
         </div>
-        
+
         {isFolder && isExpanded && node.children && (
           <div>
             {node.children.map((child: any) => renderNode(child, depth + 1))}

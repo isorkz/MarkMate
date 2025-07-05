@@ -9,16 +9,19 @@ const Sidebar: React.FC = () => {
 
   return (
     <div className="sidebar">
-      <div className="p-4 border-b border-gray-200">
+      {/* macOS traffic light buttons space */}
+      <div className="h-8"></div>
+
+      <div className="p-1 border-b border-gray-200">
         <WorkspaceSelector />
       </div>
-      
+
       {currentWorkspace && (
         <>
-          <div className="p-4 border-b border-gray-200">
+          <div className="p-4">
             <FileSearch />
           </div>
-          
+
           <div className="flex-1 overflow-y-auto">
             <FileTree />
           </div>

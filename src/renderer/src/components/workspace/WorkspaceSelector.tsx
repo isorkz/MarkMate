@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useWorkspaceStore } from '../../stores/workspaceStore'
 import { useFileSystemStore } from '../../stores/fileSystemStore'
+import { Folder, ChevronDown, Check, Plus } from 'lucide-react'
 
 const WorkspaceSelector: React.FC = () => {
   const { workspaces, currentWorkspace, setCurrentWorkspace, addWorkspace } = useWorkspaceStore()
@@ -34,47 +35,51 @@ const WorkspaceSelector: React.FC = () => {
   }
 
   return (
-    <div className="relative">
+    // tabIndex={-1} - Makes the div focusable so it can receive blur events
+    <div className="relative" onBlur={(e) => {
+      // Only close if focus is moving outside the entire component
+      if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+        setShowDropdown(false)
+      }
+    }} tabIndex={-1}>
       <button
         onClick={() => setShowDropdown(!showDropdown)}
-        className="w-full flex items-center justify-between p-2 text-sm bg-white border border-gray-200 rounded hover:bg-gray-50"
+        className="w-full flex items-center justify-between px-2 py-1.5 text-sm text-gray-700 rounded-md hover:bg-gray-100 transition-colors"
       >
-        <div className="flex items-center gap-2">
-          <span className="text-gray-600">📁</span>
-          <span className="truncate">
-            {currentWorkspace ? currentWorkspace.name : 'No Workspace'}
+        <div className="flex items-center gap-2 min-w-0">
+          <Folder className="w-4 h-4 text-gray-500" />
+          <span className="font-medium truncate">
+            {currentWorkspace ? currentWorkspace.name : 'Select workspace'}
           </span>
         </div>
-        <span className="text-gray-400">▼</span>
+        <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${showDropdown ? 'rotate-180' : ''}`} />
       </button>
 
       {showDropdown && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded shadow-lg z-10">
-          <div className="py-1">
-            {workspaces.map((workspace) => (
-              <button
-                key={workspace.id}
-                onClick={() => handleWorkspaceSelect(workspace)}
-                className="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 flex items-center gap-2"
-              >
-                <span className="text-gray-600">📁</span>
-                <span className="truncate">{workspace.name}</span>
-                {workspace.id === currentWorkspace?.id && (
-                  <span className="ml-auto text-blue-500">✓</span>
-                )}
-              </button>
-            ))}
-
-            {workspaces.length > 0 && <hr className="my-1" />}
-
+        <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-sm z-20 py-1">
+          {workspaces.map((workspace) => (
             <button
-              onClick={handleNewWorkspace}
-              className="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 flex items-center gap-2 text-green-600"
+              key={workspace.id}
+              onClick={() => handleWorkspaceSelect(workspace)}
+              className="w-full px-3 py-1.5 text-left text-sm hover:bg-gray-50 flex items-center gap-2"
             >
-              <span>➕</span>
-              <span>New Workspace...</span>
+              <Folder className="w-4 h-4 text-gray-500" />
+              <span className="truncate text-gray-700">{workspace.name}</span>
+              {workspace.id === currentWorkspace?.id && (
+                <Check className="ml-auto w-3 h-3 text-blue-600" />
+              )}
             </button>
-          </div>
+          ))}
+
+          {workspaces.length > 0 && <div className="border-t border-gray-100 my-1" />}
+
+          <button
+            onClick={handleNewWorkspace}
+            className="w-full px-3 py-1.5 text-left text-sm hover:bg-gray-50 flex items-center gap-2 text-gray-600"
+          >
+            <Plus className="w-4 h-4 text-gray-400" />
+            <span>Add workspace</span>
+          </button>
         </div>
       )}
     </div>
