@@ -17,6 +17,7 @@ interface EditorStore {
   activeTabId: string | null;
   showTOC: boolean;
   showSourceEditor: boolean;
+  syncSroll: boolean;
   
   // Actions
   openFile: (filePath: string, content: string) => void;
@@ -37,6 +38,7 @@ export const useEditorStore = create<EditorStore>()(
       activeTabId: null,
       showTOC: true,
       showSourceEditor: false,
+      syncSroll: true,
       
       openFile: (filePath, content) => {
         const existingTab = get().tabs.find(tab => tab.filePath === filePath);

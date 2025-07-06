@@ -1,14 +1,18 @@
 import React, { useEffect, useState } from 'react'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
-import Typography from '@tiptap/extension-typography'
 import CodeBlock from '@tiptap/extension-code-block'
 import Table from '@tiptap/extension-table'
 import TableRow from '@tiptap/extension-table-row'
 import TableCell from '@tiptap/extension-table-cell'
 import TableHeader from '@tiptap/extension-table-header'
 import Link from '@tiptap/extension-link'
+import Image from '@tiptap/extension-image'
+import TaskList from '@tiptap/extension-task-list'
+import TaskItem from '@tiptap/extension-task-item'
+import { Markdown } from 'tiptap-markdown'
 import { createHighlighter } from 'shiki'
+import toast from 'react-hot-toast'
 import { useEditorStore, Tab } from '../../stores/editorStore'
 import { useSettingsStore } from '../../stores/settingsStore'
 
@@ -21,33 +25,29 @@ const RichEditor: React.FC<RichEditorProps> = ({ tab }) => {
   const { settings } = useSettingsStore()
   const [highlighter, setHighlighter] = useState<any>(null)
 
-  // Initialize Shiki highlighter
-  useEffect(() => {
-    const initHighlighter = async () => {
-      try {
-        const hl = await createHighlighter({
-          themes: ['github-light', 'github-dark'],
-          langs: ['javascript', 'typescript', 'python', 'java', 'cpp', 'markdown', 'json', 'html', 'css']
-        })
-        setHighlighter(hl)
-      } catch (error) {
-        console.error('Failed to initialize highlighter:', error)
-      }
-    }
-
-    initHighlighter()
-  }, [])
-
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
-        codeBlock: false, // Disable default code block
+        heading: {
+          levels: [1, 2, 3, 4, 5, 6]
+        }
       }),
-      Typography,
-      CodeBlock.configure({
-        HTMLAttributes: {
-          class: 'code-block',
-        },
+      Markdown.configure({
+        html: true,                  // Allow HTML input/output
+        tightLists: true,            // No <p> inside <li> in markdown output
+        tightListClass: 'tight',     // Add class to <ul> allowing you to remove <p> margins when tight
+        bulletListMarker: '*',       // <li> prefix in markdown output
+        linkify: false,              // Create links from "https://..." text
+        breaks: false,               // New lines (\n) in markdown input are converted to <br>
+        transformPastedText: false,  // Allow to paste markdown text in the editor
+        transformCopiedText: false,  // Copied text is transformed to markdown
+      }),
+      Link.configure({
+        openOnClick: false
+      }),
+      Image.configure({
+        inline: true,
+        allowBase64: true,
       }),
       Table.configure({
         resizable: true,
@@ -55,75 +55,65 @@ const RichEditor: React.FC<RichEditorProps> = ({ tab }) => {
       TableRow,
       TableHeader,
       TableCell,
-      Link.configure({
-        openOnClick: false,
+      TaskList,
+      TaskItem.configure({
+        nested: true,
       }),
     ],
     content: tab?.content || '',
     onUpdate: ({ editor }) => {
-      const content = editor.getHTML()
-      updateTabContent(tab.id, content)
+      try {
+        const markdown = editor.storage.markdown.getMarkdown()
+        updateTabContent(tab.id, markdown)
+      } catch (err) {
+        console.warn('Markdown conversion failed:', err)
+        toast.error('Markdown conversion failed')
+      }
     },
     editorProps: {
       attributes: {
-        class: 'prose prose-lg max-w-none focus:outline-none p-6',
-        style: `font-size: ${settings.fontSize}px; font-family: ${settings.fontFamily}`,
-      },
-    },
+        class: 'RichEditorView max-w-none focus:outline-none h-full overflow-auto',
+        style: `font-size: 16px; padding: 60px; line-height: 1.6;`
+      }
+    }
   })
 
-  // Update editor content when active tab changes
+  // Update Rich editor content when user is typing on Source editor, or switching tabs
   useEffect(() => {
-    if (editor && tab) {
-      const currentContent = editor.getHTML()
-      if (currentContent !== tab.content) {
+    // '!editor.isFocused' ensures when user is typing on Source editor, or switching tabs
+    // If user is typing in the Rich editor, only use onUpdate() to update content
+    if (editor && tab && !editor.isFocused) {
+      try {
+        const markdown = editor.storage.markdown.getMarkdown()
+        if (markdown !== tab.content) {
+          // false (default): Silent update - doesn't trigger onUpdate callback
+          editor.commands.setContent(tab.content, false)
+        }
+      } catch (error) {
+        // Fallback: always update if we can't get markdown
+        console.warn('Could not get markdown, updating content:', error)
         editor.commands.setContent(tab.content, false)
       }
     }
-  }, [editor, tab?.content, tab?.id])
-
-  // Apply syntax highlighting to code blocks
-  useEffect(() => {
-    if (highlighter && editor) {
-      const codeBlocks = document.querySelectorAll('.code-block code')
-
-      codeBlocks.forEach((block) => {
-        const parent = block.parentElement
-        const language = parent?.getAttribute('data-language') || 'text'
-        const code = block.textContent || ''
-
-        try {
-          const html = highlighter.codeToHtml(code, {
-            lang: language,
-            theme: settings.theme === 'dark' ? 'github-dark' : 'github-light'
-          })
-
-          // Extract just the highlighted code content
-          const tempDiv = document.createElement('div')
-          tempDiv.innerHTML = html
-          const highlightedCode = tempDiv.querySelector('code')?.innerHTML || code
-
-          block.innerHTML = highlightedCode
-        } catch (error) {
-          // Fallback to plain text if highlighting fails
-          block.textContent = code
-        }
-      })
-    }
-  }, [highlighter, editor, tab?.content, settings.theme])
+  }, [tab?.content, editor])
 
   if (!tab) {
     return (
-      <div className="h-full flex items-center justify-center text-gray-500">
-        No file selected
-      </div>
+      <div className="h-full flex items-center justify-center text-gray-500">No file selected</div>
     )
   }
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="flex-1 overflow-y-auto bg-white">
-        <EditorContent editor={editor} />
+    <div
+      className={`h-full flex flex-col ${settings.theme === 'dark' ? 'bg-gray-900' : 'bg-white'}`}
+    >
+      <div className="flex-1 overflow-y-auto">
+        <div className="max-w-3xl mx-auto">
+          <EditorContent
+            editor={editor}
+            className={`min-h-full ${settings.theme === 'dark' ? 'prose-invert' : ''}`}
+          />
+        </div>
       </div>
     </div>
   )

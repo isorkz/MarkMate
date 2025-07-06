@@ -29,10 +29,10 @@ const AppLayout: React.FC = () => {
             e.preventDefault()
             toggleTOC()
             break
-          case 'b':
-            e.preventDefault()
-            toggleSidebar()
-            break
+          // case 'b':
+          //   e.preventDefault()
+          //   toggleSidebar()
+          //   break
         }
       }
     }

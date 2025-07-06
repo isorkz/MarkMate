@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @layer base {
   * {
@@ -13,5 +13,350 @@
 
   #root {
     @apply h-screen w-screen overflow-hidden;
+  }
+}
+
+@layer components {
+
+  /* Rich Editor Markdown Styling */
+  .RichEditorView {
+    @apply outline-none;
+    font-family:
+      ui-sans-serif,
+      -apple-system,
+      BlinkMacSystemFont,
+      'Segoe UI',
+      Helvetica,
+      'Apple Color Emoji',
+      Arial,
+      sans-serif,
+      'Segoe UI Emoji',
+      'Segoe UI Symbol';
+
+    /* CSS Custom Properties for consistent colors */
+    --text-secondary: rgb(55, 53, 47);
+    --text-table: rgb(120, 119, 116);
+    --border-light: rgb(227, 226, 224);
+    --bg-light: rgb(247, 246, 243);
+    --bg-quote: rgb(247, 246, 243);
+    --border-quote: rgb(206, 205, 202);
+    --accent-blue: rgb(46, 170, 220);
+    --code-red: rgb(235, 87, 87);
+  }
+
+  .RichEditorView h1 {
+    @apply text-4xl font-bold mb-2 mt-8;
+    color: var(--text-secondary);
+    line-height: 1.2;
+    letter-spacing: -0.03em;
+  }
+
+  .RichEditorView h2 {
+    @apply text-3xl font-bold mb-2 mt-6;
+    color: var(--text-secondary);
+    line-height: 1.3;
+    letter-spacing: -0.02em;
+  }
+
+  .RichEditorView h3 {
+    @apply text-2xl font-bold mb-1 mt-4;
+    color: var(--text-secondary);
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+  }
+
+  .RichEditorView h4 {
+    @apply text-xl font-semibold mb-1 mt-4;
+    color: var(--text-secondary);
+    line-height: 1.4;
+  }
+
+  .RichEditorView h5 {
+    @apply text-lg font-semibold mb-1 mt-3;
+    color: var(--text-secondary);
+    line-height: 1.4;
+  }
+
+  .RichEditorView h6 {
+    @apply text-base font-semibold mb-1 mt-3;
+    color: var(--text-secondary);
+    line-height: 1.4;
+  }
+
+  .RichEditorView p {
+    @apply mb-1;
+    line-height: 1.6;
+  }
+
+  .RichEditorView p:empty {
+    @apply h-5;
+  }
+
+  .RichEditorView ul {
+    @apply mb-4 pl-6 list-disc;
+  }
+
+  .RichEditorView ol {
+    @apply mb-4 pl-6 list-decimal;
+  }
+
+  .RichEditorView ul>li,
+  .RichEditorView ol>li {
+    @apply mb-1 pl-1.5;
+    line-height: 1.6;
+  }
+
+  /* Nested lists */
+  .RichEditorView ul ul {
+    @apply list-disc;
+    list-style-type: circle;
+  }
+
+  .RichEditorView ul ul ul {
+    @apply list-disc;
+    list-style-type: square;
+  }
+
+  .RichEditorView ol ol {
+    @apply list-decimal;
+  }
+
+  /* List marker colors */
+  .RichEditorView ul li::marker {
+    color: var(--text-secondary);
+  }
+
+  .RichEditorView ol li::marker {
+    color: var(--text-secondary);
+  }
+
+  /* Task lists (checkboxes) */
+  .RichEditorView ul[data-type='taskList'] {
+    @apply list-none pl-0;
+  }
+
+  .RichEditorView ul[data-type='taskList']>li {
+    @apply flex items-center mb-1;
+    list-style: none;
+    gap: 8px;
+  }
+
+  .RichEditorView ul[data-type='taskList']>li::marker {
+    display: none;
+  }
+
+  .RichEditorView ul[data-type='taskList']>li>label {
+    @apply flex items-center cursor-pointer;
+    margin: 0;
+    line-height: 1;
+  }
+
+  .RichEditorView ul[data-type='taskList']>li>label>input[type='checkbox'] {
+    @apply rounded-sm border-2;
+    border-color: var(--border-quote);
+    width: 16px;
+    height: 16px;
+    background: white;
+    margin: 0;
+  }
+
+  .RichEditorView ul[data-type='taskList']>li>label>input[type='checkbox']:checked {
+    background: var(--accent-blue);
+    border-color: var(--accent-blue);
+  }
+
+  .RichEditorView ul[data-type='taskList']>li>div {
+    flex: 1;
+    line-height: 1.6;
+  }
+
+  .RichEditorView ul[data-type='taskList']>li>div>p {
+    margin: 0;
+    line-height: 1.6;
+  }
+
+  .RichEditorView blockquote {
+    padding: 0 1em;
+    color: #666;
+    border-left: 0.25em solid #ddd;
+  }
+
+  .RichEditorView li>p {
+    @apply mb-0;
+    line-height: 1.6;
+  }
+
+  .RichEditorView li>*+* {
+    @apply mt-0;
+  }
+
+  /* Inline code */
+  .RichEditorView code {
+    background: var(--bg-light);
+    color: var(--code-red);
+    border: 1px solid var(--border-light);
+    border-radius: 3px;
+    padding: 2px 4px;
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+    font-size: 85%;
+    font-weight: normal;
+  }
+
+  /* Code blocks */
+  .RichEditorView pre {}
+
+  .RichEditorView pre code {}
+
+  /* Links */
+  .RichEditorView a {
+    color: var(--accent-blue);
+    text-decoration: none;
+    border-bottom: 1px solid rgba(46, 170, 220, 0.4);
+    transition: all 0.1s ease;
+  }
+
+  .RichEditorView a:hover {
+    background: rgba(46, 170, 220, 0.1);
+    border-bottom-color: var(--accent-blue);
+  }
+
+  /* Emphasis */
+  .RichEditorView strong {
+    font-weight: 700;
+  }
+
+  .RichEditorView em {
+    font-style: italic;
+  }
+
+  /* Tables */
+  .RichEditorView table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 8px 0 16px 0;
+    border: 1px solid var(--border-light);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .RichEditorView th,
+  .RichEditorView td {
+    border: 1px solid var(--border-light);
+    padding: 8px 12px;
+    text-align: left;
+    color: var(--text-secondary);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  .RichEditorView th {
+    background: var(--bg-light);
+    font-weight: 500;
+    color: var(--text-table);
+  }
+
+  /* Images */
+  .RichEditorView img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 3px;
+    margin: 8px 0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Horizontal rule */
+  .RichEditorView hr {
+    border: none;
+    height: 1px;
+    background: var(--border-light);
+    margin: 16px 0;
+  }
+
+  /* Focus styles */
+  .RichEditorView:focus {
+    @apply outline-none;
+  }
+
+  /* Selection styles */
+  .RichEditorView ::selection {
+    @apply bg-blue-200;
+  }
+
+  /* Dark theme */
+  .prose-invert .RichEditorView {
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .prose-invert .RichEditorView h1,
+  .prose-invert .RichEditorView h2,
+  .prose-invert .RichEditorView h3,
+  .prose-invert .RichEditorView h4,
+  .prose-invert .RichEditorView h5 {
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .prose-invert .RichEditorView h6 {
+    color: rgba(255, 255, 255, 0.6);
+  }
+
+  .prose-invert .RichEditorView p {
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .prose-invert .RichEditorView ul>li,
+  .prose-invert .RichEditorView ol>li {
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .prose-invert .RichEditorView ul li::marker {
+    color: rgba(255, 255, 255, 0.6);
+  }
+
+  .prose-invert .RichEditorView ol li::marker {
+    color: rgba(255, 255, 255, 0.6);
+  }
+
+  .prose-invert .RichEditorView blockquote {
+    background: rgba(255, 255, 255, 0.03);
+    border-left-color: rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.6);
+  }
+
+  .prose-invert .RichEditorView a {
+    color: rgb(78, 185, 234);
+    border-bottom-color: rgba(78, 185, 234, 0.4);
+  }
+
+  .prose-invert .RichEditorView a:hover {
+    background: rgba(78, 185, 234, 0.1);
+    border-bottom-color: rgb(78, 185, 234);
+  }
+
+  .prose-invert .RichEditorView strong,
+  .prose-invert .RichEditorView em {
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .prose-invert .RichEditorView table {
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+
+  .prose-invert .RichEditorView th,
+  .prose-invert .RichEditorView td {
+    border-color: rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .prose-invert .RichEditorView th {
+    background: rgba(255, 255, 255, 0.03);
+    color: rgba(255, 255, 255, 0.6);
+  }
+
+  .prose-invert .RichEditorView img {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  }
+
+  .prose-invert .RichEditorView hr {
+    background: rgba(255, 255, 255, 0.2);
   }
 }
