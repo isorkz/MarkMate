@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react'
-import { useEditor, EditorContent } from '@tiptap/react'
+import { useEditor, EditorContent, ReactNodeViewRenderer } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
 import Table from '@tiptap/extension-table'
@@ -14,6 +14,7 @@ import { Markdown } from 'tiptap-markdown'
 import toast from 'react-hot-toast'
 import { useEditorStore, Tab } from '../../stores/editorStore'
 import { useSettingsStore } from '../../stores/settingsStore'
+import CodeBlock from './CodeBlock'
 
 // load all languages with "all" or common languages with "common"
 import { common, createLowlight } from 'lowlight'
@@ -35,10 +36,13 @@ const RichEditor: React.FC<RichEditorProps> = ({ tab }) => {
         heading: {
           levels: [1, 2, 3, 4, 5, 6]
         },
+        codeBlock: false // Disable default code block to use CodeBlockLowlight instead
       }),
-      CodeBlockLowlight.configure({
-        lowlight,
-      }),
+      CodeBlockLowlight.extend({
+        addNodeView() {
+          return ReactNodeViewRenderer(CodeBlock)
+        },
+      }).configure({ lowlight }),
       Markdown.configure({
         html: true,                  // Allow HTML input/output
         tightLists: true,            // No <p> inside <li> in markdown output

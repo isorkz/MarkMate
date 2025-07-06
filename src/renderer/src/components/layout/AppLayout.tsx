@@ -60,7 +60,7 @@ const AppLayout: React.FC = () => {
 
       {showTOC && (
         <div className="w-64 border-l border-gray-200">
-          <TOCPanel />
+          {/* <TOCPanel /> */}
         </div>
       )}
     </div>

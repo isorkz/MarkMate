@@ -3,7 +3,6 @@ import { persist } from 'zustand/middleware'
 
 export interface Tab {
   id: string;
-  fileId: string;
   filePath: string;
   title: string;
   content: string;
@@ -49,7 +48,6 @@ export const useEditorStore = create<EditorStore>()(
         
         const newTab: Tab = {
           id: Date.now().toString(),
-          fileId: filePath,
           filePath,
           title: filePath.split('/').pop() || 'Untitled',
           content,
