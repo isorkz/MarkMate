@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect } from 'react'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
-import CodeBlock from '@tiptap/extension-code-block'
+import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
 import Table from '@tiptap/extension-table'
 import TableRow from '@tiptap/extension-table-row'
 import TableCell from '@tiptap/extension-table-cell'
@@ -11,10 +11,15 @@ import Image from '@tiptap/extension-image'
 import TaskList from '@tiptap/extension-task-list'
 import TaskItem from '@tiptap/extension-task-item'
 import { Markdown } from 'tiptap-markdown'
-import { createHighlighter } from 'shiki'
 import toast from 'react-hot-toast'
 import { useEditorStore, Tab } from '../../stores/editorStore'
 import { useSettingsStore } from '../../stores/settingsStore'
+
+// load all languages with "all" or common languages with "common"
+import { common, createLowlight } from 'lowlight'
+
+// Create lowlight instance
+const lowlight = createLowlight(common)
 
 interface RichEditorProps {
   tab: Tab
@@ -23,14 +28,16 @@ interface RichEditorProps {
 const RichEditor: React.FC<RichEditorProps> = ({ tab }) => {
   const { updateTabContent } = useEditorStore()
   const { settings } = useSettingsStore()
-  const [highlighter, setHighlighter] = useState<any>(null)
 
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
         heading: {
           levels: [1, 2, 3, 4, 5, 6]
-        }
+        },
+      }),
+      CodeBlockLowlight.configure({
+        lowlight,
       }),
       Markdown.configure({
         html: true,                  // Allow HTML input/output

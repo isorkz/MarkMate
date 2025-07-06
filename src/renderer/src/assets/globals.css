@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import 'highlight.js/styles/github-dark.css';
 
 @layer base {
   * {
@@ -203,9 +204,22 @@
   }
 
   /* Code blocks */
-  .RichEditorView pre {}
+  .RichEditorView pre {
+    background: black;
+    border-radius: 0.5rem;
+    color: white;
+    font-family: 'JetBrainsMono', monospace;
+    margin: 1.5rem 0;
+    padding: 0.75rem 1rem;
+  }
 
-  .RichEditorView pre code {}
+  .RichEditorView pre code {
+    background: none;
+    color: inherit;
+    font-size: 0.8rem;
+    padding: 0;
+    border: none;
+  }
 
   /* Links */
   .RichEditorView a {
