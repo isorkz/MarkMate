@@ -36,13 +36,7 @@
 
     /* CSS Custom Properties for consistent colors */
     --text-secondary: rgb(55, 53, 47);
-    --text-table: rgb(120, 119, 116);
-    --border-light: rgb(227, 226, 224);
-    --bg-light: rgb(247, 246, 243);
-    --bg-quote: rgb(247, 246, 243);
-    --border-quote: rgb(206, 205, 202);
-    --accent-blue: rgb(46, 170, 220);
-    --code-red: rgb(235, 87, 87);
+    --link-color: rgb(46, 170, 220);
   }
 
   .RichEditorView h1 {
@@ -154,7 +148,7 @@
 
   .RichEditorView ul[data-type='taskList']>li>label>input[type='checkbox'] {
     @apply rounded-sm border-2;
-    border-color: var(--border-quote);
+    border-color: rgb(206, 205, 202);
     width: 16px;
     height: 16px;
     background: white;
@@ -162,8 +156,8 @@
   }
 
   .RichEditorView ul[data-type='taskList']>li>label>input[type='checkbox']:checked {
-    background: var(--accent-blue);
-    border-color: var(--accent-blue);
+    background: var(--link-color);
+    border-color: var(--link-color);
   }
 
   .RichEditorView ul[data-type='taskList']>li>div {
@@ -193,19 +187,17 @@
 
   /* Inline code */
   .RichEditorView code {
-    background: var(--bg-light);
-    color: var(--code-red);
-    border: 1px solid var(--border-light);
+    color: #c7254e;
+    background-color: #f9f2f4;
     border-radius: 3px;
     padding: 2px 4px;
-    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
-    font-size: 85%;
+    font-size: 90%;
     font-weight: normal;
   }
 
   /* Code blocks */
   .RichEditorView pre {
-    background: black;
+    background: #2e2b29;
     border-radius: 0.5rem;
     color: white;
     font-family: 'JetBrainsMono', monospace;
@@ -223,7 +215,7 @@
 
   /* Links */
   .RichEditorView a {
-    color: var(--accent-blue);
+    color: var(--link-color);
     text-decoration: none;
     border-bottom: 1px solid rgba(46, 170, 220, 0.4);
     transition: all 0.1s ease;
@@ -231,7 +223,7 @@
 
   .RichEditorView a:hover {
     background: rgba(46, 170, 220, 0.1);
-    border-bottom-color: var(--accent-blue);
+    border-bottom-color: var(--link-color);
   }
 
   /* Emphasis */
@@ -248,14 +240,14 @@
     width: 100%;
     border-collapse: collapse;
     margin: 8px 0 16px 0;
-    border: 1px solid var(--border-light);
+    border: 1px solid rgb(227, 226, 224);
     border-radius: 3px;
     overflow: hidden;
   }
 
   .RichEditorView th,
   .RichEditorView td {
-    border: 1px solid var(--border-light);
+    border: 1px solid rgb(227, 226, 224);
     padding: 8px 12px;
     text-align: left;
     color: var(--text-secondary);
@@ -264,9 +256,9 @@
   }
 
   .RichEditorView th {
-    background: var(--bg-light);
+    background: rgb(247, 246, 243);
     font-weight: 500;
-    color: var(--text-table);
+    color: rgb(120, 119, 116);
   }
 
   /* Images */
@@ -282,7 +274,7 @@
   .RichEditorView hr {
     border: none;
     height: 1px;
-    background: var(--border-light);
+    background: rgb(227, 226, 224);
     margin: 16px 0;
   }
 

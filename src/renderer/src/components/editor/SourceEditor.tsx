@@ -85,6 +85,7 @@ const SourceEditor: React.FC<SourceEditorProps> = ({ tab }) => {
           closeBrackets: true,
           autocompletion: true,
           highlightSelectionMatches: false,
+          defaultKeymap: false, // Disable default keymap to avoid conflicts, e.g. `cmd+/`
         }}
         style={{
           fontSize: `${settings.fontSize}px`,
