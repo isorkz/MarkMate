@@ -119,7 +119,7 @@ const RichEditor: React.FC<RichEditorProps> = ({ tab }) => {
       className={`h-full flex flex-col ${settings.theme === 'dark' ? 'bg-gray-900' : 'bg-white'}`}
     >
       <div className="flex-1 overflow-y-auto">
-        <div className="max-w-3xl mx-auto">
+        <div className="max-w-4xl mx-auto">
           <EditorContent
             editor={editor}
             className={`min-h-full ${settings.theme === 'dark' ? 'prose-invert' : ''}`}
