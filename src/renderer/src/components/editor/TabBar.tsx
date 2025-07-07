@@ -65,7 +65,7 @@ const Tab: React.FC<TabProps> = ({ tab, onClose, onSelect }) => {
 }
 
 const TabBar: React.FC = () => {
-  const { tabs, activeTabId, setActiveTab, closeTab, reorderTabs } = useEditorStore()
+  const { tabs, setActiveTab, closeTab, reorderTabs } = useEditorStore()
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
