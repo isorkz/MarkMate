@@ -1,4 +1,5 @@
 import { Editor } from '@tiptap/react'
+import toast from 'react-hot-toast'
 import { isImagePathResolved } from '../../../../shared/commonUtils'
 
 export class ImageElementUtils {
@@ -46,5 +47,46 @@ export class ImageElementUtils {
       }
       img.setAttribute(ImageElementUtils.IS_SRC_RESOLVED_ATTR, 'true')
     }
+  }
+
+  // Handle paste events to convert pasted images to local files
+  static handleImagePaste = async (
+    editor: Editor,
+    imageItem: DataTransferItem,
+    workspacePath: string,
+    currentFilePath: string
+  ): Promise<void> => {
+    const file = imageItem.getAsFile()
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = async (e) => {
+      if (e.target?.result && typeof e.target.result === 'string') {
+        try {
+          // Save image to local file
+          const extension = file.type.split('/')[1] || 'png'
+          const relativePath = await window.electron.ipcRenderer.invoke(
+            'file:save-image',
+            e.target.result,
+            workspacePath,
+            currentFilePath,
+            extension
+          )
+
+          // Insert image with local file path
+          editor.commands.setImage({ src: relativePath })
+        } catch (error) {
+          console.error('Failed to save pasted image:', error)
+          toast.error('Failed to save pasted image')
+        }
+      }
+    }
+
+    reader.onerror = () => {
+      console.error('Failed to read pasted image file')
+      toast.error('Failed to read pasted image')
+    }
+
+    reader.readAsDataURL(file)
   }
 }

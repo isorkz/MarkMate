@@ -118,7 +118,37 @@ export function setupFileHandlers() {
       return `file://${absolutePath}`
     } catch (error) {
       console.error('Error resolving image path:', error)
-      return src
+      throw error
+    }
+  })
+
+  // Save image data to local file and return relative path
+  ipcMain.handle('file:save-image', async (_, imageData: string, workspacePath: string, currentFilePath: string, extension = 'png') => {
+    try {
+      // Create images directory in workspace root
+      const imagesDir = path.join(workspacePath, '.images')
+
+      // Ensure images directory exists
+      await fs.mkdir(imagesDir, { recursive: true })
+
+      // Generate unique filename with timestamp
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)
+      const filename = `pasted-image-${timestamp}.${extension}`
+      const imagePath = path.join(imagesDir, filename)
+
+      // Remove data URL prefix and decode base64
+      const base64Data = imageData.replace(/^data:image\/[a-z]+;base64,/, '')
+      const buffer = Buffer.from(base64Data, 'base64')
+
+      // Write image file
+      await fs.writeFile(imagePath, buffer)
+
+      // Return relative path from current file to the image
+      const relativePath = path.relative(path.dirname(path.join(workspacePath, currentFilePath)), imagePath)
+      return relativePath.replace(/\\/g, '/') // Normalize path separators
+    } catch (error) {
+      console.error('Error saving image:', error)
+      throw error
     }
   })
 }

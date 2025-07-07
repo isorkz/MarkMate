@@ -16,7 +16,7 @@ import { useEditorStore, Tab } from '../../stores/editorStore'
 import { useSettingsStore } from '../../stores/settingsStore'
 import { useWorkspaceStore } from '../../stores/workspaceStore'
 import CodeBlock from './CodeBlock'
-import { ImageElementUtils } from './imageElementUtils'
+import { ImageElementUtils } from './ImageElementUtils'
 
 // load all languages with "all" or common languages with "common"
 import { common, createLowlight } from 'lowlight'
@@ -88,6 +88,29 @@ const RichEditor: React.FC<RichEditorProps> = ({ tab }) => {
       attributes: {
         class: 'RichEditorView max-w-none focus:outline-none h-full overflow-auto',
         style: `font-size: 16px; padding: 60px; line-height: 1.6;`
+      },
+      handlePaste: (view, event) => {
+        // Handle image paste to save as local file instead of data URL
+        if (currentWorkspace && tab && editor) {
+          // Check if clipboard contains images
+          if (event.clipboardData) {
+            const items = Array.from(event.clipboardData.items)
+            const imageItem = items.find(item => item.type.startsWith('image/'))
+
+            if (imageItem) {
+              // Prevent default paste and handle async operation
+              event.preventDefault()
+              ImageElementUtils.handleImagePaste(
+                editor,
+                imageItem,
+                currentWorkspace.path,
+                tab.filePath
+              )
+              return true // Indicate we handled the paste
+            }
+          }
+        }
+        return false // Allow default paste behavior
       }
     }
   })
