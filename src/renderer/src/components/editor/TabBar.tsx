@@ -67,6 +67,19 @@ const Tab: React.FC<TabProps> = ({ tab, onClose, onSelect }) => {
 const TabBar: React.FC = () => {
   const { tabs, setActiveTab, closeTab, reorderTabs } = useEditorStore()
 
+  const handleCloseTab = (tabId: string) => {
+    const tab = tabs.find(t => t.id === tabId)
+    if (tab?.hasUnsavedChanges) {
+      const confirmed = window.confirm(
+        `"${tab.title}" has unsaved changes. Are you sure you want to close it?`
+      )
+      if (!confirmed) {
+        return
+      }
+    }
+    closeTab(tabId)
+  }
+
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -104,7 +117,7 @@ const TabBar: React.FC = () => {
             <Tab
               key={tab.id}
               tab={tab}
-              onClose={closeTab}
+              onClose={handleCloseTab}
               onSelect={setActiveTab}
             />
           ))}
