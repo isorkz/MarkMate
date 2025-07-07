@@ -14,7 +14,9 @@ import { Markdown } from 'tiptap-markdown'
 import toast from 'react-hot-toast'
 import { useEditorStore, Tab } from '../../stores/editorStore'
 import { useSettingsStore } from '../../stores/settingsStore'
+import { useWorkspaceStore } from '../../stores/workspaceStore'
 import CodeBlock from './CodeBlock'
+import { ImageElementUtils } from './imageElementUtils'
 
 // load all languages with "all" or common languages with "common"
 import { common, createLowlight } from 'lowlight'
@@ -29,6 +31,7 @@ interface RichEditorProps {
 const RichEditor: React.FC<RichEditorProps> = ({ tab }) => {
   const { updateTabContent } = useEditorStore()
   const { settings } = useSettingsStore()
+  const { currentWorkspace } = useWorkspaceStore()
 
   const editor = useEditor({
     extensions: [
@@ -107,6 +110,18 @@ const RichEditor: React.FC<RichEditorProps> = ({ tab }) => {
       }
     }
   }, [tab?.content, editor])
+
+  // Resolve image paths when content is loaded or workspace/tab changes
+  useEffect(() => {
+    if (editor && currentWorkspace && tab) {
+      // Add a delay to ensure content is fully loaded
+      const timeoutId = setTimeout(() => {
+        ImageElementUtils.resolveAllImageElementsInDom(editor, currentWorkspace.path, tab.filePath)
+      }, 200)
+
+      return () => clearTimeout(timeoutId)
+    }
+  }, [editor, currentWorkspace, tab, tab?.content])
 
   if (!tab) {
     return (

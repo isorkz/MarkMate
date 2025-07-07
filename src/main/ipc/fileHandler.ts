@@ -1,6 +1,7 @@
 import { ipcMain } from 'electron'
 import * as fs from 'fs/promises'
 import * as path from 'path'
+import { isImagePathResolved } from '../../shared/commonUtils'
 
 export function setupFileHandlers() {
   // Read file content
@@ -99,6 +100,25 @@ export function setupFileHandlers() {
     } catch (error) {
       console.error('Error creating directory:', error)
       throw error
+    }
+  })
+
+  // Get resolved image path relative to workspace and file
+  ipcMain.handle('file:get-image-path', async (_, src: string, workspacePath: string, currentFilePath: string) => {
+    try {
+      // If it's already an absolute path, base64, or URL, return as is
+      if (isImagePathResolved(src)) {
+        return src
+      }
+
+      // Resolve relative path to get absolute path
+      const currentFileAbsolutePath = path.join(workspacePath, currentFilePath)
+      const currentFileDir = path.dirname(currentFileAbsolutePath)
+      const absolutePath = path.resolve(currentFileDir, src)
+      return `file://${absolutePath}`
+    } catch (error) {
+      console.error('Error resolving image path:', error)
+      return src
     }
   })
 }
