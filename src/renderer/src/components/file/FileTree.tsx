@@ -7,7 +7,7 @@ import { Folder, FolderOpen, File, ChevronRight, ChevronDown } from 'lucide-reac
 const FileTree: React.FC = () => {
   const { fileTree, expandedFolders, toggleFolder, setFileTree } = useFileSystemStore()
   const { currentWorkspace } = useWorkspaceStore()
-  const { openFile, tabs, setActiveTab } = useEditorStore()
+  const { openFile, tabs, activeTabId, setActiveTab } = useEditorStore()
 
   // Helper function to check if a path contains any open files
   const hasOpenFiles = (nodePath: string, nodeType: string): boolean => {
@@ -59,9 +59,9 @@ const FileTree: React.FC = () => {
     const isFolder = node.type === 'folder'
     const hasOpenFile = hasOpenFiles(node.path, node.type)
     // Check if this file is the currently active tab
-    const isActiveTab = !isFolder && tabs.find(tab => tab.isActive)?.filePath === node.path
+    const isActiveTab = !isFolder && activeTabId && tabs.find(tab => tab.id === activeTabId)?.filePath === node.path
     // Check if this folder contains the currently active tab
-    const hasActiveTab = isFolder && tabs.some(tab => tab.isActive && tab.filePath.startsWith(node.path + '/'))
+    const hasActiveTab = isFolder && activeTabId && tabs.find(tab => tab.id === activeTabId)?.filePath.startsWith(node.path + '/')
 
     return (
       <div key={node.path}>

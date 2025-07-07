@@ -6,7 +6,6 @@ export interface Tab {
   filePath: string;
   title: string;
   content: string;
-  isActive: boolean;
   hasUnsavedChanges: boolean;
   lastModified: Date;
 }
@@ -51,13 +50,12 @@ export const useEditorStore = create<EditorStore>()(
           filePath,
           title: filePath.split('/').pop() || 'Untitled',
           content,
-          isActive: true,
           hasUnsavedChanges: false,
           lastModified: new Date()
         };
         
         set(state => ({
-          tabs: [...state.tabs.map(tab => ({ ...tab, isActive: false })), newTab],
+          tabs: [...state.tabs, newTab],
           activeTabId: newTab.id
         }));
       },
@@ -75,10 +73,7 @@ export const useEditorStore = create<EditorStore>()(
       },
       
       setActiveTab: (tabId) => 
-        set(state => ({
-          tabs: state.tabs.map(tab => ({ ...tab, isActive: tab.id === tabId })),
-          activeTabId: tabId
-        })),
+        set({ activeTabId: tabId }),
       
       updateTabContent: (tabId, content) => 
         set(state => ({

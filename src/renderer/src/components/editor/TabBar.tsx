@@ -11,13 +11,13 @@ interface TabProps {
     id: string
     title: string
     hasUnsavedChanges: boolean
-    isActive: boolean
   }
+  isActive: boolean
   onClose: (id: string) => void
   onSelect: (id: string) => void
 }
 
-const Tab: React.FC<TabProps> = ({ tab, onClose, onSelect }) => {
+const Tab: React.FC<TabProps> = ({ tab, isActive, onClose, onSelect }) => {
   const {
     attributes,
     listeners,
@@ -41,7 +41,7 @@ const Tab: React.FC<TabProps> = ({ tab, onClose, onSelect }) => {
       {...listeners}
       className={`
         flex items-center gap-2 px-4 py-2 border-r border-gray-200 cursor-pointer min-w-0 flex-shrink-0
-            ${tab.isActive ? 'bg-white border-b-2 border-b-blue-500' : 'hover:bg-gray-100'}
+            ${isActive ? 'bg-white border-b-2 border-b-blue-500' : 'hover:bg-gray-100'}
       `}
       onClick={() => onSelect(tab.id)}
     >
@@ -65,7 +65,7 @@ const Tab: React.FC<TabProps> = ({ tab, onClose, onSelect }) => {
 }
 
 const TabBar: React.FC = () => {
-  const { tabs, setActiveTab, closeTab, reorderTabs } = useEditorStore()
+  const { tabs, activeTabId, setActiveTab, closeTab, reorderTabs } = useEditorStore()
 
   const handleCloseTab = (tabId: string) => {
     const tab = tabs.find(t => t.id === tabId)
@@ -117,6 +117,7 @@ const TabBar: React.FC = () => {
             <Tab
               key={tab.id}
               tab={tab}
+              isActive={tab.id === activeTabId}
               onClose={handleCloseTab}
               onSelect={setActiveTab}
             />
