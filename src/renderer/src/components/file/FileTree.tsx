@@ -7,7 +7,7 @@ import { Folder, FolderOpen, File, ChevronRight, ChevronDown } from 'lucide-reac
 const FileTree: React.FC = () => {
   const { fileTree, expandedFolders, toggleFolder, setFileTree } = useFileSystemStore()
   const { currentWorkspace } = useWorkspaceStore()
-  const { openFile, tabs } = useEditorStore()
+  const { openFile, tabs, setActiveTab } = useEditorStore()
 
   // Helper function to check if a path contains any open files
   const hasOpenFiles = (nodePath: string, nodeType: string): boolean => {
@@ -17,6 +17,29 @@ const FileTree: React.FC = () => {
     }
     // For folders, check if any open tab's file path starts with this folder path
     return tabs.some(tab => tab.filePath.startsWith(nodePath + '/'))
+  }
+
+  const handleNodeClick = async (node: any, isFolder: boolean) => {
+    if (isFolder) {
+      toggleFolder(node.path)
+    } else {
+      // Check if file is already open first
+      const existingTab = tabs.find(tab => tab.filePath === node.path)
+      if (existingTab) {
+        // File is already open, just switch to that tab
+        setActiveTab(existingTab.id)
+      } else {
+        // File is not open, read content and open it
+        if (currentWorkspace) {
+          try {
+            const content = await window.electron.ipcRenderer.invoke('file:read', currentWorkspace.path, node.path)
+            openFile(node.path, content)
+          } catch (error) {
+            console.error('Failed to open file:', error)
+          }
+        }
+      }
+    }
   }
 
   // Load file tree for current workspace on startup
@@ -48,21 +71,7 @@ const FileTree: React.FC = () => {
             ${isActiveTab || hasActiveTab ? 'text-orange-600' :
               hasOpenFile ? 'text-blue-600' : 'text-gray-700'}
           `}
-          onClick={async () => {
-            if (isFolder) {
-              toggleFolder(node.path)
-            } else {
-              // Open file in editor
-              if (currentWorkspace) {
-                try {
-                  const content = await window.electron.ipcRenderer.invoke('file:read', currentWorkspace.path, node.path)
-                  openFile(node.path, content)
-                } catch (error) {
-                  console.error('Failed to open file:', error)
-                }
-              }
-            }
-          }}
+          onClick={() => handleNodeClick(node, isFolder)}
         >
           <div
             className="w-4 flex items-center justify-center mr-1 flex-shrink-0"
