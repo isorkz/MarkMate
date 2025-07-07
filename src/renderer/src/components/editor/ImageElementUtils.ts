@@ -2,9 +2,11 @@ import { Editor } from '@tiptap/react'
 import toast from 'react-hot-toast'
 import { isImagePathResolved } from '../../../../shared/commonUtils'
 
+
 export class ImageElementUtils {
   static IS_SRC_RESOLVED_ATTR = 'is-src-resolved'
   static ORIGINAL_SRC_ATTR = 'original-src'
+  static DEFAULT_ALT_TEXT = 'img'
 
   // Resolve image paths in the editor DOM only (without affecting markdown source content)
     static resolveAllImageElementsInDom = async (
@@ -25,6 +27,12 @@ export class ImageElementUtils {
     workspacePath: string,
     currentFilePath: string
   ): Promise<void> => {
+    const alt = img.getAttribute('alt')
+    if (!alt || alt.trim() === '') {
+      // Add default alt text if not provided, to show a broken image icon
+      img.setAttribute('alt', ImageElementUtils.DEFAULT_ALT_TEXT)
+    }
+
     if (img.hasAttribute(ImageElementUtils.IS_SRC_RESOLVED_ATTR)){
       // Skip if already resolved
       return;
@@ -37,11 +45,11 @@ export class ImageElementUtils {
     if (src) {
       if (!isImagePathResolved(src)){
         const resolvedSrc = await window.electron.ipcRenderer.invoke(
-                'file:get-image-path',
-                src,
-                workspacePath,
-                currentFilePath
-              )
+                  'file:get-image-path',
+                  src,
+                  workspacePath,
+                  currentFilePath
+                )
         img.setAttribute('src', resolvedSrc)
         img.setAttribute(ImageElementUtils.ORIGINAL_SRC_ATTR, src)
       }
@@ -74,7 +82,7 @@ export class ImageElementUtils {
           )
 
           // Insert image with local file path
-          editor.commands.setImage({ src: relativePath })
+          editor.commands.setImage({ src: relativePath, alt: ImageElementUtils.DEFAULT_ALT_TEXT })
         } catch (error) {
           console.error('Failed to save pasted image:', error)
           toast.error('Failed to save pasted image')
