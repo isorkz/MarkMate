@@ -104,30 +104,30 @@ const TabBar: React.FC = () => {
     }
   }
 
-  if (tabs.length === 0) {
-    return null
-  }
-
   return (
-    <div className="flex bg-gray-50 border-b border-gray-200 overflow-x-auto" style={{ WebkitAppRegion: 'drag' }}>
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragEnd={handleDragEnd}
-      >
-        <SortableContext items={tabs.map(tab => tab.id)} strategy={horizontalListSortingStrategy}>
-          {tabs.map(tab => (
-            <Tab
-              key={tab.id}
-              tab={tab}
-              isActive={tab.id === activeTabId}
-              onClose={handleCloseTab}
-              onSelect={setActiveTab}
-              onPin={pinTab}
-            />
-          ))}
-        </SortableContext>
-      </DndContext>
+    <div className="flex bg-gray-50 border-b border-gray-200 overflow-x-auto min-h-[40px]" style={{ WebkitAppRegion: 'drag' }}>
+      {tabs.length > 0 ? (
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext items={tabs.map(tab => tab.id)} strategy={horizontalListSortingStrategy}>
+            {tabs.map(tab => (
+              <Tab
+                key={tab.id}
+                tab={tab}
+                isActive={tab.id === activeTabId}
+                onClose={handleCloseTab}
+                onSelect={setActiveTab}
+                onPin={pinTab}
+              />
+            ))}
+          </SortableContext>
+        </DndContext>
+      ) : (
+        <div className="flex-1" />
+      )}
     </div>
   )
 }
