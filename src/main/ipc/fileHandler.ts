@@ -61,14 +61,25 @@ export function setupFileHandlers() {
     }
   })
   
-  // Delete file
+  // Delete file or folder
   ipcMain.handle('file:delete', async (_, workspacePath: string, filePath: string) => {
     try {
       const fullPath = path.join(workspacePath, filePath)
-      await fs.unlink(fullPath)
+      
+      // Check if it's a file or directory
+      const stats = await fs.stat(fullPath)
+      
+      if (stats.isDirectory()) {
+        // Delete directory and all its contents
+        await fs.rm(fullPath, { recursive: true, force: true })
+      } else {
+        // Delete file
+        await fs.unlink(fullPath)
+      }
+      
       return true
     } catch (error) {
-      console.error('Error deleting file:', error)
+      console.error('Error deleting file/folder:', error)
       throw error
     }
   })

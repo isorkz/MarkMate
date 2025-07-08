@@ -2,23 +2,28 @@ import React, { useState } from 'react'
 import { useWorkspaceStore } from '../../stores/workspaceStore'
 import { useFileSystemStore } from '../../stores/fileSystemStore'
 import { Folder, ChevronDown, Check, Plus } from 'lucide-react'
+import { loadFileTree } from '../../utils/fileOperations'
+import WorkspaceContextMenu from './WorkspaceContextMenu'
 
-const WorkspaceSelector: React.FC = () => {
+interface WorkspaceSelectorProps {
+  onCreateFile: () => void
+  onCreateFolder: () => void
+}
+
+const WorkspaceSelector: React.FC<WorkspaceSelectorProps> = ({ onCreateFile, onCreateFolder }) => {
   const { workspaces, currentWorkspace, setCurrentWorkspace, addWorkspace } = useWorkspaceStore()
   const { setFileTree } = useFileSystemStore()
   const [showDropdown, setShowDropdown] = useState(false)
+  const [contextMenu, setContextMenu] = useState<{
+    position: { x: number; y: number }
+  } | null>(null)
 
   const handleWorkspaceSelect = async (workspace: any) => {
     setCurrentWorkspace(workspace)
     setShowDropdown(false)
 
     // Load file tree for the selected workspace
-    try {
-      const fileTree = await window.electron.ipcRenderer.invoke('workspace:get-file-tree', workspace.path)
-      setFileTree(fileTree)
-    } catch (error) {
-      console.error('Failed to load workspace file tree:', error)
-    }
+    await loadFileTree(workspace.path, setFileTree)
   }
 
   const handleNewWorkspace = async () => {
@@ -34,6 +39,24 @@ const WorkspaceSelector: React.FC = () => {
     setShowDropdown(false)
   }
 
+  const handleContextMenu = (e: React.MouseEvent) => {
+    if (!currentWorkspace) return
+    e.preventDefault()
+    setContextMenu({
+      position: { x: e.clientX, y: e.clientY }
+    })
+  }
+
+  const handleNewFileWrapper = () => {
+    onCreateFile()
+    setContextMenu(null)
+  }
+
+  const handleNewFolderWrapper = () => {
+    onCreateFolder()
+    setContextMenu(null)
+  }
+
   return (
     // tabIndex={-1} - Makes the div focusable so it can receive blur events
     <div className="relative" onBlur={(e) => {
@@ -44,6 +67,7 @@ const WorkspaceSelector: React.FC = () => {
     }} tabIndex={-1}>
       <button
         onClick={() => setShowDropdown(!showDropdown)}
+        onContextMenu={handleContextMenu}
         className="w-full flex items-center justify-between px-2 py-1.5 text-sm text-gray-700 rounded-md hover:bg-gray-100 transition-colors"
       >
         <div className="flex items-center gap-2 min-w-0">
@@ -81,6 +105,15 @@ const WorkspaceSelector: React.FC = () => {
             <span>Add workspace</span>
           </button>
         </div>
+      )}
+
+      {contextMenu && (
+        <WorkspaceContextMenu
+          position={contextMenu.position}
+          onClose={() => setContextMenu(null)}
+          onNewFile={handleNewFileWrapper}
+          onNewFolder={handleNewFolderWrapper}
+        />
       )}
     </div>
   )

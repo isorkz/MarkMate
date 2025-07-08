@@ -1,13 +1,26 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { useFileSystemStore } from '../../stores/fileSystemStore'
 import { useWorkspaceStore } from '../../stores/workspaceStore'
 import { useEditorStore } from '../../stores/editorStore'
-import { Folder, FolderOpen, File, ChevronRight, ChevronDown } from 'lucide-react'
+import { Folder, FolderOpen, File, ChevronRight, ChevronDown, Star } from 'lucide-react'
+import FileContextMenu, { FileNode } from './FileContextMenu'
+import InlineInput from './InlineInput'
+import { handleNewFile, handleNewFolder, handleRename, handleDelete, loadFileTree } from '../../utils/fileOperations'
+import toast from 'react-hot-toast'
 
 const FileTree: React.FC = () => {
   const { fileTree, expandedFolders, toggleFolder, setFileTree } = useFileSystemStore()
-  const { currentWorkspace } = useWorkspaceStore()
-  const { openFile, tabs, activeTabId, setActiveTab } = useEditorStore()
+  const { currentWorkspace, isFavorite, toggleFavorite } = useWorkspaceStore()
+  const { openFile, tabs, activeTabId, setActiveTab, closeTab } = useEditorStore()
+  const [contextMenu, setContextMenu] = useState<{
+    node: FileNode
+    position: { x: number; y: number }
+  } | null>(null)
+  const [editingMode, setEditingMode] = useState<{
+    mode: 'rename' | 'new-file' | 'new-folder'
+    path: string // For rename: the item path, for new: the parent path
+    initialValue?: string // For rename: current name
+  } | null>(null)
 
   // Helper function to check if a path contains any open files
   const hasOpenFiles = (nodePath: string, nodeType: string): boolean => {
@@ -42,22 +55,105 @@ const FileTree: React.FC = () => {
     }
   }
 
+  const handleContextMenu = (e: React.MouseEvent, node: any) => {
+    e.preventDefault()
+    e.stopPropagation() // Prevent background context menu from triggering
+    setContextMenu({
+      node: {
+        id: node.id || node.path,
+        name: node.name,
+        path: node.path,
+        type: node.type
+      },
+      position: { x: e.clientX, y: e.clientY }
+    })
+  }
+
+  const onNewFile = (parentPath: string) => {
+    // Expand the folder if it's not already expanded
+    if (parentPath && !expandedFolders.has(parentPath)) {
+      toggleFolder(parentPath)
+    }
+    setEditingMode({ mode: 'new-file', path: parentPath })
+    setContextMenu(null)
+  }
+
+  const onNewFolder = (parentPath: string) => {
+    // Expand the folder if it's not already expanded
+    if (parentPath && !expandedFolders.has(parentPath)) {
+      toggleFolder(parentPath)
+    }
+    setEditingMode({ mode: 'new-folder', path: parentPath })
+    setContextMenu(null)
+  }
+
+  const handleEditConfirm = async (value: string) => {
+    if (!currentWorkspace || !editingMode || !value.trim()) return
+
+    if (editingMode.mode === 'rename') {
+      await handleRename(currentWorkspace.path, editingMode.path, editingMode.initialValue || '', value, setFileTree)
+    } else {
+      if (editingMode.mode === 'new-file') {
+        await handleNewFile(currentWorkspace.path, editingMode.path, value, setFileTree)
+      } else {
+        await handleNewFolder(currentWorkspace.path, editingMode.path, value, setFileTree)
+      }
+    }
+
+    setEditingMode(null)
+  }
+
+  const handleEditCancel = () => {
+    setEditingMode(null)
+  }
+
+  const onOpenInNewTab = async (filePath: string) => {
+    if (!currentWorkspace) return
+
+    try {
+      const content = await window.electron.ipcRenderer.invoke('file:read', currentWorkspace.path, filePath)
+      openFile(filePath, content)
+    } catch (error) {
+      console.error('Failed to open file:', error)
+      toast.error('Failed to open file')
+    }
+  }
+
+  const onRename = (path: string, currentName: string) => {
+    setEditingMode({ mode: 'rename', path, initialValue: currentName })
+    setContextMenu(null)
+  }
+
+  const onDelete = async (filePath: string) => {
+    if (!currentWorkspace) return
+
+    // Close any open tabs for the deleted file/folder
+    const tabsToClose = tabs.filter(tab =>
+      tab.filePath === filePath || tab.filePath.startsWith(filePath + '/')
+    )
+
+    tabsToClose.forEach(tab => {
+      closeTab(tab.id)
+    })
+
+    await handleDelete(currentWorkspace.path, filePath, setFileTree)
+  }
+
   // Load file tree for current workspace on startup
   React.useEffect(() => {
-    if (currentWorkspace && fileTree.length === 0) {
-      window.electron.ipcRenderer
-        .invoke('workspace:get-file-tree', currentWorkspace.path)
-        .then(tree => setFileTree(tree))
+    if (currentWorkspace) {
+      loadFileTree(currentWorkspace.path, setFileTree)
         .catch(error => {
-          console.error('Failed to load workspace file tree:', error)
+          toast.error('Failed to load workspace file tree:', error)
         })
     }
-  }, [currentWorkspace, fileTree.length, setFileTree])
+  }, [currentWorkspace, setFileTree])
 
   const renderNode = (node: any, depth = 0) => {
     const isExpanded = expandedFolders.has(node.path)
     const isFolder = node.type === 'folder'
     const hasOpenFile = hasOpenFiles(node.path, node.type)
+    const isNodeFavorite = isFavorite(node.path)
     // Check if this file is the currently active tab
     const isActiveTab = !isFolder && activeTabId && tabs.find(tab => tab.id === activeTabId)?.filePath === node.path
     // Check if this folder contains the currently active tab
@@ -72,6 +168,7 @@ const FileTree: React.FC = () => {
               hasOpenFile ? 'text-blue-600' : 'text-gray-700'}
           `}
           onClick={() => handleNodeClick(node, isFolder)}
+          onContextMenu={(e) => handleContextMenu(e, node)}
         >
           <div
             className="w-4 flex items-center justify-center mr-1 flex-shrink-0"
@@ -96,17 +193,43 @@ const FileTree: React.FC = () => {
             ) : (
               <File className="w-4 h-4 flex-shrink-0" />
             )}
-            <span className={`truncate text-sm min-w-0 ${isActiveTab || hasActiveTab || hasOpenFile ? 'font-medium' : ''}`}>
-              {node.name}
-            </span>
+
+            {editingMode && editingMode.mode === 'rename' && editingMode.path === node.path ? (
+              <InlineInput
+                type={isFolder ? 'folder' : 'file'}
+                mode="rename"
+                defaultValue={editingMode.initialValue}
+                onConfirm={handleEditConfirm}
+                onCancel={handleEditCancel}
+                inlineOnly
+              />
+            ) : (
+              <span className={`truncate text-sm min-w-0 ${isActiveTab || hasActiveTab || hasOpenFile ? 'font-medium' : ''}`}>
+                {node.name}
+              </span>
+            )}
+
+            {isNodeFavorite && (
+              <Star className="w-3 h-3 fill-yellow-400 text-yellow-400 ml-1 flex-shrink-0" />
+            )}
           </div>
         </div>
 
-        {isFolder && isExpanded && node.children && (
+        {isFolder && isExpanded && (
           <div>
-            {node.children.map((child: any) => renderNode(child, depth + 1))}
+            {node.children && node.children.map((child: any) => renderNode(child, depth + 1))}
+            {editingMode && (editingMode.mode === 'new-file' || editingMode.mode === 'new-folder') && editingMode.path === node.path && (
+              <InlineInput
+                type={editingMode.mode === 'new-folder' ? 'folder' : 'file'}
+                mode="create"
+                depth={depth + 1}
+                onConfirm={handleEditConfirm}
+                onCancel={handleEditCancel}
+              />
+            )}
           </div>
         )}
+
       </div>
     )
   }
@@ -119,9 +242,58 @@ const FileTree: React.FC = () => {
     )
   }
 
+  // Helper function to find all favorite nodes from the file tree
+  const findFavoriteNodes = (nodes: any[]): any[] => {
+    const favoriteNodes: any[] = []
+
+    const traverse = (nodeList: any[]) => {
+      nodeList.forEach(node => {
+        if (isFavorite(node.path)) {
+          favoriteNodes.push(node)
+        }
+        if (node.children) {
+          traverse(node.children)
+        }
+      })
+    }
+
+    traverse(nodes)
+    return favoriteNodes
+  }
+
+  const favoriteNodes = findFavoriteNodes(fileTree)
+
   return (
     <div className="px-2 py-2">
+      {/* Favorites Section */}
+      {favoriteNodes.length > 0 && (
+        <div className="mb-4 pb-2 border-b border-gray-200">
+          <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide px-2 mb-2">
+            Favorites
+          </h3>
+          {favoriteNodes.map((node) =>
+            renderNode(node, 0)
+          )}
+        </div>
+      )}
+
+      {/* Regular File Tree */}
       {fileTree.map(node => renderNode(node))}
+
+      {contextMenu && (
+        <FileContextMenu
+          node={contextMenu.node}
+          position={contextMenu.position}
+          onClose={() => setContextMenu(null)}
+          onNewFile={onNewFile}
+          onNewFolder={onNewFolder}
+          onOpenInNewTab={onOpenInNewTab}
+          onRename={() => onRename(contextMenu.node.path, contextMenu.node.name)}
+          onDelete={onDelete}
+          onToggleFavorite={toggleFavorite}
+          isFavorite={isFavorite(contextMenu.node.path)}
+        />
+      )}
     </div>
   )
 }

@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { useFilePathEventStore } from './events/filePathEventStore'
 
 export interface Tab {
   id: string;
@@ -121,3 +122,51 @@ export const useEditorStore = create<EditorStore>()(
     }
   )
 )
+
+// Subscribe to file path events
+useFilePathEventStore.subscribe((state) => {
+  const pathChange = state.lastPathChange
+  if (pathChange) {
+    const { oldPath, newPath } = pathChange
+    const { tabs } = useEditorStore.getState()
+    
+    // Update tab file paths and titles
+    const updatedTabs = tabs.map(tab => {
+      if (tab.filePath === oldPath) {
+        return {
+          ...tab,
+          filePath: newPath,
+          title: newPath.split('/').pop() || 'Untitled'
+        }
+      } else if (tab.filePath.startsWith(oldPath + '/')) {
+        const newFilePath = tab.filePath.replace(oldPath, newPath)
+        return {
+          ...tab,
+          filePath: newFilePath,
+          title: newFilePath.split('/').pop() || 'Untitled'
+        }
+      }
+      return tab
+    })
+    
+    useEditorStore.setState({ tabs: updatedTabs })
+  }
+})
+
+useFilePathEventStore.subscribe((state) => {
+  const pathDelete = state.lastPathDelete
+  if (pathDelete) {
+    const { path } = pathDelete
+    const { tabs, activeTabId } = useEditorStore.getState()
+    
+    // Find tabs that need to be closed
+    const tabsToClose = tabs.filter(tab => 
+      tab.filePath === path || tab.filePath.startsWith(path + '/')
+    )
+    
+    // Close the tabs
+    tabsToClose.forEach(tab => {
+      useEditorStore.getState().closeTab(tab.id)
+    })
+  }
+})

@@ -66,7 +66,6 @@ export function setupWorkspaceHandlers() {
               path: itemRelativePath,
               type: 'file',
               lastModified: stats.mtime,
-              size: stats.size
             })
           }
         }

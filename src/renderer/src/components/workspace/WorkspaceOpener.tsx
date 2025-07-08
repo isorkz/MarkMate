@@ -1,6 +1,7 @@
 import React from 'react'
 import { useWorkspaceStore } from '../../stores/workspaceStore'
 import { useFileSystemStore } from '../../stores/fileSystemStore'
+import { loadFileTree } from '@renderer/utils/fileOperations'
 
 const WorkspaceOpener: React.FC = () => {
   const { addWorkspace, setCurrentWorkspace } = useWorkspaceStore()
@@ -12,8 +13,7 @@ const WorkspaceOpener: React.FC = () => {
       if (workspace) {
         addWorkspace(workspace)
         setCurrentWorkspace(workspace)
-        const fileTree = await window.electron.ipcRenderer.invoke('workspace:get-file-tree', workspace.path)
-        setFileTree(fileTree)
+        await loadFileTree(workspace.path, setFileTree)
       }
     } catch (error) {
       console.error('Failed to open workspace:', error)
