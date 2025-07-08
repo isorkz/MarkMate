@@ -1,6 +1,7 @@
 import React from 'react'
 import { X } from 'lucide-react'
 import { useEditorStore } from '../../stores/editorStore'
+import { useSettingsStore } from '../../stores/settingsStore'
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
 import { SortableContext, sortableKeyboardCoordinates, horizontalListSortingStrategy } from '@dnd-kit/sortable'
 import { useSortable } from '@dnd-kit/sortable'
@@ -69,6 +70,7 @@ const Tab: React.FC<TabProps> = ({ tab, isActive, onClose, onSelect, onPin }) =>
 
 const TabBar: React.FC = () => {
   const { tabs, activeTabId, setActiveTab, closeTab, reorderTabs, pinTab } = useEditorStore()
+  const { settings } = useSettingsStore()
 
   const handleCloseTab = (tabId: string) => {
     const tab = tabs.find(t => t.id === tabId)
@@ -105,7 +107,10 @@ const TabBar: React.FC = () => {
   }
 
   return (
-    <div className="flex bg-gray-50 border-b border-gray-200 overflow-x-auto min-h-[40px]" style={{ WebkitAppRegion: 'drag' }}>
+    <div
+      className={`flex bg-gray-50 border-b border-gray-200 overflow-x-auto min-h-[40px] ${!settings.sidebarVisible ? 'ml-32' : ''}`}
+      style={{ WebkitAppRegion: 'drag' }}
+    >
       {tabs.length > 0 ? (
         <DndContext
           sensors={sensors}

@@ -6,6 +6,7 @@ import Sidebar from './Sidebar'
 import MainContent from './MainContent'
 import TOCPanel from '../editor/TOCPanel'
 import WorkspaceOpener from '../workspace/WorkspaceOpener'
+import LeftSideTopBar from './LeftSideTopBar'
 
 const AppLayout: React.FC = () => {
   const { currentWorkspace } = useWorkspaceStore()
@@ -29,10 +30,12 @@ const AppLayout: React.FC = () => {
             e.preventDefault()
             toggleTOC()
             break
-          // case 'b':
-          //   e.preventDefault()
-          //   toggleSidebar()
-          //   break
+          case 'b':
+            if (e.shiftKey) {
+              e.preventDefault()
+              toggleSidebar()
+            }
+            break
         }
       }
     }
@@ -53,7 +56,9 @@ const AppLayout: React.FC = () => {
   }
 
   return (
-    <div className="h-screen flex bg-white overflow-x-hidden">
+    <div className="h-screen flex bg-white overflow-x-hidden relative">
+      <LeftSideTopBar />
+      
       {settings.sidebarVisible && <Sidebar />}
 
       <MainContent />
