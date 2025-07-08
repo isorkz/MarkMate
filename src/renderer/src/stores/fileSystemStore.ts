@@ -7,7 +7,7 @@ interface FileNode {
   path: string;
   type: 'file' | 'folder';
   children?: FileNode[];
-  lastModified: Date;
+  // lastModified: Date;
 }
 
 interface FileSystemStore {

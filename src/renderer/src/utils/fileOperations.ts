@@ -62,8 +62,6 @@ export const handleRename = async (workspacePath: string, oldPath: string, oldNa
     
     // Notify all stores about the path change
     useFilePathEventStore.getState().notifyPathChange(oldPath, newPath)
-    
-    // await loadFileTree(workspacePath, setFileTree)
     toast.success('File renamed successfully')
   } catch (error) {
     console.error('Failed to rename:', error)
@@ -77,8 +75,6 @@ export const handleDelete = async (workspacePath: string, filePath: string, setF
     
     // Notify all stores about the path deletion
     useFilePathEventStore.getState().notifyPathDelete(filePath)
-    
-    await loadFileTree(workspacePath, setFileTree)
     toast.success('File deleted successfully')
   } catch (error) {
     console.error('Failed to delete:', error)

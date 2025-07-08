@@ -20,7 +20,7 @@ interface EditorStore {
   syncSroll: boolean;
   
   // Actions
-  openFile: (filePath: string, content: string, isPinned?: boolean) => void;
+  openFile: (filePath: string, content: string, isPinned?: boolean, lastModified?: Date) => void;
   closeTab: (tabId: string) => void;
   setActiveTab: (tabId: string) => void;
   pinTab: (tabId) => void;
@@ -41,7 +41,7 @@ export const useEditorStore = create<EditorStore>()(
       showSourceEditor: false,
       syncSroll: true,
       
-      openFile: (filePath, content, isPinned = false) => {
+      openFile: (filePath, content, isPinned = false, lastModified) => {
         const existingTab = get().tabs.find(tab => tab.filePath === filePath);
         if (existingTab) {
           set({ activeTabId: existingTab.id });
@@ -63,7 +63,7 @@ export const useEditorStore = create<EditorStore>()(
           title: filePath.split('/').pop() || 'Untitled',
           content,
           hasUnsavedChanges: false,
-          lastModified: new Date(),
+          lastModified: lastModified || new Date(),
           isPinned
         };
         

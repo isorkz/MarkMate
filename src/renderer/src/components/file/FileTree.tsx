@@ -45,8 +45,11 @@ const FileTree: React.FC = () => {
         // File is not open, read content and open it in preview mode
         if (currentWorkspace) {
           try {
-            const content = await window.electron.ipcRenderer.invoke('file:read', currentWorkspace.path, node.path)
-            openFile(node.path, content, false) // false = preview mode (not pinned)
+            const [content, lastModified] = await Promise.all([
+              window.electron.ipcRenderer.invoke('file:read', currentWorkspace.path, node.path),
+              window.electron.ipcRenderer.invoke('file:get-last-modified-time', currentWorkspace.path, node.path)
+            ])
+            openFile(node.path, content, false, new Date(lastModified)) // false = preview mode (not pinned)
           } catch (error) {
             console.error('Failed to open file:', error)
           }
@@ -66,8 +69,11 @@ const FileTree: React.FC = () => {
       } else {
         // File is not open, read content and open it in preview mode
         try {
-          const content = await window.electron.ipcRenderer.invoke('file:read', currentWorkspace.path, node.path)
-          openFile(node.path, content, true) // true = pinned tab
+          const [content, lastModified] = await Promise.all([
+            window.electron.ipcRenderer.invoke('file:read', currentWorkspace.path, node.path),
+            window.electron.ipcRenderer.invoke('file:get-last-modified-time', currentWorkspace.path, node.path)
+          ])
+          openFile(node.path, content, true, new Date(lastModified)) // true = pinned tab
         } catch (error) {
           console.error('Failed to open file:', error)
         }
@@ -131,8 +137,11 @@ const FileTree: React.FC = () => {
     if (!currentWorkspace) return
 
     try {
-      const content = await window.electron.ipcRenderer.invoke('file:read', currentWorkspace.path, filePath)
-      openFile(filePath, content, true) // true = pinned tab
+      const [content, lastModified] = await Promise.all([
+        window.electron.ipcRenderer.invoke('file:read', currentWorkspace.path, filePath),
+        window.electron.ipcRenderer.invoke('file:get-last-modified-time', currentWorkspace.path, filePath)
+      ])
+      openFile(filePath, content, true, new Date(lastModified)) // true = pinned tab
     } catch (error) {
       console.error('Failed to open file:', error)
       toast.error('Failed to open file')

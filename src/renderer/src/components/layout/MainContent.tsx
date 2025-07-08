@@ -1,6 +1,5 @@
 import React from 'react'
 import { useEditorStore } from '../../stores/editorStore'
-import TitleBar from './TitleBar'
 import TabBar from '../editor/TabBar'
 import Editor from '../editor/Editor'
 
@@ -11,7 +10,6 @@ const MainContent: React.FC = () => {
 
   return (
     <div className="flex-1 flex flex-col h-full overflow-x-hidden">
-      {/* <TitleBar /> */}
       <TabBar />
 
       {tabs.length > 0 && activeTab ? (

@@ -10,3 +10,25 @@ export const isImagePathResolved = (src: string): boolean => {
          src.startsWith('https://') ||
          src.startsWith('file://')
 }
+
+/**
+ * Formats a date for display
+ * @param date - The date to format
+ * @returns Formatted date string
+ */
+export const formatDate = (date: Date | string): string => {
+  try {
+    const dateObj = typeof date === 'string' ? new Date(date) : date
+    if (isNaN(dateObj.getTime())) {
+      return 'Unknown'
+    }
+    return new Intl.DateTimeFormat('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).format(dateObj)
+  } catch (error) {
+    return 'Unknown'
+  }
+}

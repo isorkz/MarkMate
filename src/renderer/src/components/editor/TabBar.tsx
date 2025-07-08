@@ -2,6 +2,7 @@ import React from 'react'
 import { X } from 'lucide-react'
 import { useEditorStore } from '../../stores/editorStore'
 import { useSettingsStore } from '../../stores/settingsStore'
+import { formatDate } from '../../../../shared/commonUtils'
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
 import { SortableContext, sortableKeyboardCoordinates, horizontalListSortingStrategy } from '@dnd-kit/sortable'
 import { useSortable } from '@dnd-kit/sortable'
@@ -71,6 +72,8 @@ const Tab: React.FC<TabProps> = ({ tab, isActive, onClose, onSelect, onPin }) =>
 const TabBar: React.FC = () => {
   const { tabs, activeTabId, setActiveTab, closeTab, reorderTabs, pinTab } = useEditorStore()
   const { settings } = useSettingsStore()
+  
+  const activeTab = tabs.find(tab => tab.id === activeTabId)
 
   const handleCloseTab = (tabId: string) => {
     const tab = tabs.find(t => t.id === tabId)
@@ -108,28 +111,42 @@ const TabBar: React.FC = () => {
 
   return (
     <div
-      className={`flex bg-gray-50 border-b border-gray-200 overflow-x-auto min-h-[40px] ${!settings.sidebarVisible ? 'ml-32' : ''}`}
+      className={`flex bg-gray-50 border-b border-gray-200 min-h-[40px] ${!settings.sidebarVisible ? 'ml-32' : ''}`}
       style={{ WebkitAppRegion: 'drag' }}
     >
       {tabs.length > 0 ? (
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={handleDragEnd}
-        >
-          <SortableContext items={tabs.map(tab => tab.id)} strategy={horizontalListSortingStrategy}>
-            {tabs.map(tab => (
-              <Tab
-                key={tab.id}
-                tab={tab}
-                isActive={tab.id === activeTabId}
-                onClose={handleCloseTab}
-                onSelect={setActiveTab}
-                onPin={pinTab}
-              />
-            ))}
-          </SortableContext>
-        </DndContext>
+        <>
+          <div className="flex flex-1 overflow-x-auto">
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext items={tabs.map(tab => tab.id)} strategy={horizontalListSortingStrategy}>
+                {tabs.map(tab => (
+                  <Tab
+                    key={tab.id}
+                    tab={tab}
+                    isActive={tab.id === activeTabId}
+                    onClose={handleCloseTab}
+                    onSelect={setActiveTab}
+                    onPin={pinTab}
+                  />
+                ))}
+              </SortableContext>
+            </DndContext>
+          </div>
+          
+          {/* Right side info - fixed width */}
+          {activeTab && (
+            <div 
+              className="flex items-center px-4 text-xs text-gray-500 border-l border-gray-200 whitespace-nowrap flex-shrink-0"
+              style={{ WebkitAppRegion: 'no-drag', minWidth: '150px' }}
+            >
+              Modified {formatDate(activeTab.lastModified)}
+            </div>
+          )}
+        </>
       ) : (
         <div className="flex-1" />
       )}

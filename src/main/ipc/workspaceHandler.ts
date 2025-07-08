@@ -42,11 +42,11 @@ export function setupWorkspaceHandlers() {
           const itemRelativePath = path.join(relativePath, item.name)
           
           // Skip hidden files and node_modules
-          if (item.name.startsWith('.') || item.name === 'node_modules') {
+          if (item.name.startsWith('.')) {
             continue
           }
           
-          const stats = await fs.stat(itemPath)
+          // const stats = await fs.stat(itemPath)
           
           if (item.isDirectory()) {
             const childNodes = await buildFileTree(itemPath, itemRelativePath)
@@ -56,7 +56,7 @@ export function setupWorkspaceHandlers() {
               path: itemRelativePath,
               type: 'folder',
               children: childNodes,
-              lastModified: stats.mtime,
+              // lastModified: stats.mtime,
               isExpanded: false
             })
           } else if (item.name.endsWith('.md')) {
@@ -65,7 +65,7 @@ export function setupWorkspaceHandlers() {
               name: item.name,
               path: itemRelativePath,
               type: 'file',
-              lastModified: stats.mtime,
+              // lastModified: stats.mtime,
             })
           }
         }

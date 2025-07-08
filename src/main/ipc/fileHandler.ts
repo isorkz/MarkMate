@@ -15,6 +15,18 @@ export function setupFileHandlers() {
       throw error
     }
   })
+
+  // Get file last modified time
+  ipcMain.handle('file:get-last-modified-time', async (_, workspacePath: string, filePath: string) => {
+    try {
+      const fullPath = path.join(workspacePath, filePath)
+      const stats = await fs.stat(fullPath)
+      return stats.mtime
+    } catch (error) {
+      console.error('Error getting file last modified time:', error)
+      throw error
+    }
+  })
   
   // Write file content
   ipcMain.handle('file:write', async (_, workspacePath: string, filePath: string, content: string) => {
