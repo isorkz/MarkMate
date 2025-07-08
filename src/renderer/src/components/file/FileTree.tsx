@@ -11,7 +11,7 @@ import toast from 'react-hot-toast'
 const FileTree: React.FC = () => {
   const { fileTree, expandedFolders, toggleFolder, setFileTree } = useFileSystemStore()
   const { currentWorkspace, isFavorite, toggleFavorite } = useWorkspaceStore()
-  const { openFile, tabs, activeTabId, setActiveTab, closeTab } = useEditorStore()
+  const { openFile, tabs, activeTabId, setActiveTab, closeTab, pinTab } = useEditorStore()
   const [contextMenu, setContextMenu] = useState<{
     node: FileNode
     position: { x: number; y: number }
@@ -42,14 +42,34 @@ const FileTree: React.FC = () => {
         // File is already open, just switch to that tab
         setActiveTab(existingTab.id)
       } else {
-        // File is not open, read content and open it
+        // File is not open, read content and open it in preview mode
         if (currentWorkspace) {
           try {
             const content = await window.electron.ipcRenderer.invoke('file:read', currentWorkspace.path, node.path)
-            openFile(node.path, content)
+            openFile(node.path, content, false) // false = preview mode (not pinned)
           } catch (error) {
             console.error('Failed to open file:', error)
           }
+        }
+      }
+    }
+  }
+
+  const handleNodeDoubleClick = async (node: any, isFolder: boolean) => {
+    if (!isFolder && currentWorkspace) {
+      // Check if file is already open first
+      const existingTab = tabs.find(tab => tab.filePath === node.path)
+      if (existingTab) {
+        // File is already open, just switch to that tab
+        setActiveTab(existingTab.id)
+        pinTab(existingTab.id)   // Pin the tab on double-click
+      } else {
+        // File is not open, read content and open it in preview mode
+        try {
+          const content = await window.electron.ipcRenderer.invoke('file:read', currentWorkspace.path, node.path)
+          openFile(node.path, content, true) // true = pinned tab
+        } catch (error) {
+          console.error('Failed to open file:', error)
         }
       }
     }
@@ -112,7 +132,7 @@ const FileTree: React.FC = () => {
 
     try {
       const content = await window.electron.ipcRenderer.invoke('file:read', currentWorkspace.path, filePath)
-      openFile(filePath, content)
+      openFile(filePath, content, true) // true = pinned tab
     } catch (error) {
       console.error('Failed to open file:', error)
       toast.error('Failed to open file')
@@ -168,6 +188,7 @@ const FileTree: React.FC = () => {
               hasOpenFile ? 'text-blue-600' : 'text-gray-700'}
           `}
           onClick={() => handleNodeClick(node, isFolder)}
+          onDoubleClick={() => handleNodeDoubleClick(node, isFolder)}
           onContextMenu={(e) => handleContextMenu(e, node)}
         >
           <div

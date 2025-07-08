@@ -9,6 +9,7 @@ export interface Tab {
   content: string;
   hasUnsavedChanges: boolean;
   lastModified: Date;
+  isPinned?: boolean;
 }
 
 interface EditorStore {
@@ -19,9 +20,10 @@ interface EditorStore {
   syncSroll: boolean;
   
   // Actions
-  openFile: (filePath: string, content: string) => void;
+  openFile: (filePath: string, content: string, isPinned?: boolean) => void;
   closeTab: (tabId: string) => void;
   setActiveTab: (tabId: string) => void;
+  pinTab: (tabId) => void;
   updateTabContent: (tabId: string, content: string) => void;
   markTabDirty: (tabId: string, hasUnsavedChanges: boolean) => void;
   reorderTabs: (dragIndex: number, hoverIndex: number) => void;
@@ -39,11 +41,20 @@ export const useEditorStore = create<EditorStore>()(
       showSourceEditor: false,
       syncSroll: true,
       
-      openFile: (filePath, content) => {
+      openFile: (filePath, content, isPinned = false) => {
         const existingTab = get().tabs.find(tab => tab.filePath === filePath);
         if (existingTab) {
           set({ activeTabId: existingTab.id });
           return;
+        }
+        
+        // If opening in preview mode, close existing unpinned tab first
+        if (!isPinned) {
+          const tabs = get().tabs;
+          const unpinnedTab = tabs.find(tab => !tab.isPinned);
+          if (unpinnedTab) {
+            get().closeTab(unpinnedTab.id);
+          }
         }
         
         const newTab: Tab = {
@@ -52,7 +63,8 @@ export const useEditorStore = create<EditorStore>()(
           title: filePath.split('/').pop() || 'Untitled',
           content,
           hasUnsavedChanges: false,
-          lastModified: new Date()
+          lastModified: new Date(),
+          isPinned
         };
         
         set(state => ({
@@ -76,11 +88,18 @@ export const useEditorStore = create<EditorStore>()(
       setActiveTab: (tabId) => 
         set({ activeTabId: tabId }),
       
+      pinTab: (tabId) => 
+        set(state => ({
+          tabs: state.tabs.map(tab => 
+            tab.id === tabId ? { ...tab, isPinned: true } : tab
+          )
+        })),
+      
       updateTabContent: (tabId, content) => 
         set(state => ({
           tabs: state.tabs.map(tab => 
             tab.id === tabId 
-              ? { ...tab, content, hasUnsavedChanges: true, lastModified: new Date() }
+              ? { ...tab, content, hasUnsavedChanges: true, lastModified: new Date(), isPinned: true }
               : tab
           )
         })),

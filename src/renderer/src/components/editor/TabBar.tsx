@@ -11,13 +11,15 @@ interface TabProps {
     id: string
     title: string
     hasUnsavedChanges: boolean
+    isPinned?: boolean
   }
   isActive: boolean
   onClose: (id: string) => void
   onSelect: (id: string) => void
+  onPin: (id: string) => void
 }
 
-const Tab: React.FC<TabProps> = ({ tab, isActive, onClose, onSelect }) => {
+const Tab: React.FC<TabProps> = ({ tab, isActive, onClose, onSelect, onPin }) => {
   const {
     attributes,
     listeners,
@@ -44,8 +46,9 @@ const Tab: React.FC<TabProps> = ({ tab, isActive, onClose, onSelect }) => {
             ${isActive ? 'bg-white border-b-2 border-b-blue-500' : 'hover:bg-gray-100'}
       `}
       onClick={() => onSelect(tab.id)}
+      onDoubleClick={() => onPin(tab.id)}
     >
-      <span className="text-sm truncate max-w-32">
+      <span className={`text-sm truncate max-w-32 ${!tab.isPinned ? 'italic' : ''}`}>
         {tab.title}
       </span>
       {tab.hasUnsavedChanges && (
@@ -65,7 +68,7 @@ const Tab: React.FC<TabProps> = ({ tab, isActive, onClose, onSelect }) => {
 }
 
 const TabBar: React.FC = () => {
-  const { tabs, activeTabId, setActiveTab, closeTab, reorderTabs } = useEditorStore()
+  const { tabs, activeTabId, setActiveTab, closeTab, reorderTabs, pinTab } = useEditorStore()
 
   const handleCloseTab = (tabId: string) => {
     const tab = tabs.find(t => t.id === tabId)
@@ -120,6 +123,7 @@ const TabBar: React.FC = () => {
               isActive={tab.id === activeTabId}
               onClose={handleCloseTab}
               onSelect={setActiveTab}
+              onPin={pinTab}
             />
           ))}
         </SortableContext>
