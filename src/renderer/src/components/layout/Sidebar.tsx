@@ -43,7 +43,7 @@ const Sidebar: React.FC = () => {
 
       {currentWorkspace && (
         <>
-          <div className="p-4">
+          <div className="p-4 relative">
             <FileSearch />
           </div>
 

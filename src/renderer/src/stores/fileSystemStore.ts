@@ -1,14 +1,6 @@
 import { create } from 'zustand'
 import { useFilePathEventStore } from './events/filePathEventStore'
-
-interface FileNode {
-  id: string;
-  name: string;
-  path: string;
-  type: 'file' | 'folder';
-  children?: FileNode[];
-  // lastModified: Date;
-}
+import { FileNode } from '../types'
 
 interface FileSystemStore {
   fileTree: FileNode[];

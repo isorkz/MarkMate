@@ -1,12 +1,12 @@
 import React, { useState } from 'react'
+import toast from 'react-hot-toast'
+import { Folder, FolderOpen, File, ChevronRight, ChevronDown, Star } from 'lucide-react'
 import { useFileSystemStore } from '../../stores/fileSystemStore'
 import { useWorkspaceStore } from '../../stores/workspaceStore'
 import { useEditorStore } from '../../stores/editorStore'
-import { Folder, FolderOpen, File, ChevronRight, ChevronDown, Star } from 'lucide-react'
 import FileContextMenu, { FileNode } from './FileContextMenu'
 import InlineInput from './InlineInput'
-import { handleNewFile, handleNewFolder, handleRename, handleDelete, loadFileTree } from '../../utils/fileOperations'
-import toast from 'react-hot-toast'
+import { handleNewFile, handleNewFolder, handleRename, handleDelete, loadFileTree, handleOpenFile } from '../../utils/fileOperations'
 
 const FileTree: React.FC = () => {
   const { fileTree, expandedFolders, toggleFolder, setFileTree } = useFileSystemStore()
@@ -44,15 +44,7 @@ const FileTree: React.FC = () => {
       } else {
         // File is not open, read content and open it in preview mode
         if (currentWorkspace) {
-          try {
-            const [content, lastModified] = await Promise.all([
-              window.electron.ipcRenderer.invoke('file:read', currentWorkspace.path, node.path),
-              window.electron.ipcRenderer.invoke('file:get-last-modified-time', currentWorkspace.path, node.path)
-            ])
-            openFile(node.path, content, false, new Date(lastModified)) // false = preview mode (not pinned)
-          } catch (error) {
-            console.error('Failed to open file:', error)
-          }
+          handleOpenFile(currentWorkspace.path, node.path, false, openFile) // false = preview mode (not pinned)
         }
       }
     }
@@ -67,16 +59,8 @@ const FileTree: React.FC = () => {
         setActiveTab(existingTab.id)
         pinTab(existingTab.id)   // Pin the tab on double-click
       } else {
-        // File is not open, read content and open it in preview mode
-        try {
-          const [content, lastModified] = await Promise.all([
-            window.electron.ipcRenderer.invoke('file:read', currentWorkspace.path, node.path),
-            window.electron.ipcRenderer.invoke('file:get-last-modified-time', currentWorkspace.path, node.path)
-          ])
-          openFile(node.path, content, true, new Date(lastModified)) // true = pinned tab
-        } catch (error) {
-          console.error('Failed to open file:', error)
-        }
+        // File is not open, read content and open it in pinned mode
+        handleOpenFile(currentWorkspace.path, node.path, true, openFile) // true = pinned tab
       }
     }
   }
@@ -117,7 +101,7 @@ const FileTree: React.FC = () => {
     if (!currentWorkspace || !editingMode || !value.trim()) return
 
     if (editingMode.mode === 'rename') {
-      await handleRename(currentWorkspace.path, editingMode.path, editingMode.initialValue || '', value, setFileTree)
+      await handleRename(currentWorkspace.path, editingMode.path, editingMode.initialValue || '', value)
     } else {
       if (editingMode.mode === 'new-file') {
         await handleNewFile(currentWorkspace.path, editingMode.path, value, setFileTree)
@@ -135,17 +119,7 @@ const FileTree: React.FC = () => {
 
   const onOpenInNewTab = async (filePath: string) => {
     if (!currentWorkspace) return
-
-    try {
-      const [content, lastModified] = await Promise.all([
-        window.electron.ipcRenderer.invoke('file:read', currentWorkspace.path, filePath),
-        window.electron.ipcRenderer.invoke('file:get-last-modified-time', currentWorkspace.path, filePath)
-      ])
-      openFile(filePath, content, true, new Date(lastModified)) // true = pinned tab
-    } catch (error) {
-      console.error('Failed to open file:', error)
-      toast.error('Failed to open file')
-    }
+    handleOpenFile(currentWorkspace.path, filePath, true, openFile) // true = pinned tab
   }
 
   const onRename = (path: string, currentName: string) => {
@@ -165,7 +139,7 @@ const FileTree: React.FC = () => {
       closeTab(tab.id)
     })
 
-    await handleDelete(currentWorkspace.path, filePath, setFileTree)
+    await handleDelete(currentWorkspace.path, filePath)
   }
 
   // Load file tree for current workspace on startup

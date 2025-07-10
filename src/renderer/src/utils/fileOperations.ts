@@ -11,6 +11,19 @@ export const loadFileTree = async (workspacePath: string, setFileTree: (tree: an
   }
 }
 
+export const handleOpenFile = async (workspacePath: string, filePath: string, pinned: boolean, openFile: (path: string, content: string, pinned: boolean, lastModified?: Date) => void) => {
+  try {
+      const [content, lastModified] = await Promise.all([
+        window.electron.ipcRenderer.invoke('file:read', workspacePath, filePath),
+        window.electron.ipcRenderer.invoke('file:get-last-modified-time', workspacePath, filePath)
+      ])
+      openFile(filePath, content, pinned, new Date(lastModified))
+    } catch (error) {
+      console.error('Failed to open file:', error)
+      toast.error('Failed to open file: ' + error)
+    }
+}
+
 export const handleNewFile = async (workspacePath: string, parentPath: string, fileName: string, setFileTree: (tree: any) => void) => {
   let mdFileName = fileName.trim()
   // Auto-add .md extension for new files if not present
@@ -43,7 +56,7 @@ export const handleNewFolder = async (workspacePath: string, parentPath: string,
   }
 }
 
-export const handleRename = async (workspacePath: string, oldPath: string, oldName: string, newName: string, setFileTree: (tree: any) => void) => {
+export const handleRename = async (workspacePath: string, oldPath: string, oldName: string, newName: string) => {
   const pathParts = oldPath.split('/')
   let isMdFile = oldName.endsWith('.md')
   let newFinalName = newName.trim()
@@ -69,7 +82,7 @@ export const handleRename = async (workspacePath: string, oldPath: string, oldNa
   }
 }
 
-export const handleDelete = async (workspacePath: string, filePath: string, setFileTree: (tree: any) => void) => {
+export const handleDelete = async (workspacePath: string, filePath: string) => {
   try {
     await window.electron.ipcRenderer.invoke('file:delete', workspacePath, filePath)
     
