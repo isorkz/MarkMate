@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { useWorkspaceStore } from '../../stores/workspaceStore'
 import { useEditorStore } from '../../stores/editorStore'
 import { useSettingsStore } from '../../stores/settingsStore'
@@ -7,11 +7,13 @@ import MainContent from './MainContent'
 import TOCPanel from '../editor/TOCPanel'
 import WorkspaceOpener from '../workspace/WorkspaceOpener'
 import LeftSideTopBar from './LeftSideTopBar'
+import FullSearch from '../search/FullSearch'
 
 const AppLayout: React.FC = () => {
   const { currentWorkspace } = useWorkspaceStore()
   const { toggleTOC, toggleSourceEditor, showTOC } = useEditorStore()
   const { updateSettings, settings } = useSettingsStore()
+  const [isFullSearchOpen, setIsFullSearchOpen] = useState(false)
 
   const toggleSidebar = () => {
     updateSettings('sidebarVisible', !settings.sidebarVisible)
@@ -22,6 +24,10 @@ const AppLayout: React.FC = () => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.ctrlKey || e.metaKey) {
         switch (e.key) {
+          case 'p':
+            e.preventDefault()
+            setIsFullSearchOpen(true)
+            break
           case '/':
             e.preventDefault()
             toggleSourceEditor()
@@ -68,6 +74,11 @@ const AppLayout: React.FC = () => {
           {/* <TOCPanel /> */}
         </div>
       )}
+
+      <FullSearch 
+        isOpen={isFullSearchOpen} 
+        onClose={() => setIsFullSearchOpen(false)} 
+      />
     </div>
   )
 }
