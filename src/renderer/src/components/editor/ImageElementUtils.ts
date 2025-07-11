@@ -2,7 +2,6 @@ import { Editor } from '@tiptap/react'
 import toast from 'react-hot-toast'
 import { isImagePathResolved } from '../../../../shared/commonUtils'
 
-
 export class ImageElementUtils {
   static IS_SRC_RESOLVED_ATTR = 'is-src-resolved'
   static ORIGINAL_SRC_ATTR = 'original-src'

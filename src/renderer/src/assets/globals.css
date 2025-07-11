@@ -288,6 +288,15 @@
     @apply bg-blue-200;
   }
 
+  /* Search Results Highlighting */
+  .RichEditorView .search-result {
+    @apply bg-yellow-300 rounded
+  }
+
+  .RichEditorView .search-result-current {
+    @apply bg-orange-400 rounded
+  }
+
   /* Dark theme */
   .prose-invert .RichEditorView {
     color: rgba(255, 255, 255, 0.9);

@@ -15,9 +15,12 @@ import toast from 'react-hot-toast'
 import { useEditorStore, Tab } from '../../stores/editorStore'
 import { useSettingsStore } from '../../stores/settingsStore'
 import { useWorkspaceStore } from '../../stores/workspaceStore'
+import { useRichEditorSearch } from '../../hooks/useRichEditorSearch'
 import CodeBlock from './CodeBlock'
 import { ImageElementUtils } from './ImageElementUtils'
-
+import RichEditorSearch from '../search/RichEditorSearch'
+// https://github.com/sereneinserenade/tiptap-search-and-replace
+import SearchAndReplace from '../search/SearchAndReplace'
 // load all languages with "all" or common languages with "common"
 import { common, createLowlight } from 'lowlight'
 
@@ -72,6 +75,9 @@ const RichEditor: React.FC<RichEditorProps> = ({ tab }) => {
       TaskList,
       TaskItem.configure({
         nested: true,
+      }),
+      SearchAndReplace.configure({
+        disableRegex: false,
       }),
     ],
     content: tab?.content || '',
@@ -146,6 +152,19 @@ const RichEditor: React.FC<RichEditorProps> = ({ tab }) => {
     }
   }, [editor, currentWorkspace, tab, tab?.content])
 
+  // Search functionality
+  const {
+    showSearch,
+    searchTerm,
+    currentMatchIndex,
+    totalMatches,
+    searchInputRef,
+    nextMatch,
+    prevMatch,
+    closeSearch,
+    setSearchTerm
+  } = useRichEditorSearch(editor)
+
   if (!tab) {
     return (
       <div className="h-full flex items-center justify-center text-gray-500">No file selected</div>
@@ -154,8 +173,24 @@ const RichEditor: React.FC<RichEditorProps> = ({ tab }) => {
 
   return (
     <div
-      className={`h-full flex flex-col ${settings.theme === 'dark' ? 'bg-gray-900' : 'bg-white'}`}
+      className={`h-full flex flex-col relative ${settings.theme === 'dark' ? 'bg-gray-900' : 'bg-white'}`}
     >
+      {/* Search Component */}
+      {showSearch && (
+        <RichEditorSearch
+          searchTerm={searchTerm}
+          currentMatchIndex={currentMatchIndex}
+          totalMatches={totalMatches}
+          onSearchChange={(term) => {
+            setSearchTerm(term)
+          }}
+          onNextMatch={nextMatch}
+          onPrevMatch={prevMatch}
+          onClose={closeSearch}
+          searchInputRef={searchInputRef}
+        />
+      )}
+
       <div className="flex-1 overflow-y-auto">
         <div className="max-w-4xl mx-auto">
           <EditorContent
