@@ -167,8 +167,7 @@ const FileTree: React.FC = () => {
         <div
           className={`
             flex items-center px-2 py-1.5 text-sm cursor-pointer rounded-md transition-colors hover:bg-gray-100
-            ${isActiveTab || hasActiveTab ? 'text-orange-600' :
-              hasOpenFile ? 'text-blue-600' : 'text-gray-700'}
+            ${isActiveTab || hasActiveTab ? 'text-blue-500' : 'text-gray-700'}
           `}
           onClick={() => handleNodeClick(node, isFolder)}
           onDoubleClick={() => handleNodeDoubleClick(node, isFolder)}
