@@ -72,7 +72,7 @@ const Tab: React.FC<TabProps> = ({ tab, isActive, onClose, onSelect, onPin }) =>
 const TabBar: React.FC = () => {
   const { tabs, activeTabId, setActiveTab, closeTab, reorderTabs, pinTab } = useEditorStore()
   const { settings } = useSettingsStore()
-  
+
   const activeTab = tabs.find(tab => tab.id === activeTabId)
 
   const handleCloseTab = (tabId: string) => {
@@ -136,12 +136,12 @@ const TabBar: React.FC = () => {
               </SortableContext>
             </DndContext>
           </div>
-          
+
           {/* Right side info - fixed width */}
           {activeTab && (
-            <div 
+            <div
               className="flex items-center px-4 text-xs text-gray-500 border-l border-gray-200 whitespace-nowrap flex-shrink-0"
-              style={{ WebkitAppRegion: 'no-drag', minWidth: '150px' }}
+              style={{ WebkitAppRegion: 'drag', minWidth: '150px' }}
             >
               Modified {formatDate(activeTab.lastModified)}
             </div>

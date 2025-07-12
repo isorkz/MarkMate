@@ -64,20 +64,20 @@ const AppLayout: React.FC = () => {
   return (
     <div className="h-screen flex bg-white overflow-x-hidden relative">
       <LeftSideTopBar />
-      
+
       {settings.sidebarVisible && <Sidebar />}
 
       <MainContent />
 
       {showTOC && (
         <div className="w-64 border-l border-gray-200">
-          {/* <TOCPanel /> */}
+          <TOCPanel />
         </div>
       )}
 
-      <FullSearch 
-        isOpen={isFullSearchOpen} 
-        onClose={() => setIsFullSearchOpen(false)} 
+      <FullSearch
+        isOpen={isFullSearchOpen}
+        onClose={() => setIsFullSearchOpen(false)}
       />
     </div>
   )

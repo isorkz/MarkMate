@@ -10,7 +10,7 @@ const LeftSideTopBar: React.FC = () => {
   }
 
   return (
-    <div className="fixed w-32 top-0 left-0 right-0 h-10 z-50 flex items-center" style={{ WebkitAppRegion: 'drag' }}>
+    <div className="fixed w-64 top-0 left-0 right-0 h-10 z-50 flex items-center" style={{ WebkitAppRegion: 'drag' }}>
       {/* Sidebar toggle button - positioned after macOS traffic lights */}
       <button
         onClick={toggleSidebar}

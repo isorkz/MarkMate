@@ -23,13 +23,8 @@ const TOCPanel: React.FC = () => {
         const text = heading.textContent || ''
         const id = `heading-${index}`
 
-        // Add id to heading if it doesn't have one
-        if (!heading.id) {
-          heading.id = id
-        }
-
         return {
-          id: heading.id,
+          id: id,
           level,
           text,
           element: heading as HTMLElement
@@ -41,20 +36,6 @@ const TOCPanel: React.FC = () => {
 
     // Update TOC when content changes
     updateTOC()
-
-    // Create observer to watch for content changes
-    const observer = new MutationObserver(updateTOC)
-    const proseMirror = document.querySelector('.ProseMirror')
-
-    if (proseMirror) {
-      observer.observe(proseMirror, {
-        childList: true,
-        subtree: true,
-        characterData: true
-      })
-    }
-
-    return () => observer.disconnect()
   }, [activeTab?.content])
 
   const scrollToHeading = (item: TOCItem) => {
@@ -75,12 +56,12 @@ const TOCPanel: React.FC = () => {
   }
 
   return (
-    <div className="h-full flex flex-col bg-gray-50 p-4">
-      <h3 className="text-sm font-semibold text-gray-700 mb-4">
+    <div className="h-full flex flex-col bg-gray-50 px-4 pb-4" >
+      <h3 className="text-sm font-semibold text-gray-700 py-4" style={{ WebkitAppRegion: 'drag' }}>
         Table of Contents
       </h3>
 
-      <div className="flex-1 overflow-y-auto p-3">
+      <div className="flex-1 overflow-y-auto">
         {tocItems.length === 0 ? (
           <div className="text-gray-500 text-sm text-center py-4">
             No headings found
@@ -91,12 +72,11 @@ const TOCPanel: React.FC = () => {
               <li key={item.id}>
                 <button
                   onClick={() => scrollToHeading(item)}
-                  className={`
-                    w-full text-left text-sm hover:bg-blue-100 hover:text-blue-700 rounded px-2 py-1 transition-colors
+                  className={`w-full text-left text-sm hover:bg-gray-100 rounded px-2 py-1 transition-colors
                     ${item.level === 1 ? 'font-semibold text-gray-900' : ''}
-                    ${item.level === 2 ? 'font-medium text-gray-800 ml-2' : ''}
-                    ${item.level === 3 ? 'text-gray-700 ml-4' : ''}
-                    ${item.level >= 4 ? 'text-gray-600 ml-6' : ''}
+                    ${item.level === 2 ? 'font-medium text-gray-800 ml-4' : ''}
+                    ${item.level === 3 ? 'text-gray-700 ml-8' : ''}
+                    ${item.level >= 4 ? 'text-gray-600 ml-12' : ''}
                   `}
                   title={item.text}
                 >
