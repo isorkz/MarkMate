@@ -4,7 +4,7 @@ import { useEditorStore } from '../../stores/editorStore'
 import { useSettingsStore } from '../../stores/settingsStore'
 import Sidebar from './Sidebar'
 import MainContent from './MainContent'
-import TOCPanel from '../editor/TOCPanel'
+// import TOCPanel from '../editor/TOCPanel'
 import WorkspaceOpener from '../workspace/WorkspaceOpener'
 import LeftSideTopBar from './LeftSideTopBar'
 import FullSearch from '../search/FullSearch'
@@ -69,11 +69,11 @@ const AppLayout: React.FC = () => {
 
       <MainContent />
 
-      {showTOC && (
-        <div className="w-64 border-l border-gray-200">
+      {/* {showTOC && (
+        <div className="w-sidebar border-l border-gray-200">
           <TOCPanel />
         </div>
-      )}
+      )} */}
 
       <FullSearch
         isOpen={isFullSearchOpen}

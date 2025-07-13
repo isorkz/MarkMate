@@ -148,8 +148,8 @@ const TabBar: React.FC = () => {
           {/* Right side info - fixed width */}
           {activeTab && (
             <div
-              className="flex items-center px-4 text-xs text-gray-500 border-l border-gray-200 whitespace-nowrap flex-shrink-0"
-              style={{ WebkitAppRegion: 'drag', minWidth: '200px' }}
+              className="flex w-sidebar items-center px-4 text-xs text-gray-500 border-l border-gray-200 whitespace-nowrap flex-shrink-0"
+              style={{ WebkitAppRegion: 'drag' }}
             >
               <span className="mr-3">Modified {formatDate(activeTab.lastModified)}</span>
 

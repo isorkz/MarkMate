@@ -4,13 +4,14 @@ import { useSettingsStore } from '../../stores/settingsStore'
 import { useAutoSave, useManualSave } from '../../hooks'
 import SourceEditor from './SourceEditor'
 import RichEditor from './RichEditor'
+import TOCPanel from '../editor/TOCPanel'
 
 interface EditorProps {
   tab: Tab
 }
 
 const Editor: React.FC<EditorProps> = ({ tab }) => {
-  const { showSourceEditor } = useEditorStore()
+  const { showSourceEditor, showTOC } = useEditorStore()
   const { settings } = useSettingsStore()
 
   // Use auto-save hook with settings
@@ -33,6 +34,12 @@ const Editor: React.FC<EditorProps> = ({ tab }) => {
       <div className="flex-1 min-w-0">
         <RichEditor tab={tab} />
       </div>
+
+      {showTOC && (
+        <div className="w-sidebar border-l border-gray-200">
+          <TOCPanel />
+        </div>
+      )}
     </div>
   )
 }

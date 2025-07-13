@@ -19,6 +19,11 @@
 
 @layer components {
 
+  /* Layout utilities */
+  .w-sidebar {
+    @apply w-72
+  }
+
   /* Rich Editor Markdown Styling */
   .RichEditorView {
     @apply outline-none;
