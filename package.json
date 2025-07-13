@@ -38,6 +38,7 @@
     "@tiptap/extension-table-row": "^2.24.2",
     "@tiptap/extension-task-item": "^2.24.2",
     "@tiptap/extension-task-list": "^2.24.2",
+    "@tiptap/extension-typography": "^2.24.2",
     "@tiptap/react": "^2.24.2",
     "@tiptap/starter-kit": "^2.24.2",
     "@uiw/react-codemirror": "^4.24.0",

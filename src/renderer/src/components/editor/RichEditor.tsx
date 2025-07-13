@@ -11,6 +11,7 @@ import Image from '@tiptap/extension-image'
 import TaskList from '@tiptap/extension-task-list'
 import TaskItem from '@tiptap/extension-task-item'
 import { Markdown } from 'tiptap-markdown'
+import Typography from '@tiptap/extension-typography'
 import toast from 'react-hot-toast'
 import { useEditorStore, Tab } from '../../stores/editorStore'
 import { useSettingsStore } from '../../stores/settingsStore'
@@ -79,6 +80,7 @@ const RichEditor: React.FC<RichEditorProps> = ({ tab }) => {
       SearchAndReplace.configure({
         disableRegex: false,
       }),
+      Typography,
     ],
     content: tab?.content || '',
     onUpdate: ({ editor }) => {
