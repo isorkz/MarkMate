@@ -12,6 +12,7 @@ import TaskList from '@tiptap/extension-task-list'
 import TaskItem from '@tiptap/extension-task-item'
 import { Markdown } from 'tiptap-markdown'
 import Typography from '@tiptap/extension-typography'
+import BubbleMenu from '@tiptap/extension-bubble-menu'
 import toast from 'react-hot-toast'
 import { useEditorStore, Tab } from '../../stores/editorStore'
 import { useSettingsStore } from '../../stores/settingsStore'
@@ -20,6 +21,7 @@ import { useRichEditorSearch } from '../../hooks/useRichEditorSearch'
 import CodeBlock from './CodeBlock'
 import { ImageElementUtils } from './ImageElementUtils'
 import RichEditorSearch from '../search/RichEditorSearch'
+import LinkBubbleMenu from './LinkBubbleMenu'
 // https://github.com/sereneinserenade/tiptap-search-and-replace
 import SearchAndReplace from '../search/SearchAndReplace'
 // load all languages with "all" or common languages with "common"
@@ -81,6 +83,7 @@ const RichEditor: React.FC<RichEditorProps> = ({ tab }) => {
         disableRegex: false,
       }),
       Typography,
+      BubbleMenu,
     ],
     content: tab?.content || '',
     onUpdate: ({ editor }) => {
@@ -199,6 +202,8 @@ const RichEditor: React.FC<RichEditorProps> = ({ tab }) => {
             editor={editor}
             className={`min-h-full ${settings.theme === 'dark' ? 'prose-invert' : ''}`}
           />
+
+          {editor && <LinkBubbleMenu editor={editor} />}
         </div>
       </div>
     </div>
