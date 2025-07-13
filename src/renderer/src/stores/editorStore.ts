@@ -2,6 +2,8 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { useFilePathEventStore } from './events/filePathEventStore'
 
+export type SyncStatus = 'synced' | 'out-of-date' | 'syncing' | 'error';
+
 export interface Tab {
   id: string;
   filePath: string;
@@ -10,6 +12,7 @@ export interface Tab {
   hasUnsavedChanges: boolean;
   lastModified: Date;
   isPinned?: boolean;
+  syncStatus: SyncStatus;
 }
 
 interface EditorStore {
@@ -20,12 +23,13 @@ interface EditorStore {
   syncSroll: boolean;
   
   // Actions
-  openFile: (filePath: string, content: string, isPinned?: boolean, lastModified?: Date) => void;
+  openFile: (filePath: string, content: string, isPinned?: boolean, lastModified?: Date, syncStatus?: SyncStatus) => void;
   closeTab: (tabId: string) => void;
   setActiveTab: (tabId: string) => void;
   pinTab: (tabId) => void;
   updateTabContent: (tabId: string, content: string) => void;
   markTabDirty: (tabId: string, hasUnsavedChanges: boolean) => void;
+  updateTabSyncStatus: (tabId: string, syncStatus: SyncStatus) => void;
   reorderTabs: (dragIndex: number, hoverIndex: number) => void;
   saveTabState: (tabId: string, state: Partial<Tab>) => void;
   toggleTOC: () => void;
@@ -41,7 +45,7 @@ export const useEditorStore = create<EditorStore>()(
       showSourceEditor: false,
       syncSroll: true,
       
-      openFile: (filePath, content, isPinned = false, lastModified) => {
+      openFile: (filePath, content, isPinned = false, lastModified, syncStatus = 'out-of-date') => {
         const existingTab = get().tabs.find(tab => tab.filePath === filePath);
         if (existingTab) {
           // Update content if tab has no unsaved changes
@@ -76,7 +80,8 @@ export const useEditorStore = create<EditorStore>()(
           content,
           hasUnsavedChanges: false,
           lastModified: lastModified || new Date(),
-          isPinned
+          isPinned,
+          syncStatus
         };
         
         set(state => ({
@@ -111,7 +116,7 @@ export const useEditorStore = create<EditorStore>()(
         set(state => ({
           tabs: state.tabs.map(tab => 
             tab.id === tabId 
-              ? { ...tab, content, hasUnsavedChanges: true, lastModified: new Date(), isPinned: true }
+              ? { ...tab, content, hasUnsavedChanges: true, lastModified: new Date(), isPinned: true, syncStatus: 'out-of-date' }
               : tab
           )
         })),
@@ -120,6 +125,13 @@ export const useEditorStore = create<EditorStore>()(
         set(state => ({
           tabs: state.tabs.map(tab => 
             tab.id === tabId ? { ...tab, hasUnsavedChanges } : tab
+          )
+        })),
+      
+      updateTabSyncStatus: (tabId, syncStatus) => 
+        set(state => ({
+          tabs: state.tabs.map(tab => 
+            tab.id === tabId ? { ...tab, syncStatus } : tab
           )
         })),
       
@@ -188,7 +200,7 @@ useFilePathEventStore.subscribe((state) => {
   const pathDelete = state.lastPathDelete
   if (pathDelete) {
     const { path } = pathDelete
-    const { tabs, activeTabId } = useEditorStore.getState()
+    const { tabs } = useEditorStore.getState()
     
     // Find tabs that need to be closed
     const tabsToClose = tabs.filter(tab => 

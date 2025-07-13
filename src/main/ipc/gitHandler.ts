@@ -24,14 +24,14 @@ export function setupGitHandlers() {
     }
   })
 
-  // Commit file changes
-  ipcMain.handle('git:commit', async (_, workspacePath: string, filePath: string, commitMessage: string) => {
+  // Commit all changes
+  ipcMain.handle('git:commit', async (_, workspacePath: string, commitMessage: string) => {
     try {
       const git = simpleGit(workspacePath)
-      await git.add(filePath)
+      await git.add('.')  // Add all changes
       await git.commit(commitMessage)
     } catch (error) {
-      console.error('Failed to commit file:', error)
+      console.error('Failed to commit changes:', error)
       throw error
     }
   })

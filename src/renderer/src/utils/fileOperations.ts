@@ -1,5 +1,6 @@
 import toast from 'react-hot-toast'
 import { useFilePathEventStore } from '../stores/events/filePathEventStore'
+import { SyncStatus } from '@renderer/stores/editorStore'
 
 export const loadFileTree = async (workspacePath: string, setFileTree: (tree: any) => void) => {
   try{
@@ -11,13 +12,24 @@ export const loadFileTree = async (workspacePath: string, setFileTree: (tree: an
   }
 }
 
-export const handleOpenFile = async (workspacePath: string, filePath: string, pinned: boolean, openFile: (path: string, content: string, pinned: boolean, lastModified?: Date) => void) => {
+export const handleOpenFile = async (workspacePath: string, filePath: string, pinned: boolean, openFile: (path: string, content: string, pinned: boolean, lastModified?: Date, syncStatus?: SyncStatus) => void) => {
   try {
       const [content, lastModified] = await Promise.all([
         window.electron.ipcRenderer.invoke('file:read', workspacePath, filePath),
         window.electron.ipcRenderer.invoke('file:get-last-modified-time', workspacePath, filePath)
       ])
-      openFile(filePath, content, pinned, new Date(lastModified))
+      
+      // Check sync status separately
+      let syncStatus: SyncStatus = 'error'
+      try {
+        const statusResult = await window.electron.ipcRenderer.invoke('git:file-status', workspacePath, filePath)
+        syncStatus = statusResult.hasChanges ? 'out-of-date' : 'synced'
+      } catch (syncError) {
+        console.warn('Failed to check sync status:', syncError)
+        syncStatus = 'error'
+      }
+      
+      openFile(filePath, content, pinned, new Date(lastModified), syncStatus)
     } catch (error) {
       console.error('Failed to open file:', error)
       toast.error('Failed to open file: ' + error)

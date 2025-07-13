@@ -1,7 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { useWorkspaceStore } from '../stores/workspaceStore'
-import { Tab } from '../stores/editorStore'
-import type { SyncStatus } from '../components/version/SyncStatusIcon'
+import { useEditorStore } from '../stores/editorStore'
 import { formatDate } from '../../../shared/commonUtils'
 
 interface UseAutoSyncOptions {
@@ -9,74 +8,56 @@ interface UseAutoSyncOptions {
   enabled: boolean
 }
 
-export const useAutoSync = (tab: Tab | null, options: UseAutoSyncOptions) => {
+export const useAutoSync = (options: UseAutoSyncOptions) => {
   const { delayInSeconds, enabled } = options
   const { currentWorkspace } = useWorkspaceStore()
-  const [syncStatus, setSyncStatus] = useState<SyncStatus>('out-of-date')
-  const [lastSyncedContent, setLastSyncedContent] = useState<string>('')
-  const [isInitialized, setIsInitialized] = useState(false)
+  const { tabs, updateTabSyncStatus } = useEditorStore()
 
-  // Initialize sync status by checking Git status
   useEffect(() => {
-    if (!tab || !currentWorkspace || isInitialized) return
+    if (!currentWorkspace || !enabled) {
+      return
+    }
 
-    const initializeSyncStatus = async () => {
-      try {
-        // Check if file has uncommitted changes using git status
-        const statusResult = await window.electron.ipcRenderer.invoke('git:file-status', currentWorkspace.path, tab.filePath)
-        
-        if (statusResult.hasChanges) {
-          // File has uncommitted changes
-          setSyncStatus('out-of-date')
-        } else {
-          // File is in sync with Git
-          setLastSyncedContent(tab.content)
-          setSyncStatus('synced')
+    const syncAllSavedTabs = async () => {
+      // Only sync tabs that have been saved
+      const savedTabs = tabs.filter(tab => !tab.hasUnsavedChanges)
+      
+      // Check each tab's git status and update sync status
+      for (const tab of savedTabs) {
+        try {
+          const statusResult = await window.electron.ipcRenderer.invoke('git:file-status', currentWorkspace.path, tab.filePath)
+          
+          if (statusResult.hasChanges) {
+            updateTabSyncStatus(tab.id, 'out-of-date')
+          } else {
+            updateTabSyncStatus(tab.id, 'synced')
+          }
+        } catch (error) {
+          console.warn('Failed to check git status for', tab.title, error)
+          updateTabSyncStatus(tab.id, 'error')
         }
-      } catch (error) {
-        console.warn('Failed to initialize sync status:', error)
-        setSyncStatus('error')
-      } finally {
-        setIsInitialized(true)
+      }
+
+      // Commit all saved files
+      if (savedTabs.length > 0) {
+        try {
+          // Set all files to syncing status
+          savedTabs.forEach(tab => updateTabSyncStatus(tab.id, 'syncing'))
+          
+          const commitMessage = `Auto-sync at ${formatDate(new Date())}`
+          await window.electron.ipcRenderer.invoke('git:commit', currentWorkspace.path, commitMessage)
+          
+          // Set all files to synced status
+          savedTabs.forEach(tab => updateTabSyncStatus(tab.id, 'synced'))
+        } catch (error) {
+          console.warn('Auto-sync failed:', error)
+          // Set all files to error status
+          savedTabs.forEach(tab => updateTabSyncStatus(tab.id, 'error'))
+        }
       }
     }
 
-    initializeSyncStatus()
-  }, [tab?.filePath, currentWorkspace, isInitialized])
-
-  // Check if content has changed since last sync
-  useEffect(() => {
-    if (!tab || !isInitialized) return
-    
-    if (tab.content.trim() !== '' && tab.content !== lastSyncedContent) {
-      setSyncStatus('out-of-date')
-    }
-  }, [tab?.content, lastSyncedContent, isInitialized])
-
-  useEffect(() => {
-    if (!tab || !currentWorkspace || !enabled) return
-    if (tab.hasUnsavedChanges) return // Wait for auto-save first
-    if (tab.content === lastSyncedContent) return // Already synced
-
-    const syncFile = async () => {
-      try {
-        setSyncStatus('syncing')
-        
-        // Commit the changes to version control
-        const commitMessage = `Auto-sync at ${formatDate(tab.lastModified)}`
-        await window.electron.ipcRenderer.invoke('git:commit', currentWorkspace.path, tab.filePath, commitMessage)
-        
-        setLastSyncedContent(tab.content)
-        setSyncStatus('synced')
-      } catch (error) {
-        console.warn('Auto-sync failed:', error)
-        setSyncStatus('error')
-      }
-    }
-
-    const autoSyncTimer = setTimeout(syncFile, delayInSeconds * 1000)
-    return () => clearTimeout(autoSyncTimer)
-  }, [tab?.content, tab?.hasUnsavedChanges, tab?.id, tab?.filePath, currentWorkspace, delayInSeconds, enabled, lastSyncedContent])
-
-  return { syncStatus }
+    const timer = setInterval(syncAllSavedTabs, delayInSeconds * 1000)
+    return () => clearInterval(timer)
+  }, [tabs, currentWorkspace, delayInSeconds, enabled, updateTabSyncStatus])
 }

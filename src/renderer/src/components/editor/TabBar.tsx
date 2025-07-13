@@ -9,7 +9,6 @@ import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import VersionHistory from '../version/VersionHistory'
 import SyncStatusIcon from '../version/SyncStatusIcon'
-import { useAutoSync } from '../../hooks/useAutoSync'
 
 interface TabProps {
   tab: {
@@ -78,10 +77,6 @@ const TabBar: React.FC = () => {
   const [showVersionHistory, setShowVersionHistory] = useState(false)
 
   const activeTab = tabs.find(tab => tab.id === activeTabId) || null
-  const { syncStatus } = useAutoSync(activeTab, {
-    delayInSeconds: settings.autoSyncDelayInSeconds,
-    enabled: settings.autoSyncEnabled
-  }) // Auto-sync every 60 seconds by default
 
   const handleCloseTab = (tabId: string) => {
     const tab = tabs.find(t => t.id === tabId)
@@ -154,7 +149,7 @@ const TabBar: React.FC = () => {
               <span className="mr-3">Modified {formatDate(activeTab.lastModified)}</span>
 
               <div style={{ WebkitAppRegion: 'no-drag' }}>
-                <SyncStatusIcon status={syncStatus} className="mr-2" />
+                <SyncStatusIcon status={activeTab.syncStatus} className="mr-2" />
               </div>
 
               <button

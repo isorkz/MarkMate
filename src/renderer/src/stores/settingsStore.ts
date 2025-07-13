@@ -26,7 +26,7 @@ const defaultSettings: AppSettings = {
   autoSaveEnabled: true,
   autoSaveDelayInSeconds: 10,
   autoSyncEnabled: true,
-  autoSyncDelayInSeconds: 60
+  autoSyncDelayInSeconds: 300 // 5 minutes
 };
 
 export const useSettingsStore = create<SettingsStore>()(

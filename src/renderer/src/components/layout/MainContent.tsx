@@ -2,6 +2,7 @@ import React from 'react'
 import { useEditorStore } from '../../stores/editorStore'
 import { useSettingsStore } from '../../stores/settingsStore'
 import { useAutoSave } from '../../hooks/useAutoSave'
+import { useAutoSync } from '../../hooks/useAutoSync'
 import TabBar from '../editor/TabBar'
 import Editor from '../editor/Editor'
 
@@ -13,6 +14,12 @@ const MainContent: React.FC = () => {
   useAutoSave({
     enabled: settings.autoSaveEnabled,
     delayInSeconds: settings.autoSaveDelayInSeconds
+  })
+
+  // Auto-sync all tabs
+  useAutoSync({
+    enabled: settings.autoSyncEnabled,
+    delayInSeconds: settings.autoSyncDelayInSeconds
   })
 
   const activeTab = tabs.find(tab => tab.id === activeTabId)
