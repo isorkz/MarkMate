@@ -1,10 +1,19 @@
 import React from 'react'
 import { useEditorStore } from '../../stores/editorStore'
+import { useSettingsStore } from '../../stores/settingsStore'
+import { useAutoSave } from '../../hooks/useAutoSave'
 import TabBar from '../editor/TabBar'
 import Editor from '../editor/Editor'
 
 const MainContent: React.FC = () => {
   const { tabs, activeTabId } = useEditorStore()
+  const { settings } = useSettingsStore()
+
+  // Auto-save all tabs
+  useAutoSave({
+    enabled: settings.autoSaveEnabled,
+    delayInSeconds: settings.autoSaveDelayInSeconds
+  })
 
   const activeTab = tabs.find(tab => tab.id === activeTabId)
 

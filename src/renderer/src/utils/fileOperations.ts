@@ -82,12 +82,23 @@ export const handleRename = async (workspacePath: string, oldPath: string, oldNa
   }
 }
 
-export const handleDelete = async (workspacePath: string, filePath: string) => {
+export const handleSave = async (workspacePath: string, filePath: string, tabId: string, content: string, markTabDirty: (tabId: string, isDirty: boolean) => void) => {
+  try {
+    await window.electron.ipcRenderer.invoke('file:write', workspacePath, filePath, content)
+    markTabDirty(tabId, false)
+  } catch (error) {
+    console.error('Failed to save file:', error)
+    throw error
+  }
+}
+
+export const handleDelete = async (workspacePath: string, filePath: string, setFileTree: (tree: any) => void) => {
   try {
     await window.electron.ipcRenderer.invoke('file:delete', workspacePath, filePath)
     
     // Notify all stores about the path deletion
     useFilePathEventStore.getState().notifyPathDelete(filePath)
+    await loadFileTree(workspacePath, setFileTree)
     toast.success('File deleted successfully')
   } catch (error) {
     console.error('Failed to delete:', error)

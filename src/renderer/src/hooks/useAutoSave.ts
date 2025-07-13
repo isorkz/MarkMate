@@ -1,33 +1,40 @@
 import { useEffect } from 'react'
 import toast from 'react-hot-toast'
 import { useWorkspaceStore } from '../stores/workspaceStore'
-import { useEditorStore, Tab } from '../stores/editorStore'
+import { useEditorStore } from '../stores/editorStore'
+import { handleSave } from '../utils/fileOperations'
 
 interface UseAutoSaveOptions {
   delayInSeconds?: number
   enabled?: boolean
 }
 
-export const useAutoSave = (tab: Tab | null, options: UseAutoSaveOptions = {}) => {
+export const useAutoSave = (options: UseAutoSaveOptions = {}) => {
   const { delayInSeconds = 10, enabled = true } = options
   const { currentWorkspace } = useWorkspaceStore()
-  const { markTabDirty } = useEditorStore()
+  const { tabs, markTabDirty } = useEditorStore()
 
   useEffect(() => {
-    if (!tab || !currentWorkspace || !enabled) return
-    if (!tab.hasUnsavedChanges) return
+    if (!currentWorkspace || !enabled) return
 
-    const saveFile = async () => {
-      try {
-        await window.electron.ipcRenderer.invoke('file:write', currentWorkspace.path, tab.filePath, tab.content)
-        markTabDirty(tab.id, false)
-      } catch (error) {
-        console.error('Failed to auto-save file:', error)
-        toast.error('Failed to auto-save file: ' + error)
+    const saveAllDirtyTabs = async () => {
+      const dirtyTabs = tabs.filter(tab => tab.hasUnsavedChanges)
+      let failedToSave = false
+      for (const tab of dirtyTabs) {
+        try {
+          handleSave(currentWorkspace.path, tab.filePath, tab.id, tab.content, markTabDirty)
+        } catch (error) {
+          console.error('Failed to auto-save file:', error)
+          failedToSave = true
+        }
+      }
+
+      if (failedToSave) {
+        toast.error('Failed to auto-save. Please check the console for details.')
       }
     }
 
-    const autoSaveTimer = setTimeout(saveFile, delayInSeconds * 1000)
-    return () => clearTimeout(autoSaveTimer)
-  }, [tab?.content, tab?.hasUnsavedChanges, tab?.id, tab?.filePath, currentWorkspace, markTabDirty, delayInSeconds, enabled])
+    const timer = setInterval(saveAllDirtyTabs, delayInSeconds * 1000)
+    return () => clearInterval(timer)
+  }, [tabs, currentWorkspace, delayInSeconds, enabled, markTabDirty])
 }

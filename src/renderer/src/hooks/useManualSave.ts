@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import toast from 'react-hot-toast'
 import { useWorkspaceStore } from '../stores/workspaceStore'
 import { useEditorStore, Tab } from '../stores/editorStore'
+import { handleSave } from '../utils/fileOperations'
 
 export const useManualSave = (tab: Tab | null) => {
   const { currentWorkspace } = useWorkspaceStore()
@@ -13,8 +14,7 @@ export const useManualSave = (tab: Tab | null) => {
         e.preventDefault()
         if (tab && currentWorkspace) {
           try {
-            await window.electron.ipcRenderer.invoke('file:write', currentWorkspace.path, tab.filePath, tab.content)
-            markTabDirty(tab.id, false)
+            handleSave(currentWorkspace.path, tab.filePath, tab.id, tab.content, markTabDirty)
           } catch (error) {
             console.error('Failed to save file:', error)
             toast.error('Failed to save file: ' + error)

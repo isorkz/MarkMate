@@ -139,7 +139,7 @@ const FileTree: React.FC = () => {
       closeTab(tab.id)
     })
 
-    await handleDelete(currentWorkspace.path, filePath)
+    await handleDelete(currentWorkspace.path, filePath, setFileTree)
   }
 
   // Load file tree for current workspace on startup

@@ -23,7 +23,7 @@ export function setupWorkspaceHandlers() {
       path: workspacePath,
       lastAccessed: new Date(),
       settings: {
-        autoSave: true,
+        autoSaveEnabled: true,
         autoSaveDelay: 2000,
         gitAutoCommit: false
       }

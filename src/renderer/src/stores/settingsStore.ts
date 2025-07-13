@@ -6,7 +6,7 @@ interface AppSettings {
   fontSize: number;
   fontFamily: string;
   sidebarVisible: boolean;
-  autoSave: boolean;
+  autoSaveEnabled: boolean;
   autoSaveDelayInSeconds: number;
   autoSyncEnabled: boolean;
   autoSyncDelayInSeconds: number;
@@ -23,7 +23,7 @@ const defaultSettings: AppSettings = {
   fontSize: 14,
   fontFamily: 'Monaco, monospace',
   sidebarVisible: true,
-  autoSave: true,
+  autoSaveEnabled: true,
   autoSaveDelayInSeconds: 10,
   autoSyncEnabled: true,
   autoSyncDelayInSeconds: 60

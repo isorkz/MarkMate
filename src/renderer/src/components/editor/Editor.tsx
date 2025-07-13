@@ -1,7 +1,6 @@
 import React from 'react'
 import { useEditorStore, Tab } from '../../stores/editorStore'
-import { useSettingsStore } from '../../stores/settingsStore'
-import { useAutoSave, useManualSave } from '../../hooks'
+import { useManualSave } from '../../hooks'
 import SourceEditor from './SourceEditor'
 import RichEditor from './RichEditor'
 import TOCPanel from '../editor/TOCPanel'
@@ -12,13 +11,6 @@ interface EditorProps {
 
 const Editor: React.FC<EditorProps> = ({ tab }) => {
   const { showSourceEditor, showTOC } = useEditorStore()
-  const { settings } = useSettingsStore()
-
-  // Use auto-save hook with settings
-  useAutoSave(tab, {
-    enabled: settings.autoSave,
-    delayInSeconds: settings.autoSaveDelayInSeconds
-  })
 
   // Use manual save hook
   useManualSave(tab)
