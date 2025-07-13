@@ -35,7 +35,7 @@ export function setupWorkspaceHandlers() {
     try {
       const buildFileTree = async (dirPath: string, relativePath = ''): Promise<any> => {
         const items = await fs.readdir(dirPath, { withFileTypes: true })
-        const children = []
+        const children: any[] = []
         
         for (const item of items) {
           const itemPath = path.join(dirPath, item.name)

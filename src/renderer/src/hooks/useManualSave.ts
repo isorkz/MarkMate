@@ -15,7 +15,6 @@ export const useManualSave = (tab: Tab | null) => {
           try {
             await window.electron.ipcRenderer.invoke('file:write', currentWorkspace.path, tab.filePath, tab.content)
             markTabDirty(tab.id, false)
-            toast.success('File saved')
           } catch (error) {
             console.error('Failed to save file:', error)
             toast.error('Failed to save file: ' + error)

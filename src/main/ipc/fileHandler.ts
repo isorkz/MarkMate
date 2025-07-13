@@ -56,7 +56,7 @@ export function setupFileHandlers() {
         throw new Error('File already exists')
       } catch (error) {
         // File doesn't exist, we can create it
-        if (error.code !== 'ENOENT') {
+        if (error && typeof error === 'object' && 'code' in error && error.code !== 'ENOENT') {
           throw error
         }
       }
