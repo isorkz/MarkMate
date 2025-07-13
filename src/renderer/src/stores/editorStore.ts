@@ -44,7 +44,19 @@ export const useEditorStore = create<EditorStore>()(
       openFile: (filePath, content, isPinned = false, lastModified) => {
         const existingTab = get().tabs.find(tab => tab.filePath === filePath);
         if (existingTab) {
-          set({ activeTabId: existingTab.id });
+          // Update content if tab has no unsaved changes
+          if (!existingTab.hasUnsavedChanges) {
+            set(state => ({
+              tabs: state.tabs.map(tab => 
+                tab.id === existingTab.id 
+                  ? { ...tab, content, lastModified: lastModified || new Date() }
+                : tab
+              ),
+              activeTabId: existingTab.id
+            }));
+          } else {
+            throw new Error(`Tab for file "${filePath}" already exists with unsaved changes.`);
+          }
           return;
         }
         

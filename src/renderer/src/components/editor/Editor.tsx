@@ -1,6 +1,6 @@
 import React from 'react'
 import { useEditorStore, Tab } from '../../stores/editorStore'
-import { useWorkspaceStore } from '../../stores/workspaceStore'
+import { useSettingsStore } from '../../stores/settingsStore'
 import { useAutoSave, useManualSave } from '../../hooks'
 import SourceEditor from './SourceEditor'
 import RichEditor from './RichEditor'
@@ -11,12 +11,12 @@ interface EditorProps {
 
 const Editor: React.FC<EditorProps> = ({ tab }) => {
   const { showSourceEditor } = useEditorStore()
-  const { currentWorkspace } = useWorkspaceStore()
+  const { settings } = useSettingsStore()
 
-  // Use auto-save hook with workspace settings
+  // Use auto-save hook with settings
   useAutoSave(tab, {
-    enabled: currentWorkspace?.settings?.autoSave ?? true,
-    delay: currentWorkspace?.settings?.autoSaveDelay ?? 10000
+    enabled: settings.autoSave,
+    delayInSeconds: settings.autoSaveDelayInSeconds
   })
 
   // Use manual save hook

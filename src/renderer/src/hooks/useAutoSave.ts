@@ -4,12 +4,12 @@ import { useWorkspaceStore } from '../stores/workspaceStore'
 import { useEditorStore, Tab } from '../stores/editorStore'
 
 interface UseAutoSaveOptions {
-  delay?: number
+  delayInSeconds?: number
   enabled?: boolean
 }
 
 export const useAutoSave = (tab: Tab | null, options: UseAutoSaveOptions = {}) => {
-  const { delay = 10000, enabled = true } = options
+  const { delayInSeconds = 10, enabled = true } = options
   const { currentWorkspace } = useWorkspaceStore()
   const { markTabDirty } = useEditorStore()
 
@@ -27,7 +27,7 @@ export const useAutoSave = (tab: Tab | null, options: UseAutoSaveOptions = {}) =
       }
     }
 
-    const autoSaveTimer = setTimeout(saveFile, delay)
+    const autoSaveTimer = setTimeout(saveFile, delayInSeconds * 1000)
     return () => clearTimeout(autoSaveTimer)
-  }, [tab?.content, tab?.hasUnsavedChanges, tab?.id, tab?.filePath, currentWorkspace, markTabDirty, delay, enabled])
+  }, [tab?.content, tab?.hasUnsavedChanges, tab?.id, tab?.filePath, currentWorkspace, markTabDirty, delayInSeconds, enabled])
 }

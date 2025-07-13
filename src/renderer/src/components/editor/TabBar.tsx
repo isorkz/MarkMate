@@ -1,5 +1,5 @@
-import React from 'react'
-import { X } from 'lucide-react'
+import React, { useState } from 'react'
+import { X, History } from 'lucide-react'
 import { useEditorStore } from '../../stores/editorStore'
 import { useSettingsStore } from '../../stores/settingsStore'
 import { formatDate } from '../../../../shared/commonUtils'
@@ -7,6 +7,9 @@ import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, us
 import { SortableContext, sortableKeyboardCoordinates, horizontalListSortingStrategy } from '@dnd-kit/sortable'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+import VersionHistory from '../version/VersionHistory'
+import SyncStatusIcon from '../version/SyncStatusIcon'
+import { useAutoSync } from '../../hooks/useAutoSync'
 
 interface TabProps {
   tab: {
@@ -72,8 +75,13 @@ const Tab: React.FC<TabProps> = ({ tab, isActive, onClose, onSelect, onPin }) =>
 const TabBar: React.FC = () => {
   const { tabs, activeTabId, setActiveTab, closeTab, reorderTabs, pinTab } = useEditorStore()
   const { settings } = useSettingsStore()
+  const [showVersionHistory, setShowVersionHistory] = useState(false)
 
-  const activeTab = tabs.find(tab => tab.id === activeTabId)
+  const activeTab = tabs.find(tab => tab.id === activeTabId) || null
+  const { syncStatus } = useAutoSync(activeTab, {
+    delayInSeconds: settings.autoSyncDelayInSeconds,
+    enabled: settings.autoSyncEnabled
+  }) // Auto-sync every 60 seconds by default
 
   const handleCloseTab = (tabId: string) => {
     const tab = tabs.find(t => t.id === tabId)
@@ -141,14 +149,36 @@ const TabBar: React.FC = () => {
           {activeTab && (
             <div
               className="flex items-center px-4 text-xs text-gray-500 border-l border-gray-200 whitespace-nowrap flex-shrink-0"
-              style={{ WebkitAppRegion: 'drag', minWidth: '150px' }}
+              style={{ WebkitAppRegion: 'drag', minWidth: '200px' }}
             >
-              Modified {formatDate(activeTab.lastModified)}
+              <span className="mr-3">Modified {formatDate(activeTab.lastModified)}</span>
+
+              <div style={{ WebkitAppRegion: 'no-drag' }}>
+                <SyncStatusIcon status={syncStatus} className="mr-2" />
+              </div>
+
+              <button
+                onClick={() => setShowVersionHistory(true)}
+                className="p-1 hover:bg-gray-200 rounded transition-colors"
+                style={{ WebkitAppRegion: 'no-drag' }}
+                title="View version history"
+              >
+                <History className="w-4 h-4" />
+              </button>
             </div>
           )}
         </>
       ) : (
         <div className="flex-1" />
+      )}
+
+      {/* Version History Modal */}
+      {activeTab && (
+        <VersionHistory
+          isOpen={showVersionHistory}
+          onClose={() => setShowVersionHistory(false)}
+          tab={activeTab}
+        />
       )}
     </div>
   )

@@ -4,9 +4,6 @@ import { persist, StorageValue } from 'zustand/middleware'
 import { useFilePathEventStore } from './events/filePathEventStore'
 
 interface WorkspaceSettings {
-  autoSave: boolean;
-  autoSaveDelay: number;
-  gitAutoCommit: boolean;
 }
 
 interface Workspace {

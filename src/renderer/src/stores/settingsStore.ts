@@ -6,6 +6,10 @@ interface AppSettings {
   fontSize: number;
   fontFamily: string;
   sidebarVisible: boolean;
+  autoSave: boolean;
+  autoSaveDelayInSeconds: number;
+  autoSyncEnabled: boolean;
+  autoSyncDelayInSeconds: number;
 }
 
 interface SettingsStore {
@@ -18,7 +22,11 @@ const defaultSettings: AppSettings = {
   theme: 'auto',
   fontSize: 14,
   fontFamily: 'Monaco, monospace',
-  sidebarVisible: true
+  sidebarVisible: true,
+  autoSave: true,
+  autoSaveDelayInSeconds: 10,
+  autoSyncEnabled: true,
+  autoSyncDelayInSeconds: 60
 };
 
 export const useSettingsStore = create<SettingsStore>()(
