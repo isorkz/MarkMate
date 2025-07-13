@@ -171,7 +171,7 @@ const TabBar: React.FC = () => {
       {activeTab && (
         <VersionHistory
           isOpen={showVersionHistory}
-          onClose={() => setShowVersionHistory(false)}
+          setShowVersionHistory={setShowVersionHistory}
           tab={activeTab}
         />
       )}

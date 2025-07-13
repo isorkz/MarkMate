@@ -88,6 +88,18 @@ export function setupGitHandlers() {
     }
   })
 
+  // Get diff between two commits for a file
+  ipcMain.handle('git:diff', async (_, workspacePath: string, filePath: string, fromCommit: string, toCommit: string) => {
+    try {
+      const git = simpleGit(workspacePath)
+      const diff = await git.diff([`${fromCommit}..${toCommit}`, '--', filePath])
+      return diff
+    } catch (error) {
+      console.error('Failed to get diff:', error)
+      throw error
+    }
+  })
+
   // Restore file to specific commit
   ipcMain.handle('git:restore', async (_, workspacePath: string, filePath: string, commitHash: string) => {
     try {

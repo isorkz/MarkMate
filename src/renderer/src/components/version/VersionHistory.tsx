@@ -4,6 +4,7 @@ import toast from 'react-hot-toast'
 import { useWorkspaceStore } from '../../stores/workspaceStore'
 import { Tab, useEditorStore } from '../../stores/editorStore'
 import { formatDate } from '../../../../shared/commonUtils'
+import DiffViewer from './DiffViewer'
 
 interface VersionHistoryItem {
   hash: string
@@ -15,17 +16,17 @@ interface VersionHistoryItem {
 
 interface VersionHistoryProps {
   isOpen: boolean
-  onClose: () => void
+  setShowVersionHistory: (visible: boolean) => void
   tab: Tab
 }
 
-const VersionHistory: React.FC<VersionHistoryProps> = ({ isOpen, onClose, tab }) => {
+const VersionHistory: React.FC<VersionHistoryProps> = ({ isOpen, setShowVersionHistory, tab }) => {
   const [versions, setVersions] = useState<VersionHistoryItem[]>([])
   const [loading, setLoading] = useState(false)
   const [selectedVersion, setSelectedVersion] = useState<VersionHistoryItem | null>(null)
-  const [previewMode, setPreviewMode] = useState<'diff' | 'content'>('content')
+  const [previewMode, setPreviewMode] = useState<'diff' | 'content'>('diff')
   const [previewContent, setPreviewContent] = useState<string>('')
-  const [previousVersionContent, setPreviousVersionContent] = useState<string>('')
+  const [diffContent, setDiffContent] = useState<string>('')
 
   const { currentWorkspace } = useWorkspaceStore()
   const { openFile } = useEditorStore()
@@ -66,22 +67,22 @@ const VersionHistory: React.FC<VersionHistoryProps> = ({ isOpen, onClose, tab })
       // Get the selected version content
       const content = await window.electron.ipcRenderer.invoke('git:get-file-commit', currentWorkspace.path, tab.filePath, version.hash)
 
-      // Find the previous version
+      // Find the previous version for diff
       const currentVersionIndex = versions.findIndex(v => v.hash === version.hash)
       const previousVersion = versions[currentVersionIndex + 1] // Next in array is previous in time
 
-      let previousContent = ''
+      let diff = ''
       if (previousVersion) {
-        // Get the previous version content
-        previousContent = await window.electron.ipcRenderer.invoke('git:get-file-commit', currentWorkspace.path, tab.filePath, previousVersion.hash) || ''
+        // Get diff between previous and current version
+        diff = await window.electron.ipcRenderer.invoke('git:diff', currentWorkspace.path, tab.filePath, previousVersion.hash, version.hash)
       } else {
-        // This is the first commit, compare with empty content
-        previousContent = ''
+        // This is the first commit, show diff against empty
+        diff = await window.electron.ipcRenderer.invoke('git:diff', currentWorkspace.path, tab.filePath, '4b825dc642cb6eb9a060e54bf8d69288fbee4904', version.hash) // Empty tree hash
       }
 
       if (content !== null) {
         setPreviewContent(content)
-        setPreviousVersionContent(previousContent)
+        setDiffContent(diff)
         setSelectedVersion(version)
       }
     } catch (error) {
@@ -120,33 +121,13 @@ const VersionHistory: React.FC<VersionHistoryProps> = ({ isOpen, onClose, tab })
     }
   }
 
-  // Simple diff function to highlight changes
-  const createDiff = (oldText: string, newText: string) => {
-    const oldLines = oldText.split('\n')
-    const newLines = newText.split('\n')
-    const maxLines = Math.max(oldLines.length, newLines.length)
 
-    const diffLines: Array<{ type: string; content: string; lineNum: number }> = []
-
-    for (let i = 0; i < maxLines; i++) {
-      const oldLine = oldLines[i] || ''
-      const newLine = newLines[i] || ''
-
-      if (oldLine === newLine) {
-        diffLines.push({ type: 'equal', content: oldLine, lineNum: i + 1 })
-      } else {
-        if (oldLine && !newLine) {
-          diffLines.push({ type: 'removed', content: oldLine, lineNum: i + 1 })
-        } else if (!oldLine && newLine) {
-          diffLines.push({ type: 'added', content: newLine, lineNum: i + 1 })
-        } else {
-          diffLines.push({ type: 'changed-old', content: oldLine, lineNum: i + 1 })
-          diffLines.push({ type: 'changed-new', content: newLine, lineNum: i + 1 })
-        }
-      }
-    }
-
-    return diffLines
+  const onClose = () => {
+    setShowVersionHistory(false)
+    setSelectedVersion(null)
+    setPreviewContent('')
+    setDiffContent('')
+    setPreviewMode('diff')
   }
 
   if (!isOpen) return null
@@ -221,7 +202,7 @@ const VersionHistory: React.FC<VersionHistoryProps> = ({ isOpen, onClose, tab })
               {selectedVersion ? (
                 <div className="h-full overflow-y-auto">
                   {previewMode === 'diff' ? (
-                    // Diff view
+                    // Git diff view
                     <div className="p-6">
                       <div className="bg-gray-50 rounded-lg border border-gray-200 overflow-hidden">
                         <div className="bg-white border-b border-gray-200 p-3">
@@ -236,32 +217,8 @@ const VersionHistory: React.FC<VersionHistoryProps> = ({ isOpen, onClose, tab })
                             </div>
                           </div>
                         </div>
-                        <div className="text-sm font-mono max-h-96 overflow-y-auto">
-                          {createDiff(previousVersionContent, previewContent).map((line, index) => (
-                            <div
-                              key={index}
-                              className={`px-4 py-1 flex items-start ${line.type === 'equal' ? 'bg-white' :
-                                line.type === 'added' || line.type === 'changed-new' ? 'bg-green-50' :
-                                  line.type === 'removed' || line.type === 'changed-old' ? 'bg-red-50' :
-                                    'bg-white'
-                                }`}
-                            >
-                              <span className="inline-block w-10 text-gray-400 text-xs mr-3 select-none text-right">
-                                {line.lineNum}
-                              </span>
-                              <span className={`flex-1 ${line.type === 'added' || line.type === 'changed-new' ? 'text-green-700' :
-                                line.type === 'removed' || line.type === 'changed-old' ? 'text-red-700' :
-                                  'text-gray-700'
-                                }`}>
-                                <span className="inline-block w-4 text-center">
-                                  {line.type === 'added' || line.type === 'changed-new' ? '+' :
-                                    line.type === 'removed' || line.type === 'changed-old' ? '−' :
-                                      ''}
-                                </span>
-                                {line.content}
-                              </span>
-                            </div>
-                          ))}
+                        <div className="max-h-96 overflow-y-auto bg-white">
+                          <DiffViewer diffContent={diffContent} />
                         </div>
                       </div>
                     </div>
