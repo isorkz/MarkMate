@@ -84,8 +84,8 @@
   }
 
   .RichEditorView p {
-    @apply mb-1;
-    line-height: 1.6;
+    @apply mb-2;
+    line-height: 1.5;
   }
 
   .RichEditorView p:empty {

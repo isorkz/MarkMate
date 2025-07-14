@@ -53,7 +53,7 @@ const RichEditor: React.FC<RichEditorProps> = ({ tab }) => {
         },
       }).configure({ lowlight }),
       Markdown.configure({
-        html: true,                  // Allow HTML input/output
+        html: true,                  // Allow HTML input/output (see tests in tiptap-markdown source code for examples)
         tightLists: true,            // No <p> inside <li> in markdown output
         tightListClass: 'tight',     // Add class to <ul> allowing you to remove <p> margins when tight
         bulletListMarker: '*',       // <li> prefix in markdown output

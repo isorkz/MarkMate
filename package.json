@@ -43,6 +43,7 @@
     "@tiptap/starter-kit": "^2.24.2",
     "@uiw/react-codemirror": "^4.24.0",
     "autoprefixer": "^10.4.21",
+    "electron": "^37.2.1",
     "electron-updater": "^6.3.9",
     "highlight.js": "^11.11.1",
     "lowlight": "^3.3.0",
@@ -52,7 +53,7 @@
     "simple-git": "^3.28.0",
     "superjson": "^2.2.2",
     "tailwindcss": "^4.1.11",
-    "tiptap-markdown": "^0.8.10",
+    "tiptap-markdown": "github:isorkz/tiptap-markdown",
     "zustand": "^5.0.6"
   },
   "devDependencies": {
@@ -63,7 +64,6 @@
     "@types/react": "^19.1.1",
     "@types/react-dom": "^19.1.2",
     "@vitejs/plugin-react": "^4.3.4",
-    "electron": "^35.1.5",
     "electron-builder": "^25.1.8",
     "electron-vite": "^3.1.0",
     "eslint": "^9.24.0",
