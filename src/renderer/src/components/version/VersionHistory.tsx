@@ -34,6 +34,13 @@ const VersionHistory: React.FC<VersionHistoryProps> = ({ isOpen, setShowVersionH
   useEffect(() => {
     if (isOpen && currentWorkspace && tab.filePath) {
       loadVersionHistory()
+      setSelectedVersion({
+        hash: 'uncommitted',
+        message: 'Uncommitted Changes',
+        date: new Date(),
+        author: '',
+        filePath: tab.filePath
+      })
     }
   }, [isOpen, currentWorkspace, tab.filePath])
 
@@ -42,9 +49,6 @@ const VersionHistory: React.FC<VersionHistoryProps> = ({ isOpen, setShowVersionH
 
     setLoading(true)
     try {
-      // Ensure repository is initialized
-      // await window.electron.ipcRenderer.invoke('git:init', currentWorkspace.path)
-
       const history = await window.electron.ipcRenderer.invoke('git:history', currentWorkspace.path, tab.filePath)
       const versionsWithDates = history.map((item: any) => ({
         ...item,
@@ -59,7 +63,8 @@ const VersionHistory: React.FC<VersionHistoryProps> = ({ isOpen, setShowVersionH
     }
   }
 
-  const handlePreviewVersion = async (version: VersionHistoryItem) => {
+  // Preview the diff or content of a specific version that has been committed to Git.
+  const handlePreviewCommitVersion = async (version: VersionHistoryItem) => {
     if (!currentWorkspace) return
 
     setLoading(true)
@@ -74,10 +79,10 @@ const VersionHistory: React.FC<VersionHistoryProps> = ({ isOpen, setShowVersionH
       let diff = ''
       if (previousVersion) {
         // Get diff between previous and current version
-        diff = await window.electron.ipcRenderer.invoke('git:diff', currentWorkspace.path, tab.filePath, previousVersion.hash, version.hash)
+        diff = await window.electron.ipcRenderer.invoke('git:file-commits-diff', currentWorkspace.path, tab.filePath, previousVersion.hash, version.hash)
       } else {
         // This is the first commit, show diff against empty
-        diff = await window.electron.ipcRenderer.invoke('git:diff', currentWorkspace.path, tab.filePath, '4b825dc642cb6eb9a060e54bf8d69288fbee4904', version.hash) // Empty tree hash
+        diff = await window.electron.ipcRenderer.invoke('git:file-commits-diff', currentWorkspace.path, tab.filePath, '4b825dc642cb6eb9a060e54bf8d69288fbee4904', version.hash) // Empty tree hash
       }
 
       if (content !== null) {
@@ -93,15 +98,47 @@ const VersionHistory: React.FC<VersionHistoryProps> = ({ isOpen, setShowVersionH
     }
   }
 
+  // Preview the diff or content of the working file changes (uncommitted changes).
+  const handlePreviewUncommittedChanges = async () => {
+    if (!currentWorkspace) return
+
+    setLoading(true)
+    try {
+      // Get uncommitted diff
+      const diff = await window.electron.ipcRenderer.invoke('git:uncommitted-diff', currentWorkspace.path, tab.filePath)
+
+      // Use current tab content as preview content
+      setPreviewContent(tab.content)
+      setDiffContent(diff)
+      setSelectedVersion({
+        hash: 'uncommitted',
+        message: 'Uncommitted Changes',
+        date: new Date(),
+        author: '',
+        filePath: tab.filePath
+      })
+    } catch (error) {
+      console.error('Failed to preview uncommitted diff:', error)
+      toast.error('Failed to preview uncommitted diff: ' + error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const handleRestoreVersion = async (version: VersionHistoryItem) => {
     if (!currentWorkspace) return
 
-    const confirmed = confirm(`Are you sure you want to restore to this version?\n\nThis will overwrite the current content and create a new commit.`)
+    const confirmed = confirm(`Are you sure you want to restore to this version?\n\n`)
     if (!confirmed) return
 
     setLoading(true)
     try {
-      await window.electron.ipcRenderer.invoke('git:restore', currentWorkspace.path, tab.filePath, version.hash)
+      if (version.hash === 'uncommitted') {
+        await window.electron.ipcRenderer.invoke('git:discard-changes', currentWorkspace.path, tab.filePath)
+      }
+      else {
+        await window.electron.ipcRenderer.invoke('git:restore', currentWorkspace.path, tab.filePath, version.hash)
+      }
 
       // Reload the file in the editor
       const content = await window.electron.ipcRenderer.invoke('git:get-file-commit', currentWorkspace.path, tab.filePath, 'HEAD')
@@ -111,7 +148,10 @@ const VersionHistory: React.FC<VersionHistoryProps> = ({ isOpen, setShowVersionH
 
       // Refresh version history
       await loadVersionHistory()
-
+      if (version.hash === 'uncommitted') {
+        setPreviewContent('')
+        setDiffContent('')
+      }
       toast.success('File restored successfully!')
     } catch (error) {
       console.error('Failed to restore version:', error)
@@ -120,7 +160,6 @@ const VersionHistory: React.FC<VersionHistoryProps> = ({ isOpen, setShowVersionH
       setLoading(false)
     }
   }
-
 
   const onClose = () => {
     setShowVersionHistory(false)
@@ -269,10 +308,47 @@ const VersionHistory: React.FC<VersionHistoryProps> = ({ isOpen, setShowVersionH
                 </div>
               ) : (
                 <div className="p-4 space-y-2">
+                  {/* Uncommitted Changes */}
+                  <div
+                    onClick={handlePreviewUncommittedChanges}
+                    className={`group p-4 rounded-lg border cursor-pointer transition-all duration-200 ${selectedVersion?.hash === 'uncommitted'
+                      ? 'border-blue-200 bg-blue-50 shadow-sm'
+                      : 'border-yellow-200 bg-yellow-50 hover:border-yellow-300 hover:shadow-sm'
+                      }`}
+                  >
+                    <div className="flex items-start justify-between overflow-x-hidden">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div>
+                            <p className="text-sm font-medium text-gray-900 truncate">
+                              Uncommitted Changes
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1 ml-2">
+                        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              if (selectedVersion) {
+                                handleRestoreVersion(selectedVersion)
+                              }
+                            }}
+                            className="p-2 hover:bg-blue-100 text-blue-600 rounded-lg transition-colors"
+                            title="Restore to this version"
+                          >
+                            <RotateCcw className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
                   {versions.map((version, index) => (
                     <div
                       key={version.hash}
-                      onClick={() => handlePreviewVersion(version)}
+                      onClick={() => handlePreviewCommitVersion(version)}
                       title={version.message}
                       className={`group p-4 rounded-lg border cursor-pointer transition-all duration-200 ${selectedVersion?.hash === version.hash
                         ? 'border-blue-200 bg-blue-50 shadow-sm'

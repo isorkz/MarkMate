@@ -89,13 +89,27 @@ export function setupGitHandlers() {
   })
 
   // Get diff between two commits for a file
-  ipcMain.handle('git:diff', async (_, workspacePath: string, filePath: string, fromCommit: string, toCommit: string) => {
+  ipcMain.handle('git:file-commits-diff', async (_, workspacePath: string, filePath: string, fromCommit: string, toCommit: string) => {
     try {
       const git = simpleGit(workspacePath)
       const diff = await git.diff([`${fromCommit}..${toCommit}`, '--', filePath])
       return diff
     } catch (error) {
       console.error('Failed to get diff:', error)
+      throw error
+    }
+  })
+
+  // Get working directory diff for a file (current saved file vs last committed version)
+  ipcMain.handle('git:uncommitted-diff', async (_, workspacePath: string, filePath: string) => {
+    try {
+      const git = simpleGit(workspacePath)
+      
+      // Get diff between working directory and HEAD for the specific file
+      const diff = await git.diff(['HEAD', '--', filePath])
+      return diff
+    } catch (error) {
+      console.error('Failed to get working directory diff:', error)
       throw error
     }
   })
@@ -115,6 +129,18 @@ export function setupGitHandlers() {
       await git.commit(commitMessage)
     } catch (error) {
       console.error('Failed to restore file:', error)
+      throw error
+    }
+  })
+
+  // Discard uncommitted changes for a specific file
+  ipcMain.handle('git:discard-changes', async (_, workspacePath: string, filePath: string) => {
+    try {
+      const git = simpleGit(workspacePath)
+      // Reset the file to HEAD (discard working directory changes)
+      await git.checkout(['HEAD', '--', filePath])
+    } catch (error) {
+      console.error('Failed to discard changes:', error)
       throw error
     }
   })
