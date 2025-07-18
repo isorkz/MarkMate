@@ -106,6 +106,10 @@ const RichEditor: React.FC<RichEditorProps> = ({ tab }) => {
     content: tab?.content || '',
     onUpdate: ({ editor }) => {
       try {
+        // Only trigger content update if user is actively editing (editor is focused)                                                                                                                                      │ │
+        // This prevents marking tabs as dirty when programmatically setting content 
+        if (!editor.isFocused) return
+
         const markdown = editor.storage.markdown.getMarkdown()
         updateTabContent(tab.id, markdown)
       } catch (err) {
