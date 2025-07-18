@@ -44,6 +44,7 @@ const SourceEditor: React.FC<SourceEditorProps> = ({ tab }) => {
         extensions={[markdown(), disableCommentKeymap]}
         theme={settings.theme === 'dark' ? oneDark : undefined}
         onChange={onChange}
+        readOnly={settings.readOnlyMode}
         basicSetup={{
           lineNumbers: true,
           foldGutter: true,

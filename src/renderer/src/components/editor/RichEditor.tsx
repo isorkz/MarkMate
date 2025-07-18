@@ -43,7 +43,6 @@ const RichEditor: React.FC<RichEditorProps> = ({ tab }) => {
   const { currentWorkspace } = useWorkspaceStore()
 
   const editor = useEditor({
-    editable: !settings.readOnlyMode,
     extensions: [
       StarterKit.configure({
         heading: {
@@ -116,8 +115,18 @@ const RichEditor: React.FC<RichEditorProps> = ({ tab }) => {
     },
     editorProps: {
       attributes: {
-        class: 'RichEditorView max-w-none focus:outline-none h-full overflow-auto',
-        style: `font-size: 16px; padding: 60px; line-height: 1.6;`
+        class: `RichEditorView max-w-none focus:outline-none h-full overflow-auto ${settings.readOnlyMode ? 'select-text' : ''}`,
+        style: `font-size: 16px; padding: 60px; line-height: 1.6; ${settings.readOnlyMode ? 'user-select: text; -webkit-user-select: text; -moz-user-select: text; -ms-user-select: text;' : ''}`
+      },
+      // Allow selection and copy even in read-only mode
+      handleKeyDown: (view, event) => {
+        if (settings.readOnlyMode) {
+          // Allow Ctrl+A (Select All) and Ctrl+C (Copy) in read-only mode
+          if ((event.ctrlKey || event.metaKey) && (event.key === 'a' || event.key === 'c')) {
+            return false // Allow default behavior
+          }
+        }
+        return false
       },
       handlePaste: (view, event) => {
         // Handle image paste to save as local file instead of data URL
