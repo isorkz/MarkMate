@@ -10,9 +10,12 @@ import Link from '@tiptap/extension-link'
 import Image from '@tiptap/extension-image'
 import TaskList from '@tiptap/extension-task-list'
 import TaskItem from '@tiptap/extension-task-item'
+import Underline from '@tiptap/extension-underline'
 import { Markdown } from 'tiptap-markdown'
 import Typography from '@tiptap/extension-typography'
 import BubbleMenu from '@tiptap/extension-bubble-menu'
+import Strike from '@tiptap/extension-strike'
+import Highlight from '@tiptap/extension-highlight'
 import toast from 'react-hot-toast'
 import { useEditorStore, Tab } from '../../stores/editorStore'
 import { useSettingsStore } from '../../stores/settingsStore'
@@ -40,6 +43,7 @@ const RichEditor: React.FC<RichEditorProps> = ({ tab }) => {
   const { currentWorkspace } = useWorkspaceStore()
 
   const editor = useEditor({
+    editable: !settings.readOnlyMode,
     extensions: [
       StarterKit.configure({
         heading: {
@@ -64,6 +68,21 @@ const RichEditor: React.FC<RichEditorProps> = ({ tab }) => {
       }),
       Link.configure({
         openOnClick: false
+      }),
+      Underline,
+      Strike.extend({
+        addKeyboardShortcuts() {
+          return {
+            'Mod-d': () => this.editor.commands.toggleStrike(),
+          }
+        }
+      }),
+      Highlight.extend({
+        addKeyboardShortcuts() {
+          return {
+            'Mod-h': () => this.editor.commands.toggleHighlight(),
+          }
+        }
       }),
       Image.configure({
         inline: true,
@@ -144,6 +163,13 @@ const RichEditor: React.FC<RichEditorProps> = ({ tab }) => {
       }
     }
   }, [tab?.content, editor])
+
+  // Update editor editable state when read-only mode changes
+  useEffect(() => {
+    if (editor) {
+      editor.setEditable(!settings.readOnlyMode)
+    }
+  }, [editor, settings.readOnlyMode])
 
   // Resolve image paths when content is loaded or workspace/tab changes
   useEffect(() => {

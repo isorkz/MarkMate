@@ -10,6 +10,7 @@ interface AppSettings {
   autoSaveDelayInSeconds: number;
   autoSyncEnabled: boolean;
   autoSyncDelayInSeconds: number;
+  readOnlyMode: boolean;
 }
 
 interface SettingsStore {
@@ -26,7 +27,8 @@ const defaultSettings: AppSettings = {
   autoSaveEnabled: true,
   autoSaveDelayInSeconds: 10,
   autoSyncEnabled: true,
-  autoSyncDelayInSeconds: 300 // 5 minutes
+  autoSyncDelayInSeconds: 300, // 5 minutes
+  readOnlyMode: false
 };
 
 export const useSettingsStore = create<SettingsStore>()(

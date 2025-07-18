@@ -1,8 +1,12 @@
 import AppLayout from './components/layout/AppLayout'
 import { Toaster } from 'react-hot-toast'
+import { useMenuHandlers } from './hooks/useMenuHandlers'
 import './assets/globals.css'
 
 function App(): React.JSX.Element {
+  // Initialize menu handlers
+  useMenuHandlers()
+
   return (
     <>
       <AppLayout />
