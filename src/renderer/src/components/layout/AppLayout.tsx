@@ -32,7 +32,7 @@ const AppLayout: React.FC = () => {
             e.preventDefault()
             toggleSourceEditor()
             break
-          case 't':
+          case 'o':
             e.preventDefault()
             toggleTOC()
             break

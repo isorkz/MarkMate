@@ -11,6 +11,7 @@ export const useMenuHandlers = () => {
     tabs,
     closeTab,
     toggleSourceEditor,
+    toggleTOC,
     markTabDirty 
   } = useEditorStore()
   
@@ -81,6 +82,10 @@ export const useMenuHandlers = () => {
       toggleSourceEditor()
     }
 
+    const handleToggleTOC = () => {
+      toggleTOC()
+    }
+
     // Register IPC listeners
     window.electron.ipcRenderer.on('menu:close-tab', handleCloseTab)
     window.electron.ipcRenderer.on('menu:save-tab', handleSaveTab)
@@ -88,6 +93,7 @@ export const useMenuHandlers = () => {
     window.electron.ipcRenderer.on('menu:full-search', handleFullSearch)
     window.electron.ipcRenderer.on('menu:toggle-read-only', handleToggleReadOnly)
     window.electron.ipcRenderer.on('menu:toggle-source-editor', handleToggleSourceEditor)
+    window.electron.ipcRenderer.on('menu:toggle-toc', handleToggleTOC)
 
     // Cleanup
     return () => {
@@ -97,6 +103,7 @@ export const useMenuHandlers = () => {
       window.electron.ipcRenderer.removeAllListeners('menu:full-search')
       window.electron.ipcRenderer.removeAllListeners('menu:toggle-read-only')
       window.electron.ipcRenderer.removeAllListeners('menu:toggle-source-editor')
+      window.electron.ipcRenderer.removeAllListeners('menu:toggle-toc')
     }
   }, [activeTabId, tabs, currentWorkspace, closeTab, toggleSourceEditor, updateSettings, markTabDirty])
 }

@@ -133,6 +133,13 @@ export function createAppMenu(mainWindow: BrowserWindow) {
             mainWindow.webContents.send('menu:toggle-source-editor')
           }
         },
+        {
+          label: 'Toggle TOC',
+          accelerator: 'CmdOrCtrl+O',
+          click: () => {
+            mainWindow.webContents.send('menu:toggle-toc')
+          }
+        },
         { type: 'separator' },
         // { role: 'reload' },
         { role: 'forceReload' },
