@@ -22,14 +22,19 @@ const MainContent: React.FC = () => {
     delayInSeconds: settings.autoSyncDelayInSeconds
   })
 
-  const activeTab = tabs.find(tab => tab.id === activeTabId)
-
   return (
     <div className="flex-1 flex flex-col h-full overflow-x-hidden">
       <TabBar />
 
-      {tabs.length > 0 && activeTab ? (
-        <Editor tab={activeTab} />
+      {tabs.length > 0 ? (
+        <div className="flex-1 relative">
+          {tabs.map(tab => (
+            // inset-0: Make the tab fill the entire parent container
+            <div key={tab.id} id={`tab-${tab.id}`} className={`absolute inset-0 ${tab.id === activeTabId ? 'flex' : 'hidden'}`} >
+              <Editor tab={tab} />
+            </div>
+          ))}
+        </div>
       ) : (
         <div className="flex-1 flex items-center justify-center bg-gray-50">
           <div className="text-center text-gray-500">

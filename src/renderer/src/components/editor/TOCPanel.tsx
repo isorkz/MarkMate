@@ -16,7 +16,7 @@ const TOCPanel: React.FC = () => {
 
   useEffect(() => {
     const updateTOC = () => {
-      const headings = document.querySelectorAll('.ProseMirror h1, .ProseMirror h2, .ProseMirror h3, .ProseMirror h4, .ProseMirror h5, .ProseMirror h6')
+      const headings = document.querySelectorAll(`#tab-${activeTabId} .ProseMirror h1, #tab-${activeTabId} .ProseMirror h2, #tab-${activeTabId} .ProseMirror h3, #tab-${activeTabId} .ProseMirror h4, #tab-${activeTabId} .ProseMirror h5, #tab-${activeTabId} .ProseMirror h6`)
 
       const items: TOCItem[] = Array.from(headings).map((heading, index) => {
         const level = parseInt(heading.tagName.charAt(1))
@@ -36,7 +36,7 @@ const TOCPanel: React.FC = () => {
 
     // Update TOC when content changes
     updateTOC()
-  }, [activeTab?.content])
+  }, [activeTab?.content, activeTabId])
 
   const scrollToHeading = (item: TOCItem) => {
     if (item.element) {

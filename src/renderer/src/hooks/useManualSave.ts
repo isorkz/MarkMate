@@ -6,9 +6,12 @@ import { handleSave } from '../utils/fileOperations'
 
 export const useManualSave = (tab: Tab | null) => {
   const { currentWorkspace } = useWorkspaceStore()
-  const { markTabDirty } = useEditorStore()
+  const { markTabDirty, activeTabId } = useEditorStore()
 
   useEffect(() => {
+    // Only add event listener for the active tab
+    if (!tab || tab.id !== activeTabId) return
+
     const handleKeyDown = async (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 's') {
         e.preventDefault()
@@ -25,5 +28,5 @@ export const useManualSave = (tab: Tab | null) => {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [tab, currentWorkspace, markTabDirty])
+  }, [tab, currentWorkspace, markTabDirty, activeTabId])
 }

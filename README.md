@@ -1,4 +1,4 @@
-# markmate
+# MarkMate
 
 A WYSIWYG markdown editor.
 

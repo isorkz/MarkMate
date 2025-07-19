@@ -1,5 +1,5 @@
-appId: com.electron.app
-productName: markmate
+appId: com.markmate.app
+productName: MarkMate
 directories:
   buildResources: build
 files:
