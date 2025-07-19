@@ -11,7 +11,7 @@ import { handleNewFile, handleNewFolder, handleRename, handleDelete, loadFileTre
 const FileTree: React.FC = () => {
   const { fileTree, expandedFolders, toggleFolder, setFileTree } = useFileSystemStore()
   const { currentWorkspace, isFavorite, toggleFavorite } = useWorkspaceStore()
-  const { openFile, tabs, activeTabId, setActiveTab, closeTab, pinTab } = useEditorStore()
+  const { tabs, activeTabId, closeTab, pinTab } = useEditorStore()
   const [contextMenu, setContextMenu] = useState<{
     node: FileNode
     position: { x: number; y: number }
@@ -36,16 +36,8 @@ const FileTree: React.FC = () => {
     if (isFolder) {
       toggleFolder(node.path)
     } else {
-      // Check if file is already open first
-      const existingTab = tabs.find(tab => tab.filePath === node.path)
-      if (existingTab) {
-        // File is already open, just switch to that tab
-        setActiveTab(existingTab.id)
-      } else {
-        // File is not open, read content and open it in preview mode
-        if (currentWorkspace) {
-          handleOpenFile(currentWorkspace.path, node.path, false, openFile) // false = preview mode (not pinned)
-        }
+      if (currentWorkspace) {
+        handleOpenFile(currentWorkspace.path, node.path, false) // false = preview mode (not pinned)
       }
     }
   }
@@ -114,7 +106,7 @@ const FileTree: React.FC = () => {
 
   const onOpenInNewTab = async (filePath: string) => {
     if (!currentWorkspace) return
-    handleOpenFile(currentWorkspace.path, filePath, true, openFile) // true = pinned tab
+    handleOpenFile(currentWorkspace.path, filePath, true) // true = pinned tab
   }
 
   const onRename = (path: string, currentName: string) => {

@@ -1,7 +1,6 @@
 import React, { useRef, useEffect } from 'react'
 import { File } from 'lucide-react'
 import { useWorkspaceStore } from '../../stores/workspaceStore'
-import { useEditorStore } from '../../stores/editorStore'
 import { FileNode } from '../../types'
 import { handleOpenFile } from '@renderer/utils/fileOperations'
 
@@ -14,7 +13,6 @@ interface FileSearchResultsProps {
 const FileSearchResults: React.FC<FileSearchResultsProps> = ({ searchTerm, results, clearSearch }) => {
   const resultsRef = useRef<HTMLDivElement>(null)
   const { currentWorkspace } = useWorkspaceStore()
-  const { openFile } = useEditorStore()
 
   // Handle click outside to close search results
   useEffect(() => {
@@ -30,7 +28,7 @@ const FileSearchResults: React.FC<FileSearchResultsProps> = ({ searchTerm, resul
 
   const handleResultClick = async (file: FileNode) => {
     if (currentWorkspace) {
-      handleOpenFile(currentWorkspace.path, file.path, false, openFile)  // false = preview mode (not pinned)
+      handleOpenFile(currentWorkspace.path, file.path, false)  // false = preview mode (not pinned)
       clearSearch()
     }
   }

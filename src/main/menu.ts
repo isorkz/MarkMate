@@ -1,6 +1,6 @@
 import { Menu, BrowserWindow, app } from 'electron'
 
-export function createAppMenu(mainWindow: BrowserWindow) {
+export function createAppMenu(mainWindow: BrowserWindow, recentFiles: string[] = []) {
   const isMac = process.platform === 'darwin'
 
   const template: Electron.MenuItemConstructorOptions[] = []
@@ -30,6 +30,30 @@ export function createAppMenu(mainWindow: BrowserWindow) {
     {
       label: 'File',
       submenu: [
+        {
+          label: 'Open Recent',
+          submenu: recentFiles.length > 0 ? [
+            ...recentFiles.map(filePath => ({
+              label: filePath.split('/').pop() || filePath,
+              click: () => {
+                mainWindow.webContents.send('menu:open-recent-file', filePath)
+              }
+            })),
+            { type: 'separator' as const },
+            {
+              label: 'Clear Recent Files',
+              click: () => {
+                mainWindow.webContents.send('menu:clear-recent-files')
+              }
+            }
+          ] : [
+            {
+              label: 'No Recent Files',
+              enabled: false
+            }
+          ]
+        },
+        { type: 'separator' },
         {
           label: 'Save',
           accelerator: 'CmdOrCtrl+S',

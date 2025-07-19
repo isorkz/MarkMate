@@ -3,7 +3,7 @@ import toast from 'react-hot-toast'
 import { useEditorStore } from '../stores/editorStore'
 import { useSettingsStore } from '../stores/settingsStore'
 import { useWorkspaceStore } from '../stores/workspaceStore'
-import { handleSave } from '../utils/fileOperations'
+import { handleSave, handleOpenFile } from '../utils/fileOperations'
 
 export const useMenuHandlers = () => {
   const { 
@@ -19,7 +19,11 @@ export const useMenuHandlers = () => {
     updateSettings 
   } = useSettingsStore()
   
-  const { currentWorkspace } = useWorkspaceStore()
+  const { 
+    currentWorkspace, 
+    recentFiles,
+    clearRecentFiles
+  } = useWorkspaceStore()
 
   useEffect(() => {
     // File menu handlers
@@ -86,6 +90,22 @@ export const useMenuHandlers = () => {
       toggleTOC()
     }
 
+    // Recent files handlers
+    const handleOpenRecentFile = async (_, filePath: string) => {
+      if (!currentWorkspace) return
+      
+      try {
+        handleOpenFile(currentWorkspace.path, filePath, false) // false = unpinned
+      } catch (error) {
+        console.error('Failed to open recent file:', error)
+        toast.error(`Failed to open ${filePath.split('/').pop()}`)
+      }
+    }
+
+    const handleClearRecentFiles = () => {
+      clearRecentFiles()
+    }
+
     // Register IPC listeners
     window.electron.ipcRenderer.on('menu:close-tab', handleCloseTab)
     window.electron.ipcRenderer.on('menu:save-tab', handleSaveTab)
@@ -94,6 +114,8 @@ export const useMenuHandlers = () => {
     window.electron.ipcRenderer.on('menu:toggle-read-only', handleToggleReadOnly)
     window.electron.ipcRenderer.on('menu:toggle-source-editor', handleToggleSourceEditor)
     window.electron.ipcRenderer.on('menu:toggle-toc', handleToggleTOC)
+    window.electron.ipcRenderer.on('menu:open-recent-file', handleOpenRecentFile)
+    window.electron.ipcRenderer.on('menu:clear-recent-files', handleClearRecentFiles)
 
     // Cleanup
     return () => {
@@ -104,6 +126,21 @@ export const useMenuHandlers = () => {
       window.electron.ipcRenderer.removeAllListeners('menu:toggle-read-only')
       window.electron.ipcRenderer.removeAllListeners('menu:toggle-source-editor')
       window.electron.ipcRenderer.removeAllListeners('menu:toggle-toc')
+      window.electron.ipcRenderer.removeAllListeners('menu:open-recent-file')
+      window.electron.ipcRenderer.removeAllListeners('menu:clear-recent-files')
     }
   }, [activeTabId, tabs, currentWorkspace, closeTab, toggleSourceEditor, updateSettings, markTabDirty])
+
+  // Update menu when recent files change
+  useEffect(() => {
+    const updateMenu = async () => {
+      try {
+        await window.electron.ipcRenderer.invoke('menu:update-recent-files', recentFiles)
+      } catch (error) {
+        console.error('Failed to update menu:', error)
+      }
+    }
+    
+    updateMenu()
+  }, [recentFiles])
 }

@@ -3,6 +3,8 @@ import superjson from 'superjson'
 import { persist, StorageValue } from 'zustand/middleware'
 import { useFilePathEventStore } from './events/filePathEventStore'
 
+const MAX_RECENT_FILES = 10
+
 interface WorkspaceSettings {
 }
 
@@ -26,6 +28,7 @@ interface WorkspaceStore {
   setCurrentWorkspace: (workspace: Workspace | null) => void;
   updateWorkspace: (id: string, updates: Partial<Workspace>) => void;
   addRecentFile: (filePath: string) => void;
+  clearRecentFiles: () => void;
   addFavorite: (filePath: string) => void;
   removeFavorite: (filePath: string) => void;
   toggleFavorite: (filePath: string) => void;
@@ -63,8 +66,11 @@ export const useWorkspaceStore = create<WorkspaceStore>()(
       
       addRecentFile: (filePath) => 
         set(state => ({
-          recentFiles: [filePath, ...state.recentFiles.filter(f => f !== filePath)].slice(0, 10)
+          recentFiles: [filePath, ...state.recentFiles.filter(f => f !== filePath)].slice(0, MAX_RECENT_FILES)
         })),
+
+      clearRecentFiles: () => 
+        set({ recentFiles: [] }),
 
       addFavorite: (filePath) =>
         set(state => ({
