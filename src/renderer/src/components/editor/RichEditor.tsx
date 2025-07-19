@@ -48,7 +48,8 @@ const RichEditor: React.FC<RichEditorProps> = ({ tab }) => {
         heading: {
           levels: [1, 2, 3, 4, 5, 6]
         },
-        codeBlock: false // Disable default code block to use CodeBlockLowlight instead
+        codeBlock: false, // Disable default code block to use CodeBlockLowlight instead
+        strike: false // Disable default strike to use custom one with Mod-d shortcut
       }),
       CodeBlockLowlight.extend({
         addNodeView() {
