@@ -114,7 +114,7 @@ const RichEditor: React.FC<RichEditorProps> = ({ tab }) => {
         const markdown = editor.storage.markdown.getMarkdown()
         updateTabContent(tab.id, markdown)
       } catch (err) {
-        console.warn('Markdown conversion failed:', err)
+        console.error('Markdown conversion failed:', err)
         toast.error('Markdown conversion failed')
       }
     },
@@ -172,7 +172,7 @@ const RichEditor: React.FC<RichEditorProps> = ({ tab }) => {
         }
       } catch (error) {
         // Fallback: always update if we can't get markdown
-        console.warn('Could not get markdown, updating content:', error)
+        console.error('Could not get markdown, updating content:', error)
         editor.commands.setContent(tab.content, false)
       }
     }

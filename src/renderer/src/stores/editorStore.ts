@@ -23,7 +23,7 @@ interface EditorStore {
   syncSroll: boolean;
   
   // Actions
-  openFile: (filePath: string, content: string, isPinned?: boolean, lastModified?: Date, syncStatus?: SyncStatus) => void;
+  openFile: (filePath: string, content: string, isPinned?: boolean, lastModified?: Date, syncStatus?: SyncStatus) => string;
   closeTab: (tabId: string) => void;
   setActiveTab: (tabId: string) => void;
   pinTab: (tabId) => void;
@@ -45,7 +45,7 @@ export const useEditorStore = create<EditorStore>()(
       showSourceEditor: false,
       syncSroll: true,
       
-      openFile: (filePath, content, isPinned = false, lastModified, syncStatus = 'out-of-date') => {
+      openFile: (filePath, content, isPinned = false, lastModified, syncStatus = 'syncing') => {
         const existingTab = get().tabs.find(tab => tab.filePath === filePath);
         if (existingTab) {
           // Update content if tab has no unsaved changes
@@ -61,7 +61,7 @@ export const useEditorStore = create<EditorStore>()(
           } else {
             throw new Error(`Tab for file "${filePath}" already exists with unsaved changes.`);
           }
-          return;
+          return existingTab.id;
         }
         
         // If opening in preview mode, close existing unpinned tab first
@@ -88,6 +88,8 @@ export const useEditorStore = create<EditorStore>()(
           tabs: [...state.tabs, newTab],
           activeTabId: newTab.id
         }));
+        
+        return newTab.id;
       },
       
       closeTab: (tabId) => {

@@ -1,7 +1,8 @@
 import toast from 'react-hot-toast'
 import { useFilePathEventStore } from '../stores/events/filePathEventStore'
 import { useWorkspaceStore } from '../stores/workspaceStore'
-import { useEditorStore, SyncStatus } from '@renderer/stores/editorStore'
+import { useEditorStore } from '@renderer/stores/editorStore'
+import { checkSyncStatus } from './checkSyncStatus'
 
 export const loadFileTree = async (workspacePath: string, setFileTree: (tree: any) => void) => {
   try{
@@ -16,37 +17,35 @@ export const loadFileTree = async (workspacePath: string, setFileTree: (tree: an
 export const handleOpenFile = async (workspacePath: string, filePath: string, pinned: boolean) => {
   try {
     // Check if file is already open
-    const { tabs, setActiveTab, pinTab, openFile } = useEditorStore.getState()
+    const { tabs, setActiveTab, pinTab, openFile, updateTabSyncStatus } = useEditorStore.getState()
     const existingTab = tabs.find(tab => tab.filePath === filePath)
+    let tabId = existingTab?.id
     if (existingTab) {
       // File is already open, just switch to that tab
       setActiveTab(existingTab.id)
       if (pinned && !existingTab.isPinned) {
         pinTab(existingTab.id)
       }
-      return
+    } else{
+      // File is not open, read content and open it
+      const [content, lastModified] = await Promise.all([
+        window.electron.ipcRenderer.invoke('file:read', workspacePath, filePath),
+        window.electron.ipcRenderer.invoke('file:get-last-modified-time', workspacePath, filePath)
+      ])
+      
+      // Open the file in the editor
+      tabId = openFile(filePath, content, pinned, new Date(lastModified))
+      // Add to recent files
+      useWorkspaceStore.getState().addRecentFile(filePath)
     }
     
-    // File is not open, read content and open it
-    const [content, lastModified] = await Promise.all([
-      window.electron.ipcRenderer.invoke('file:read', workspacePath, filePath),
-      window.electron.ipcRenderer.invoke('file:get-last-modified-time', workspacePath, filePath)
-    ])
-    
-    // Check sync status separately
-    let syncStatus: SyncStatus = 'error'
-    try {
-      const statusResult = await window.electron.ipcRenderer.invoke('git:file-status', workspacePath, filePath)
-      syncStatus = statusResult.hasChanges ? 'out-of-date' : 'synced'
-    } catch (syncError) {
-      console.warn('Failed to check sync status:', syncError)
-      syncStatus = 'error'
-    }
-    
-    // Open the file in the editor
-    openFile(filePath, content, pinned, new Date(lastModified), syncStatus)
-    // Add to recent files
-    useWorkspaceStore.getState().addRecentFile(filePath)
+    // Async check sync status, to avoid blocking opening the file
+    // checkSyncStatus will always return a result without throwing an error
+    checkSyncStatus(workspacePath, filePath).then((syncStatus) => {
+      if (tabId){
+        updateTabSyncStatus(tabId, syncStatus)
+      }
+    })
   } catch (error) {
     console.error('Failed to open file:', error)
     toast.error('Failed to open file: ' + error)

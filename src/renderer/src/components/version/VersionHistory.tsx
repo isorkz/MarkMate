@@ -73,10 +73,10 @@ const VersionHistory: React.FC<VersionHistoryProps> = ({ isOpen, setShowVersionH
       let diff = ''
       if (previousVersion) {
         // Get diff between previous and current version
-        diff = await window.electron.ipcRenderer.invoke('git:file-commits-diff', currentWorkspace.path, tab.filePath, previousVersion.hash, version.hash)
+        diff = await window.electron.ipcRenderer.invoke('git:get-file-commits-diff', currentWorkspace.path, tab.filePath, previousVersion.hash, version.hash)
       } else {
         // This is the first commit, show diff against empty
-        diff = await window.electron.ipcRenderer.invoke('git:file-commits-diff', currentWorkspace.path, tab.filePath, '4b825dc642cb6eb9a060e54bf8d69288fbee4904', version.hash) // Empty tree hash
+        diff = await window.electron.ipcRenderer.invoke('git:get-file-commits-diff', currentWorkspace.path, tab.filePath, '4b825dc642cb6eb9a060e54bf8d69288fbee4904', version.hash) // Empty tree hash
       }
 
       if (content !== null) {
@@ -99,7 +99,7 @@ const VersionHistory: React.FC<VersionHistoryProps> = ({ isOpen, setShowVersionH
     setLoading(true)
     try {
       // Get uncommitted diff
-      const diff = await window.electron.ipcRenderer.invoke('git:uncommitted-diff', currentWorkspace.path, tab.filePath)
+      const diff = await window.electron.ipcRenderer.invoke('git:get-uncommitted-diff', currentWorkspace.path, tab.filePath)
 
       // Use current tab content as preview content
       setPreviewContent(tab.content)

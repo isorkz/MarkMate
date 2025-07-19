@@ -32,7 +32,7 @@ export const useFullSearch = () => {
               const content = await window.electron.ipcRenderer.invoke('file:read', currentWorkspace.path, node.path)
               result.push({ ...node, content })
             } catch (error) {
-              console.warn(`Failed to read ${node.path}:`, error)
+              console.error(`Failed to read ${node.path}:`, error)
             }
           }
           if (node.children) {
