@@ -32,7 +32,7 @@ const FileTree: React.FC = () => {
     return tabs.some(tab => tab.filePath.startsWith(nodePath + '/'))
   }
 
-  const handleNodeClick = async (node: any, isFolder: boolean) => {
+  const handleNodeClick = async (node: FileNode, isFolder: boolean) => {
     if (isFolder) {
       toggleFolder(node.path)
     } else {
@@ -50,17 +50,12 @@ const FileTree: React.FC = () => {
     }
   }
 
-  const handleNodeDoubleClick = async (node: any, isFolder: boolean) => {
+  const handleNodeDoubleClick = async (node: FileNode, isFolder: boolean) => {
+    // The handleNodeClick() will be called first.
     if (!isFolder && currentWorkspace) {
-      // Check if file is already open first
       const existingTab = tabs.find(tab => tab.filePath === node.path)
-      if (existingTab) {
-        // File is already open, just switch to that tab
-        setActiveTab(existingTab.id)
+      if (existingTab && !existingTab.isPinned) {
         pinTab(existingTab.id)   // Pin the tab on double-click
-      } else {
-        // File is not open, read content and open it in pinned mode
-        handleOpenFile(currentWorkspace.path, node.path, true, openFile) // true = pinned tab
       }
     }
   }
