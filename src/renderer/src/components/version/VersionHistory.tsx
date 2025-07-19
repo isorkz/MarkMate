@@ -34,13 +34,7 @@ const VersionHistory: React.FC<VersionHistoryProps> = ({ isOpen, setShowVersionH
   useEffect(() => {
     if (isOpen && currentWorkspace && tab.filePath) {
       loadVersionHistory()
-      setSelectedVersion({
-        hash: 'uncommitted',
-        message: 'Uncommitted Changes',
-        date: new Date(),
-        author: '',
-        filePath: tab.filePath
-      })
+      handlePreviewUncommittedChanges()
     }
   }, [isOpen, currentWorkspace, tab.filePath])
 
