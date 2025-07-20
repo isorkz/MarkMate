@@ -1,19 +1,28 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { useWorkspaceStore } from '../../stores/workspaceStore'
 import { useEditorStore } from '../../stores/editorStore'
 import { useSettingsStore } from '../../stores/settingsStore'
 import Sidebar from './Sidebar'
 import MainContent from './MainContent'
-// import TOCPanel from '../editor/TOCPanel'
 import WorkspaceOpener from '../workspace/WorkspaceOpener'
 import LeftSideTopBar from './LeftSideTopBar'
 import FullSearch from '../search/FullSearch'
+import { useFullSearch } from '@renderer/hooks/useFullSearch'
 
 const AppLayout: React.FC = () => {
   const { currentWorkspace } = useWorkspaceStore()
-  const { toggleTOC, toggleSourceEditor, showTOC } = useEditorStore()
+  const { toggleTOC, toggleSourceEditor } = useEditorStore()
   const { updateAppearanceSettings, appearanceSettings } = useSettingsStore()
-  const [isFullSearchOpen, setIsFullSearchOpen] = useState(false)
+
+  // Full search functionality
+  const {
+    showSearch,
+    openSearch,
+    closeSearch,
+    searchTerm,
+    setSearchTerm,
+    searchResults,
+  } = useFullSearch()
 
   const toggleSidebar = () => {
     updateAppearanceSettings({ sidebarVisible: !appearanceSettings.sidebarVisible })
@@ -26,7 +35,7 @@ const AppLayout: React.FC = () => {
         switch (e.key) {
           case 'p':
             e.preventDefault()
-            setIsFullSearchOpen(true)
+            openSearch()
             break
           case '/':
             e.preventDefault()
@@ -69,15 +78,12 @@ const AppLayout: React.FC = () => {
 
       <MainContent />
 
-      {/* {showTOC && (
-        <div className="w-sidebar border-l border-gray-200">
-          <TOCPanel />
-        </div>
-      )} */}
-
       <FullSearch
-        isOpen={isFullSearchOpen}
-        onClose={() => setIsFullSearchOpen(false)}
+        isOpen={showSearch}
+        onClose={closeSearch}
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        searchResults={searchResults}
       />
     </div>
   )

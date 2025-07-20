@@ -1,18 +1,25 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { Search, X, File } from 'lucide-react'
-import { useFullSearch } from '../../hooks/useFullSearch'
 import { useWorkspaceStore } from '../../stores/workspaceStore'
 import { handleOpenFile } from '../../utils/fileOperations'
 
 interface FullSearchProps {
   isOpen: boolean
   onClose: () => void
+  searchTerm: string
+  setSearchTerm: (term: string) => void
+  searchResults: any[]
 }
 
-const FullSearch: React.FC<FullSearchProps> = ({ isOpen, onClose }) => {
+const FullSearch: React.FC<FullSearchProps> = ({
+  isOpen,
+  onClose,
+  searchTerm,
+  setSearchTerm,
+  searchResults,
+}) => {
   const [selectedIndex, setSelectedIndex] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
-  const { searchTerm, setSearchTerm, clearSearch, searchResults } = useFullSearch()
   const { currentWorkspace } = useWorkspaceStore()
 
   // Focus input when modal opens
@@ -61,7 +68,6 @@ const FullSearch: React.FC<FullSearchProps> = ({ isOpen, onClose }) => {
     if (currentWorkspace) {
       await handleOpenFile(currentWorkspace.path, file.path, false)
       onClose()
-      clearSearch()
     }
   }
 
@@ -83,7 +89,6 @@ const FullSearch: React.FC<FullSearchProps> = ({ isOpen, onClose }) => {
 
   const handleClose = () => {
     onClose()
-    clearSearch()
   }
 
   const highlightMatch = (text: string, searchTerm: string) => {

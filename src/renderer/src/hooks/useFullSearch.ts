@@ -9,6 +9,7 @@ interface SearchableFile extends FileNode {
 }
 
 export const useFullSearch = () => {
+  const [showSearch, setShowSearch] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const debouncedSearchTerm = useDebounce(searchTerm, 300)
   const { fileTree } = useFileSystemStore()
@@ -17,6 +18,8 @@ export const useFullSearch = () => {
 
   // Load markdown files with content
   useEffect(() => {
+    if (!showSearch) return
+    
     if (!currentWorkspace) {
       setFilesWithContent([])
       return
@@ -27,7 +30,7 @@ export const useFullSearch = () => {
       
       const traverse = async (nodeList: FileNode[]) => {
         for (const node of nodeList) {
-          if (node.type === 'file' && node.name.endsWith('.md')) {
+          if (node.type === 'file') {
             try {
               const content = await window.electron.ipcRenderer.invoke('file:read', currentWorkspace.path, node.path)
               result.push({ ...node, content })
@@ -46,7 +49,7 @@ export const useFullSearch = () => {
     }
     
     loadMarkdownFiles()
-  }, [fileTree, currentWorkspace])
+  }, [fileTree, currentWorkspace, showSearch])
 
   // Custom search function with priority scoring
   const customSearch = (files: SearchableFile[], term: string) => {
@@ -100,15 +103,21 @@ export const useFullSearch = () => {
     return customSearch(filesWithContent, debouncedSearchTerm)
   }, [debouncedSearchTerm, filesWithContent])
 
-  const clearSearch = () => {
+  const openSearch = () => {
+    setShowSearch(true)
+  }
+
+  const closeSearch = () => {
+    setShowSearch(false)
     setSearchTerm('')
   }
 
   return {
+    showSearch,
+    openSearch,
+    closeSearch,
     searchTerm,
     setSearchTerm,
-    clearSearch,
     searchResults,
-    isSearching: Boolean(debouncedSearchTerm.trim())
   }
 }

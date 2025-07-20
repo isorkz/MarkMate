@@ -92,14 +92,14 @@ export const useRichEditorSearch = (editor: Editor | null) => {
 
   return {
     showSearch,
+    openSearch,
+    closeSearch,
     searchTerm,
+    setSearchTerm,
     currentMatchIndex,
     totalMatches,
-    searchInputRef,
     nextMatch,
     prevMatch,
-    closeSearch,
-    openSearch,
-    setSearchTerm
+    searchInputRef,
   }
 }

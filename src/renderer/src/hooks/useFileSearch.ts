@@ -10,6 +10,10 @@ export const useFileSearch = () => {
 
   // Flatten file tree to get all files
   const allFiles = useMemo(() => {
+    if (!debouncedSearchTerm.trim()) {
+      return []
+    }
+    
     const flatten = (nodes: FileNode[]): FileNode[] => {
       const result: FileNode[] = []
       
