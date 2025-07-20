@@ -3,10 +3,10 @@ import { PanelLeft } from 'lucide-react'
 import { useSettingsStore } from '../../stores/settingsStore'
 
 const LeftSideTopBar: React.FC = () => {
-  const { settings, updateSettings } = useSettingsStore()
+  const { appearanceSettings, updateAppearanceSettings } = useSettingsStore()
 
   const toggleSidebar = () => {
-    updateSettings('sidebarVisible', !settings.sidebarVisible)
+    updateAppearanceSettings({ sidebarVisible: !appearanceSettings.sidebarVisible })
   }
 
   return (

@@ -11,8 +11,8 @@ interface EditorProps {
 }
 
 const Editor: React.FC<EditorProps> = ({ tab }) => {
-  const { showSourceEditor, showTOC } = useEditorStore()
-  const { settings } = useSettingsStore()
+  const { showSourceEditor, showTOC, readOnlyMode } = useEditorStore()
+  const { appearanceSettings } = useSettingsStore()
 
   // Use manual save hook
   useManualSave(tab)
@@ -20,12 +20,11 @@ const Editor: React.FC<EditorProps> = ({ tab }) => {
   return (
     <div className="flex flex-1 overflow-hidden relative">
       {/* Read Only Mode Indicator */}
-      {settings.readOnlyMode && (
-        <div className={`absolute top-4 right-4 z-10 px-3 py-1 rounded-full text-sm font-medium shadow-md border ${
-          settings.theme === 'dark' 
-            ? 'bg-yellow-900 text-yellow-200 border-yellow-700' 
-            : 'bg-yellow-100 text-yellow-800 border-yellow-200'
-        }`}>
+      {readOnlyMode && (
+        <div className={`absolute top-4 right-4 z-10 px-3 py-1 rounded-full text-sm font-medium shadow-md border ${appearanceSettings.theme === 'dark'
+          ? 'bg-yellow-900 text-yellow-200 border-yellow-700'
+          : 'bg-yellow-100 text-yellow-800 border-yellow-200'
+          }`}>
           Read Only Mode
         </div>
       )}

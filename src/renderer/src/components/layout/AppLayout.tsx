@@ -12,11 +12,11 @@ import FullSearch from '../search/FullSearch'
 const AppLayout: React.FC = () => {
   const { currentWorkspace } = useWorkspaceStore()
   const { toggleTOC, toggleSourceEditor, showTOC } = useEditorStore()
-  const { updateSettings, settings } = useSettingsStore()
+  const { updateAppearanceSettings, appearanceSettings } = useSettingsStore()
   const [isFullSearchOpen, setIsFullSearchOpen] = useState(false)
 
   const toggleSidebar = () => {
-    updateSettings('sidebarVisible', !settings.sidebarVisible)
+    updateAppearanceSettings({ sidebarVisible: !appearanceSettings.sidebarVisible })
   }
 
   // Keyboard shortcuts
@@ -65,7 +65,7 @@ const AppLayout: React.FC = () => {
     <div className="h-screen flex bg-white overflow-x-hidden relative">
       <LeftSideTopBar />
 
-      {settings.sidebarVisible && <Sidebar />}
+      {appearanceSettings.sidebarVisible && <Sidebar />}
 
       <MainContent />
 

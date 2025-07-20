@@ -1,57 +1,100 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-interface AppSettings {
-  theme: 'light' | 'dark' | 'auto';
+export type SettingsType = 'general' | 'appearance' | 'sync'
+
+interface GeneralSettings {
+  autoSaveEnabled: boolean;
+  autoSaveDelayInSeconds: number;
+}
+
+interface AppearanceSettings {
+  theme: 'light' | 'dark';
   fontSize: number;
   fontFamily: string;
   sidebarVisible: boolean;
-  autoSaveEnabled: boolean;
-  autoSaveDelayInSeconds: number;
+}
+
+interface SyncSettings {
   autoSyncEnabled: boolean;
   autoSyncDelayInSeconds: number;
-  readOnlyMode: boolean;
+  gitUsername: string;
+  gitEmail: string;
+  gitRemoteUrl: string;
 }
 
 interface SettingsStore {
-  settings: AppSettings;
-  updateSettings: (path: string, value: any) => void;
+  generalSettings: GeneralSettings;
+  appearanceSettings: AppearanceSettings;
+  syncSettings: SyncSettings;
+  
+  // UI state
+  isOpen: boolean;
+  activeSettings: SettingsType;
+  
+  // Actions
+  openSettings: (type: SettingsType) => void;
+  closeSettings: () => void;
+  setActiveSettings: (type: SettingsType) => void;
+  updateGeneralSettings: (settings: Partial<GeneralSettings>) => void;
+  updateAppearanceSettings: (settings: Partial<AppearanceSettings>) => void;
+  updateSyncSettings: (settings: Partial<SyncSettings>) => void;
   resetSettings: () => void;
 }
 
-const defaultSettings: AppSettings = {
-  theme: 'auto',
+const defaultGeneralSettings: GeneralSettings = {
+  autoSaveEnabled: true,
+  autoSaveDelayInSeconds: 10
+};
+
+const defaultAppearanceSettings: AppearanceSettings = {
+  theme: 'light',
   fontSize: 14,
   fontFamily: 'Monaco, monospace',
   sidebarVisible: true,
-  autoSaveEnabled: true,
-  autoSaveDelayInSeconds: 10,
+};
+
+const defaultSyncSettings: SyncSettings = {
   autoSyncEnabled: true,
   autoSyncDelayInSeconds: 300, // 5 minutes
-  readOnlyMode: false
+  gitUsername: '',
+  gitEmail: '',
+  gitRemoteUrl: ''
 };
 
 export const useSettingsStore = create<SettingsStore>()(
   persist(
     (set, get) => ({
-      settings: defaultSettings,
+      generalSettings: defaultGeneralSettings,
+      appearanceSettings: defaultAppearanceSettings,
+      syncSettings: defaultSyncSettings,
       
-      updateSettings: (path, value) => {
-        const keys = path.split('.');
-        set(state => {
-          const newSettings = { ...state.settings };
-          let current = newSettings;
-          
-          for (let i = 0; i < keys.length - 1; i++) {
-            current = current[keys[i]] = { ...current[keys[i]] };
-          }
-          
-          current[keys[keys.length - 1]] = value;
-          return { settings: newSettings };
-        });
-      },
+      // UI state
+      isOpen: false,
+      activeSettings: 'general',
       
-      resetSettings: () => set({ settings: defaultSettings })
+      // Actions
+      openSettings: (type) => set({ isOpen: true, activeSettings: type }),
+      closeSettings: () => set({ isOpen: false }),
+      setActiveSettings: (type) => set({ activeSettings: type }),
+      
+      updateGeneralSettings: (settings) => set(state => ({
+        generalSettings: { ...state.generalSettings, ...settings }
+      })),
+
+      updateAppearanceSettings: (settings) => set(state => ({
+        appearanceSettings: { ...state.appearanceSettings, ...settings }
+      })),
+      
+      updateSyncSettings: (settings) => set(state => ({
+        syncSettings: { ...state.syncSettings, ...settings }
+      })),
+      
+      resetSettings: () => set({ 
+        generalSettings: defaultGeneralSettings, 
+        appearanceSettings: defaultAppearanceSettings, 
+        syncSettings: defaultSyncSettings 
+      })
     }),
     {
       name: 'settings-storage'

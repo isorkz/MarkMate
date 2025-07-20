@@ -38,9 +38,9 @@ interface RichEditorProps {
 }
 
 const RichEditor: React.FC<RichEditorProps> = ({ tab }) => {
-  const { updateTabContent } = useEditorStore()
-  const { settings } = useSettingsStore()
+  const { updateTabContent, readOnlyMode } = useEditorStore()
   const { currentWorkspace } = useWorkspaceStore()
+  const { appearanceSettings } = useSettingsStore()
 
   const editor = useEditor({
     extensions: [
@@ -120,12 +120,12 @@ const RichEditor: React.FC<RichEditorProps> = ({ tab }) => {
     },
     editorProps: {
       attributes: {
-        class: `RichEditorView max-w-none focus:outline-none h-full overflow-auto ${settings.readOnlyMode ? 'select-text' : ''}`,
-        style: `font-size: 16px; padding: 60px; line-height: 1.6; ${settings.readOnlyMode ? 'user-select: text; -webkit-user-select: text; -moz-user-select: text; -ms-user-select: text;' : ''}`
+        class: `RichEditorView max-w-none focus:outline-none h-full overflow-auto ${readOnlyMode ? 'select-text' : ''}`,
+        style: `font-size: 16px; padding: 60px; line-height: 1.6; ${readOnlyMode ? 'user-select: text; -webkit-user-select: text; -moz-user-select: text; -ms-user-select: text;' : ''}`
       },
       // Allow selection and copy even in read-only mode
       handleKeyDown: (view, event) => {
-        if (settings.readOnlyMode) {
+        if (readOnlyMode) {
           // Allow Ctrl+A (Select All) and Ctrl+C (Copy) in read-only mode
           if ((event.ctrlKey || event.metaKey) && (event.key === 'a' || event.key === 'c')) {
             return false // Allow default behavior
@@ -181,9 +181,9 @@ const RichEditor: React.FC<RichEditorProps> = ({ tab }) => {
   // Update editor editable state when read-only mode changes
   useEffect(() => {
     if (editor) {
-      editor.setEditable(!settings.readOnlyMode)
+      editor.setEditable(!readOnlyMode)
     }
-  }, [editor, settings.readOnlyMode])
+  }, [editor, readOnlyMode])
 
   // Resolve image paths when content is loaded or workspace/tab changes
   useEffect(() => {
@@ -218,7 +218,7 @@ const RichEditor: React.FC<RichEditorProps> = ({ tab }) => {
 
   return (
     <div
-      className={`h-full flex flex-col relative ${settings.theme === 'dark' ? 'bg-gray-900' : 'bg-white'}`}
+      className={`h-full flex flex-col relative ${appearanceSettings.theme === 'dark' ? 'bg-gray-900' : 'bg-white'}`}
     >
       {/* Search Component */}
       {showSearch && (
@@ -240,7 +240,7 @@ const RichEditor: React.FC<RichEditorProps> = ({ tab }) => {
         <div className="max-w-4xl mx-auto">
           <EditorContent
             editor={editor}
-            className={`min-h-full ${settings.theme === 'dark' ? 'prose-invert' : ''}`}
+            className={`min-h-full ${appearanceSettings.theme === 'dark' ? 'prose-invert' : ''}`}
           />
 
           {editor && <LinkBubbleMenu editor={editor} />}

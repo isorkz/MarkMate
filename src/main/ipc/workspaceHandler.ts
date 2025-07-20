@@ -21,12 +21,7 @@ export function setupWorkspaceHandlers() {
       id: Date.now().toString(),
       name: workspaceName,
       path: workspacePath,
-      lastAccessed: new Date(),
-      settings: {
-        autoSaveEnabled: true,
-        autoSaveDelay: 2000,
-        gitAutoCommit: false
-      }
+      lastAccessed: new Date()
     }
   })
   

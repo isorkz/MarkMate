@@ -8,18 +8,18 @@ import Editor from '../editor/Editor'
 
 const MainContent: React.FC = () => {
   const { tabs, activeTabId } = useEditorStore()
-  const { settings } = useSettingsStore()
+  const { generalSettings, syncSettings } = useSettingsStore()
 
   // Auto-save all tabs
   useAutoSave({
-    enabled: settings.autoSaveEnabled,
-    delayInSeconds: settings.autoSaveDelayInSeconds
+    enabled: generalSettings.autoSaveEnabled,
+    delayInSeconds: generalSettings.autoSaveDelayInSeconds
   })
 
   // Auto-sync all tabs
   useAutoSync({
-    enabled: settings.autoSyncEnabled,
-    delayInSeconds: settings.autoSyncDelayInSeconds
+    enabled: syncSettings.autoSyncEnabled,
+    delayInSeconds: syncSettings.autoSyncDelayInSeconds
   })
 
   return (

@@ -20,7 +20,7 @@ interface EditorStore {
   activeTabId: string | null;
   showTOC: boolean;
   showSourceEditor: boolean;
-  syncSroll: boolean;
+  readOnlyMode: boolean;
   
   // Actions
   openFile: (filePath: string, content: string, isPinned?: boolean, lastModified?: Date, syncStatus?: SyncStatus) => string;
@@ -34,6 +34,7 @@ interface EditorStore {
   saveTabState: (tabId: string, state: Partial<Tab>) => void;
   toggleTOC: () => void;
   toggleSourceEditor: () => void;
+  toggleReadOnlyMode: () => void;
 }
 
 export const useEditorStore = create<EditorStore>()(
@@ -43,7 +44,7 @@ export const useEditorStore = create<EditorStore>()(
       activeTabId: null,
       showTOC: true,
       showSourceEditor: false,
-      syncSroll: true,
+      readOnlyMode: false,
       
       openFile: (filePath, content, isPinned = false, lastModified, syncStatus = 'syncing') => {
         const existingTab = get().tabs.find(tab => tab.filePath === filePath);
@@ -154,7 +155,9 @@ export const useEditorStore = create<EditorStore>()(
       
       toggleTOC: () => set(state => ({ showTOC: !state.showTOC })),
       
-      toggleSourceEditor: () => set(state => ({ showSourceEditor: !state.showSourceEditor }))
+      toggleSourceEditor: () => set(state => ({ showSourceEditor: !state.showSourceEditor })),
+
+      toggleReadOnlyMode: () => set(state => ({ readOnlyMode: !state.readOnlyMode }))
     }),
     {
       name: 'editor-storage',

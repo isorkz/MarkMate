@@ -4,22 +4,41 @@ import simpleGit from 'simple-git'
 
 export function setupGitHandlers() {
   // Initialize Git repository
-  ipcMain.handle('git:init', async (_, workspacePath: string) => {
+  // ipcMain.handle('git:init', async (_, workspacePath: string) => {
+  //   try {
+  //     const git = simpleGit(workspacePath)
+      
+  //     // Check if Git repo already exists
+  //     const isRepo = await git.checkIsRepo()
+  //     if (isRepo) {
+  //       return // Repository already exists
+  //     }
+      
+  //     // Initialize new repository
+  //     await git.init()
+  //     await git.addConfig('user.name', 'MarkMate User')
+  //     await git.addConfig('user.email', 'user@markmate.local')
+  //   } catch (error) {
+  //     console.error('Failed to initialize Git repository:', error)
+  //     throw error
+  //   }
+  // })
+
+  // Configure Git
+  ipcMain.handle('git:config', async (_, workspacePath: string, gitUsername: string, gitEmail: string, gitRemoteUrl: string) => {
     try {
       const git = simpleGit(workspacePath)
       
-      // Check if Git repo already exists
-      const isRepo = await git.checkIsRepo()
-      if (isRepo) {
-        return // Repository already exists
-      }
+      // Set user config
+      await git.addConfig('user.name', gitUsername)
+      await git.addConfig('user.email', gitEmail)
       
-      // Initialize new repository
-      await git.init()
-      await git.addConfig('user.name', 'MarkMate User')
-      await git.addConfig('user.email', 'user@markmate.local')
+      await git.remote(['set-url', 'origin', gitRemoteUrl])
+
+      // Test remote URL by setting it and fetching
+      await git.fetch('origin')
     } catch (error) {
-      console.error('Failed to initialize Git repository:', error)
+      console.error('Git config failed:', error)
       throw error
     }
   })
@@ -136,17 +155,6 @@ export function setupGitHandlers() {
         await git.commit(commitMessage)
       }
 
-      // Configure credentials if available
-      if (import.meta.env.VITE_GIT_USERNAME && import.meta.env.VITE_GIT_TOKEN) {
-        const username = import.meta.env.VITE_GIT_USERNAME
-        const useremail = import.meta.env.VITE_GIT_USEREMAIL
-        const remote_url = import.meta.env.VITE_GIT_REMOTE_URL
-        
-        await git.addConfig('user.name', username)
-        await git.addConfig('user.email', useremail)
-        await git.remote(['set-url', remote, remote_url])
-      }
-
       // Pull latest changes with rebase
       await git.pull(remote, 'main', { '--rebase': 'true' })
 
@@ -201,17 +209,7 @@ export function setupGitHandlers() {
         console.log('remote: ', remotes)
         throw `Remote '${remote}' does not exist`
       }
-      
-      if (import.meta.env.VITE_GIT_USERNAME && import.meta.env.VITE_GIT_TOKEN) {
-        const username = import.meta.env.VITE_GIT_USERNAME
-        const useremail = import.meta.env.VITE_GIT_USEREMAIL
-        const remote_url = import.meta.env.VITE_GIT_REMOTE_URL
-        
-        await git.addConfig('user.name', username)
-        await git.addConfig('user.email', useremail)
-        await git.remote(['set-url', remote, remote_url])
-      }
-      
+
       // Fetch latest remote info (without merging)
       await git.fetch(remote, branch)
       

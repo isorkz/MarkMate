@@ -12,11 +12,14 @@ export const useMenuHandlers = () => {
     closeTab,
     toggleSourceEditor,
     toggleTOC,
+    toggleReadOnlyMode,
     markTabDirty 
   } = useEditorStore()
   
   const { 
-    updateSettings 
+    appearanceSettings,
+    updateAppearanceSettings,
+    openSettings
   } = useSettingsStore()
   
   const { 
@@ -78,8 +81,8 @@ export const useMenuHandlers = () => {
     }
 
     // View menu handlers
-    const handleToggleReadOnly = (_, isReadOnly: boolean) => {
-      updateSettings('readOnlyMode', isReadOnly)
+    const handleToggleReadOnly = () => {
+      toggleReadOnlyMode()
     }
 
     const handleToggleSourceEditor = () => {
@@ -88,6 +91,10 @@ export const useMenuHandlers = () => {
 
     const handleToggleTOC = () => {
       toggleTOC()
+    }
+
+    const handleToggleSidebar = () => {
+      updateAppearanceSettings({ sidebarVisible: !appearanceSettings.sidebarVisible })
     }
 
     // Recent files handlers
@@ -106,6 +113,10 @@ export const useMenuHandlers = () => {
       clearRecentFiles()
     }
 
+    const handleOpenSettings = () => {
+      openSettings('general')
+    }
+
     // Register IPC listeners
     window.electron.ipcRenderer.on('menu:close-tab', handleCloseTab)
     window.electron.ipcRenderer.on('menu:save-tab', handleSaveTab)
@@ -114,8 +125,10 @@ export const useMenuHandlers = () => {
     window.electron.ipcRenderer.on('menu:toggle-read-only', handleToggleReadOnly)
     window.electron.ipcRenderer.on('menu:toggle-source-editor', handleToggleSourceEditor)
     window.electron.ipcRenderer.on('menu:toggle-toc', handleToggleTOC)
+    window.electron.ipcRenderer.on('menu:toggle-sidebar', handleToggleSidebar)
     window.electron.ipcRenderer.on('menu:open-recent-file', handleOpenRecentFile)
     window.electron.ipcRenderer.on('menu:clear-recent-files', handleClearRecentFiles)
+    window.electron.ipcRenderer.on('menu:open-settings', handleOpenSettings)
 
     // Cleanup
     return () => {
@@ -126,10 +139,12 @@ export const useMenuHandlers = () => {
       window.electron.ipcRenderer.removeAllListeners('menu:toggle-read-only')
       window.electron.ipcRenderer.removeAllListeners('menu:toggle-source-editor')
       window.electron.ipcRenderer.removeAllListeners('menu:toggle-toc')
+      window.electron.ipcRenderer.removeAllListeners('menu:toggle-sidebar')
       window.electron.ipcRenderer.removeAllListeners('menu:open-recent-file')
       window.electron.ipcRenderer.removeAllListeners('menu:clear-recent-files')
+      window.electron.ipcRenderer.removeAllListeners('menu:open-settings')
     }
-  }, [activeTabId, tabs, currentWorkspace, closeTab, toggleSourceEditor, updateSettings, markTabDirty])
+  }, [activeTabId, tabs, currentWorkspace, appearanceSettings, closeTab, toggleSourceEditor, updateAppearanceSettings, markTabDirty])
 
   // Update menu when recent files change
   useEffect(() => {

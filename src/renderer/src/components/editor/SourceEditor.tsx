@@ -12,8 +12,8 @@ interface SourceEditorProps {
 }
 
 const SourceEditor: React.FC<SourceEditorProps> = ({ tab }) => {
-  const { updateTabContent } = useEditorStore()
-  const { settings } = useSettingsStore()
+  const { updateTabContent, readOnlyMode } = useEditorStore()
+  const { appearanceSettings } = useSettingsStore()
 
   const onChange = (value: string) => {
     updateTabContent(tab.id, value)
@@ -42,9 +42,9 @@ const SourceEditor: React.FC<SourceEditorProps> = ({ tab }) => {
         value={tab.content}
         height="100%"
         extensions={[markdown(), disableCommentKeymap]}
-        theme={settings.theme === 'dark' ? oneDark : undefined}
+        theme={appearanceSettings.theme === 'dark' ? oneDark : undefined}
         onChange={onChange}
-        readOnly={settings.readOnlyMode}
+        readOnly={readOnlyMode}
         basicSetup={{
           lineNumbers: true,
           foldGutter: true,
@@ -58,8 +58,8 @@ const SourceEditor: React.FC<SourceEditorProps> = ({ tab }) => {
           defaultKeymap: true, // false - Disable default keymap to avoid conflicts
         }}
         style={{
-          fontSize: `${settings.fontSize}px`,
-          fontFamily: settings.fontFamily,
+          fontSize: `${appearanceSettings.fontSize}px`,
+          fontFamily: appearanceSettings.fontFamily,
         }}
       />
     </div>

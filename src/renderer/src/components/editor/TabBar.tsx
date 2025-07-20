@@ -73,7 +73,7 @@ const Tab: React.FC<TabProps> = ({ tab, isActive, onClose, onSelect, onPin }) =>
 
 const TabBar: React.FC = () => {
   const { tabs, activeTabId, setActiveTab, closeTab, reorderTabs, pinTab } = useEditorStore()
-  const { settings } = useSettingsStore()
+  const { appearanceSettings } = useSettingsStore()
   const [showVersionHistory, setShowVersionHistory] = useState(false)
 
   const activeTab = tabs.find(tab => tab.id === activeTabId) || null
@@ -114,7 +114,7 @@ const TabBar: React.FC = () => {
 
   return (
     <div
-      className={`flex bg-gray-50 border-b border-gray-200 min-h-[40px] ${!settings.sidebarVisible ? 'ml-32' : ''}`}
+      className={`flex bg-gray-50 border-b border-gray-200 min-h-[40px] ${!appearanceSettings.sidebarVisible ? 'ml-32' : ''}`}
       style={{ WebkitAppRegion: 'drag' }}
     >
       {tabs.length > 0 ? (

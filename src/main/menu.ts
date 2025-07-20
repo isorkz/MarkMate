@@ -12,6 +12,15 @@ export function createAppMenu(mainWindow: BrowserWindow, recentFiles: string[] =
       submenu: [
         { role: 'about' },
         { type: 'separator' },
+        {
+          // MacOS specific: Preferences menu
+          label: 'Preferences...',
+          accelerator: 'CmdOrCtrl+,',
+          click: () => {
+            mainWindow.webContents.send('menu:open-settings')
+          }
+        },
+        { type: 'separator' },
         { role: 'services' },
         { type: 'separator' },
         { role: 'hide' },
@@ -164,6 +173,13 @@ export function createAppMenu(mainWindow: BrowserWindow, recentFiles: string[] =
             mainWindow.webContents.send('menu:toggle-toc')
           }
         },
+        {
+          label: 'Toggle Sidebar',
+          accelerator: 'CmdOrCtrl+Shift+B',
+          click: () => {
+            mainWindow.webContents.send('menu:toggle-sidebar')
+          }
+        },
         { type: 'separator' },
         // { role: 'reload' },
         { role: 'forceReload' },
@@ -174,6 +190,15 @@ export function createAppMenu(mainWindow: BrowserWindow, recentFiles: string[] =
         { role: 'resetZoom' },
         { type: 'separator' },
         { role: 'togglefullscreen' },
+        { type: 'separator' },
+        {
+          // For non-Mac platforms, this will be the Settings menu
+          label: 'Settings...',
+          accelerator: process.platform === 'darwin' ? undefined : 'CmdOrCtrl+,',
+          click: () => {
+            mainWindow.webContents.send('menu:open-settings')
+          }
+        },
       ]
     },
 

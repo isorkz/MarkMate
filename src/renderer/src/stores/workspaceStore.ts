@@ -5,15 +5,11 @@ import { useFilePathEventStore } from './events/filePathEventStore'
 
 const MAX_RECENT_FILES = 10
 
-interface WorkspaceSettings {
-}
-
 interface Workspace {
   id: string;
   name: string;
   path: string;
   lastAccessed: Date;
-  settings: WorkspaceSettings;
 }
 
 interface WorkspaceStore {
