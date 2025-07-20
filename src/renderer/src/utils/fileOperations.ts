@@ -84,19 +84,19 @@ export const handleNewFolder = async (workspacePath: string, parentPath: string,
   }
 }
 
-export const handleRename = async (workspacePath: string, oldPath: string, oldName: string, newName: string) => {
+export const handleRename = async (workspacePath: string, oldPath: string, oldName: string, newName: string, isFolder: boolean) => {
   const pathParts = oldPath.split('/')
-  let isMdFile = oldName.endsWith('.md')
-  let newFinalName = newName.trim()
-  // Auto-add .md extension for new files if not present
-  if (isMdFile && !newFinalName.includes('.')) {
-    newFinalName = `${newFinalName}.md`
-  }
-  if (oldName === newFinalName) {
+  let newMdName = newName.trim()
+  if (oldName === newMdName) {
     return
   }
 
-  const newPath = [...pathParts.slice(0, -1), newFinalName].join('/')
+  // Auto-add .md extension for new files if not present
+  if (!isFolder && !newMdName.endsWith('.md')) {
+    newMdName = `${newMdName}.md`
+  }
+
+  const newPath = [...pathParts.slice(0, -1), newMdName].join('/')
   
   try {
     await window.electron.ipcRenderer.invoke('file:rename', workspacePath, oldPath, newPath)

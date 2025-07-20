@@ -4,9 +4,10 @@ import { Folder, FolderOpen, File, ChevronRight, ChevronDown, Star } from 'lucid
 import { useFileSystemStore } from '../../stores/fileSystemStore'
 import { useWorkspaceStore } from '../../stores/workspaceStore'
 import { useEditorStore } from '../../stores/editorStore'
-import FileContextMenu, { FileNode } from './FileContextMenu'
+import FileContextMenu from './FileContextMenu'
 import InlineInput from './InlineInput'
 import { handleNewFile, handleNewFolder, handleRename, handleDelete, loadFileTree, handleOpenFile } from '../../utils/fileOperations'
+import { FileNode } from '@renderer/types'
 
 const FileTree: React.FC = () => {
   const { fileTree, expandedFolders, toggleFolder, setFileTree } = useFileSystemStore()
@@ -17,9 +18,10 @@ const FileTree: React.FC = () => {
     position: { x: number; y: number }
   } | null>(null)
   const [editingMode, setEditingMode] = useState<{
-    mode: 'rename' | 'new-file' | 'new-folder'
+    mode: 'create' | 'rename'
+    type: 'file' | 'folder'
     path: string // For rename: the item path, for new: the parent path
-    initialValue?: string // For rename: current name
+    initialValue?: string // For rename: current display name, for new: undefined
   } | null>(null)
 
   // Helper function to check if a path contains any open files
@@ -71,7 +73,7 @@ const FileTree: React.FC = () => {
     if (parentPath && !expandedFolders.has(parentPath)) {
       toggleFolder(parentPath)
     }
-    setEditingMode({ mode: 'new-file', path: parentPath })
+    setEditingMode({ mode: 'create', type: 'file', path: parentPath })
     setContextMenu(null)
   }
 
@@ -80,7 +82,7 @@ const FileTree: React.FC = () => {
     if (parentPath && !expandedFolders.has(parentPath)) {
       toggleFolder(parentPath)
     }
-    setEditingMode({ mode: 'new-folder', path: parentPath })
+    setEditingMode({ mode: 'create', type: 'folder', path: parentPath })
     setContextMenu(null)
   }
 
@@ -88,9 +90,9 @@ const FileTree: React.FC = () => {
     if (!currentWorkspace || !editingMode || !value.trim()) return
 
     if (editingMode.mode === 'rename') {
-      await handleRename(currentWorkspace.path, editingMode.path, editingMode.initialValue || '', value)
-    } else {
-      if (editingMode.mode === 'new-file') {
+      await handleRename(currentWorkspace.path, editingMode.path, editingMode.initialValue || '', value, editingMode.type === 'folder')
+    } else if (editingMode.mode === 'create') {
+      if (editingMode.type === 'file') {
         await handleNewFile(currentWorkspace.path, editingMode.path, value, setFileTree)
       } else {
         await handleNewFolder(currentWorkspace.path, editingMode.path, value, setFileTree)
@@ -109,8 +111,8 @@ const FileTree: React.FC = () => {
     handleOpenFile(currentWorkspace.path, filePath, true) // true = pinned tab
   }
 
-  const onRename = (path: string, currentName: string) => {
-    setEditingMode({ mode: 'rename', path, initialValue: currentName })
+  const onRename = (path: string, currentName: string, isFolder: boolean) => {
+    setEditingMode({ mode: 'rename', type: isFolder ? 'folder' : 'file', path, initialValue: currentName })
     setContextMenu(null)
   }
 
@@ -184,7 +186,7 @@ const FileTree: React.FC = () => {
               <File className="w-4 h-4 flex-shrink-0" />
             )}
 
-            {editingMode && editingMode.mode === 'rename' && editingMode.path === node.path ? (
+            {editingMode && editingMode.mode.startsWith('rename') && editingMode.path === node.path ? (
               <InlineInput
                 type={isFolder ? 'folder' : 'file'}
                 mode="rename"
@@ -208,9 +210,9 @@ const FileTree: React.FC = () => {
         {isFolder && isExpanded && (
           <div>
             {node.children && node.children.map((child: any) => renderNode(child, depth + 1))}
-            {editingMode && (editingMode.mode === 'new-file' || editingMode.mode === 'new-folder') && editingMode.path === node.path && (
+            {editingMode && (editingMode.mode === 'create') && editingMode.path === node.path && (
               <InlineInput
-                type={editingMode.mode === 'new-folder' ? 'folder' : 'file'}
+                type={editingMode.type}
                 mode="create"
                 depth={depth + 1}
                 onConfirm={handleEditConfirm}
@@ -278,7 +280,7 @@ const FileTree: React.FC = () => {
           onNewFile={onNewFile}
           onNewFolder={onNewFolder}
           onOpenInNewTab={onOpenInNewTab}
-          onRename={() => onRename(contextMenu.node.path, contextMenu.node.name)}
+          onRename={() => onRename(contextMenu.node.path, contextMenu.node.name, contextMenu.node.type === 'folder')}
           onDelete={onDelete}
           onToggleFavorite={toggleFavorite}
           isFavorite={isFavorite(contextMenu.node.path)}

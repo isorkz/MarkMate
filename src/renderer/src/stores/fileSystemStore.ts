@@ -39,9 +39,9 @@ export const useFileSystemStore = create<FileSystemStore>((set, get) => ({
         if (node.path === oldPath) {
           // Update the main node
           return { 
-            ...node, 
-            path: newPath, 
-            name: newName,
+            ...node,
+            path: newPath,
+            name: newName.replace(/\.md$/, ''), // Remove .md extension if present
             children: node.children ? updateChildrenPaths(node.children, oldPath, newPath) : undefined
           };
         }

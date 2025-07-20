@@ -7,7 +7,7 @@ export type SyncStatus = 'synced' | 'out-of-date' | 'syncing' | 'error';
 export interface Tab {
   id: string;
   filePath: string;
-  title: string;
+  title: string;  // without '.md' extension
   content: string;
   hasUnsavedChanges: boolean;
   lastModified: Date;
@@ -77,7 +77,7 @@ export const useEditorStore = create<EditorStore>()(
         const newTab: Tab = {
           id: Date.now().toString(),
           filePath,
-          title: filePath.split('/').pop() || 'Untitled',
+          title: (filePath.split('/').pop() || 'Untitled').replace(/\.md$/, ''),
           content,
           hasUnsavedChanges: false,
           lastModified: lastModified || new Date(),
@@ -184,14 +184,14 @@ useFilePathEventStore.subscribe((state) => {
         return {
           ...tab,
           filePath: newPath,
-          title: newPath.split('/').pop() || 'Untitled'
+          title: (newPath.split('/').pop() || 'Untitled').replace(/\.md$/, '')
         }
       } else if (tab.filePath.startsWith(oldPath + '/')) {
         const newFilePath = tab.filePath.replace(oldPath, newPath)
         return {
           ...tab,
           filePath: newFilePath,
-          title: newFilePath.split('/').pop() || 'Untitled'
+          title: (newFilePath.split('/').pop() || 'Untitled').replace(/\.md$/, '')
         }
       }
       return tab

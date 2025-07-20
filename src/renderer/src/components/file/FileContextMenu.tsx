@@ -1,19 +1,13 @@
-import React, { useState } from 'react'
-import { 
-  FileText, 
-  Folder, 
-  Edit3, 
-  Trash2, 
+import React from 'react'
+import {
+  FileText,
+  Folder,
+  Edit3,
+  Trash2,
   Star,
   ExternalLink
 } from 'lucide-react'
-
-export interface FileNode {
-  id: string
-  name: string
-  path: string
-  type: 'file' | 'folder'
-}
+import { FileNode } from '@renderer/types';
 
 interface FileContextMenuProps {
   node: FileNode
@@ -103,11 +97,11 @@ const FileContextMenu: React.FC<FileContextMenuProps> = ({
   return (
     <>
       {/* Backdrop */}
-      <div 
-        className="fixed inset-0 z-40" 
+      <div
+        className="fixed inset-0 z-40"
         onClick={onClose}
       />
-      
+
       {/* Context Menu */}
       <div
         className="fixed z-50 bg-white border border-gray-200 rounded-md shadow-lg py-1 min-w-48"

@@ -57,7 +57,7 @@ export function setupWorkspaceHandlers() {
           } else if (item.name.endsWith('.md')) {
             children.push({
               id: itemRelativePath,
-              name: item.name,
+              name: item.name.replace(/\.md$/, ''), // Remove .md extension for display
               path: itemRelativePath,
               type: 'file',
               // lastModified: stats.mtime,
