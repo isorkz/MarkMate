@@ -27,6 +27,9 @@ import RichEditorSearch from '../search/RichEditorSearch'
 import LinkBubbleMenu from './LinkBubbleMenu'
 // https://github.com/sereneinserenade/tiptap-search-and-replace
 import SearchAndReplace from './extensions/search/SearchAndReplace'
+// Slash commands extension
+import { SlashCommands } from './extensions/slash-commands/SlashCommands'
+import { suggestion } from './extensions/slash-commands/suggestion'
 // load all languages with "all" or common languages with "common"
 import { common, createLowlight } from 'lowlight'
 
@@ -100,6 +103,9 @@ const RichEditor: React.FC<RichEditorProps> = ({ tab }) => {
       }),
       SearchAndReplace.configure({
         disableRegex: false,
+      }),
+      SlashCommands.configure({
+        suggestion,
       }),
       Typography,
       BubbleMenu,
