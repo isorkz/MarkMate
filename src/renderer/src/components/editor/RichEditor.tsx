@@ -24,7 +24,7 @@ import { useRichEditorSearch } from '../../hooks/useRichEditorSearch'
 import CodeBlock from './CodeBlock'
 import { ImageElementUtils } from './ImageElementUtils'
 import RichEditorSearch from '../search/RichEditorSearch'
-import LinkBubbleMenu from './LinkBubbleMenu'
+import LinkBubbleMenu from './bubble-menu/LinkBubbleMenu'
 // https://github.com/sereneinserenade/tiptap-search-and-replace
 import SearchAndReplace from './extensions/search/SearchAndReplace'
 // Slash commands extension

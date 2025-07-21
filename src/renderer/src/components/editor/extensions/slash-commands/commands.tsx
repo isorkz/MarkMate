@@ -8,7 +8,7 @@ import {
   Quote,
   Minus,
   Image,
-  Link,
+  Link2,
   Table
 } from 'lucide-react'
 
@@ -54,6 +54,24 @@ export const commandsList: Command[] = [
     icon: <Table className="w-4 h-4" />,
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
+    },
+  },
+  {
+    title: 'Link',
+    icon: <Link2 className="w-4 h-4" />,
+    command: ({ editor, range }) => {
+      // Delete the slash command text and insert link in one transaction
+      const linkText = 'link'
+      const linkUrl = 'https://example.com'
+      editor.chain()
+        .focus()
+        .deleteRange(range)
+        .insertContent(linkText + ' ')  // insert link text followed by a space
+        .setTextSelection({ from: range.from, to: range.from + linkText.length })
+        .setLink({ href: linkUrl })
+        .run()
+
+      // The existing LinkBubbleMenu will automatically show up because we have an active link
     },
   },
 ]
