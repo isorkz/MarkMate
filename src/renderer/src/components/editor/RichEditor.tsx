@@ -26,7 +26,7 @@ import { ImageElementUtils } from './ImageElementUtils'
 import RichEditorSearch from '../search/RichEditorSearch'
 import LinkBubbleMenu from './LinkBubbleMenu'
 // https://github.com/sereneinserenade/tiptap-search-and-replace
-import SearchAndReplace from '../search/SearchAndReplace'
+import SearchAndReplace from './extensions/search/SearchAndReplace'
 // load all languages with "all" or common languages with "common"
 import { common, createLowlight } from 'lowlight'
 
