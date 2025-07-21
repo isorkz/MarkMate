@@ -8,18 +8,18 @@ export class ImageElementUtils {
   static DEFAULT_ALT_TEXT = 'img'
 
   // Resolve image paths in the editor DOM only (without affecting markdown source content)
-    static resolveAllImageElementsInDom = async (
-      editor : Editor,
-       workspacePath: string, 
-       currentFilePath:string) => {
-      // Get all img elements in the editor DOM
-      const editorElement = editor.view.dom
-      const images = editorElement.querySelectorAll('img')
-  
-      for (const img of images) {
-        await ImageElementUtils.processImageElement(img as HTMLImageElement, workspacePath, currentFilePath)
-      }
+  static resolveAllImageElementsInDom = async (
+    editor : Editor,
+      workspacePath: string, 
+      currentFilePath:string) => {
+    // Get all img elements in the editor DOM
+    const editorElement = editor.view.dom
+    const images = editorElement.querySelectorAll('img')
+
+    for (const img of images) {
+      await ImageElementUtils.processImageElement(img as HTMLImageElement, workspacePath, currentFilePath)
     }
+  }
 
   static processImageElement = async (
     img: HTMLImageElement,

@@ -9,7 +9,8 @@ import {
   Minus,
   Image,
   Link2,
-  Table
+  Table,
+  Type
 } from 'lucide-react'
 
 export interface Command {
@@ -21,6 +22,31 @@ export interface Command {
 // List of all available slash commands
 // Each command has a title, icon, and a function that executes when selected
 export const commandsList: Command[] = [
+  {
+    title: 'Text',
+    icon: <Type className="w-4 h-4" />,
+    command: ({ editor, range }) => {
+      editor.chain().focus().deleteRange(range).setParagraph().run()
+    },
+  },
+  {
+    title: 'Link',
+    icon: <Link2 className="w-4 h-4" />,
+    command: ({ editor, range }) => {
+      // Delete the slash command text and insert link in one transaction
+      const linkText = 'link'
+      const linkUrl = 'https://example.com'
+      editor.chain()
+        .focus()
+        .deleteRange(range)
+        .insertContent(linkText + ' ')  // insert link text followed by a space
+        .setTextSelection({ from: range.from, to: range.from + linkText.length })
+        .setLink({ href: linkUrl })
+        .run()
+
+      // The existing LinkBubbleMenu will automatically show up because we have an active link
+    },
+  },
   {
     title: 'Task List',
     icon: <CheckSquare className="w-4 h-4" />,
@@ -54,24 +80,6 @@ export const commandsList: Command[] = [
     icon: <Table className="w-4 h-4" />,
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
-    },
-  },
-  {
-    title: 'Link',
-    icon: <Link2 className="w-4 h-4" />,
-    command: ({ editor, range }) => {
-      // Delete the slash command text and insert link in one transaction
-      const linkText = 'link'
-      const linkUrl = 'https://example.com'
-      editor.chain()
-        .focus()
-        .deleteRange(range)
-        .insertContent(linkText + ' ')  // insert link text followed by a space
-        .setTextSelection({ from: range.from, to: range.from + linkText.length })
-        .setLink({ href: linkUrl })
-        .run()
-
-      // The existing LinkBubbleMenu will automatically show up because we have an active link
     },
   },
 ]
