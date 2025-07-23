@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import toast from 'react-hot-toast'
-import { Folder, FolderOpen, File, ChevronRight, ChevronDown, Star } from 'lucide-react'
+import { Folder, FolderOpen, FileText, ChevronRight, ChevronDown, Star } from 'lucide-react'
 import { useFileSystemStore } from '../../stores/fileSystemStore'
 import { useWorkspaceStore } from '../../stores/workspaceStore'
 import { useEditorStore } from '../../stores/editorStore'
@@ -183,7 +183,7 @@ const FileTree: React.FC = () => {
                 <Folder className="w-4 h-4 flex-shrink-0" />
               )
             ) : (
-              <File className="w-4 h-4 flex-shrink-0" />
+              <FileText className="w-4 h-4 flex-shrink-0" />
             )}
 
             {editingMode && editingMode.mode.startsWith('rename') && editingMode.path === node.path ? (
