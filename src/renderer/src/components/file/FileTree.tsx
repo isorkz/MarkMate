@@ -235,10 +235,10 @@ const FileTree: React.FC = () => {
   }
 
   // Helper function to find all favorite nodes from the file tree
-  const findFavoriteNodes = (nodes: any[]): any[] => {
-    const favoriteNodes: any[] = []
+  const findFavoriteNodes = (nodes: FileNode[]): FileNode[] => {
+    const favoriteNodes: FileNode[] = []
 
-    const traverse = (nodeList: any[]) => {
+    const traverse = (nodeList: FileNode[]) => {
       nodeList.forEach(node => {
         if (isFavorite(node.path)) {
           favoriteNodes.push(node)

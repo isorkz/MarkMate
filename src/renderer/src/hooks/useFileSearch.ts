@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
 import { useFileSystemStore } from '../stores/fileSystemStore'
-import { FileNode } from '../types'
 import { useDebounce } from './useDebounce'
+import { getAllMarkdownFiles } from '@renderer/utils/fileOperations'
 
 export const useFileSearch = () => {
   const [searchTerm, setSearchTerm] = useState('')
@@ -13,26 +13,7 @@ export const useFileSearch = () => {
     if (!debouncedSearchTerm.trim()) {
       return []
     }
-    
-    const flatten = (nodes: FileNode[]): FileNode[] => {
-      const result: FileNode[] = []
-      
-      const traverse = (nodeList: FileNode[]) => {
-        nodeList.forEach(node => {
-          if (node.type === 'file') {
-            result.push(node)
-          }
-          if (node.children) {
-            traverse(node.children)
-          }
-        })
-      }
-      
-      traverse(nodes)
-      return result
-    }
-    
-    return flatten(fileTree)
+    return getAllMarkdownFiles(fileTree)
   }, [fileTree])
 
   // Get search results as flat list

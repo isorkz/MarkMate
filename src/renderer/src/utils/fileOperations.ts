@@ -3,6 +3,26 @@ import { useFilePathEventStore } from '../stores/events/filePathEventStore'
 import { useWorkspaceStore } from '../stores/workspaceStore'
 import { useEditorStore } from '@renderer/stores/editorStore'
 import { checkSyncStatus } from './checkSyncStatus'
+import { FileNode } from '@renderer/types'
+
+// Helper function to get all markdown files from the file tree
+export const getAllMarkdownFiles = (nodes: FileNode[]): FileNode[] => {
+  const markdownFiles: FileNode[] = []
+
+  const traverse = (nodeList: FileNode[]) => {
+    for (const node of nodeList) {
+      if (node.type === 'file' && node.path.endsWith('.md')) {
+        markdownFiles.push(node)
+      }
+      if (node.children) {
+        traverse(node.children)
+      }
+    }
+  }
+
+  traverse(nodes)
+  return markdownFiles
+}
 
 export const loadFileTree = async (workspacePath: string, setFileTree: (tree: any) => void) => {
   try{

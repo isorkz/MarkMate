@@ -41,7 +41,7 @@ interface RichEditorProps {
 }
 
 const RichEditor: React.FC<RichEditorProps> = ({ tab }) => {
-  const { updateTabContent, readOnlyMode } = useEditorStore()
+  const { updateTabContent, readOnlyMode, showSourceEditor } = useEditorStore()
   const { currentWorkspace } = useWorkspaceStore()
   const { appearanceSettings } = useSettingsStore()
 
@@ -165,11 +165,11 @@ const RichEditor: React.FC<RichEditorProps> = ({ tab }) => {
     }
   })
 
-  // Update Rich editor content when user is typing on Source editor, or switching tabs
+  // Update Rich editor content when user is typing on Source editor
   useEffect(() => {
-    // '!editor.isFocused' ensures when user is typing on Source editor, or switching tabs
+    // '!editor.isFocused' ensures when user is only typing on Source editor
     // If user is typing in the Rich editor, only use onUpdate() to update content
-    if (editor && tab && !editor.isFocused) {
+    if (showSourceEditor && tab && editor && !editor.isFocused) {
       try {
         const markdown = editor.storage.markdown.getMarkdown()
         if (markdown !== tab.content) {
@@ -182,7 +182,7 @@ const RichEditor: React.FC<RichEditorProps> = ({ tab }) => {
         editor.commands.setContent(tab.content, false)
       }
     }
-  }, [tab?.content, editor])
+  }, [tab?.content, editor?.isFocused, showSourceEditor])
 
   // Update editor editable state when read-only mode changes
   useEffect(() => {
