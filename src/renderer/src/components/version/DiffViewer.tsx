@@ -143,16 +143,16 @@ const DiffViewer: React.FC<DiffViewerProps> = ({ diffContent }) => {
               <span>{line.newLineNumber || ''}</span>
             </div>
           </div>
-          
+
           {/* Prefix (+/-/ ) */}
           <div className="flex-shrink-0 w-6 px-1 py-1 text-center select-none">
             <span className={getTextClasses(line.type)}>
               {getPrefix(line.type)}
             </span>
           </div>
-          
+
           {/* Content */}
-          <div className={`flex-1 px-2 py-1 ${getTextClasses(line.type)} break-all`}>
+          <div className={`flex-1 px-2 py-1 ${getTextClasses(line.type)} break-all select-text`}>
             {line.content}
           </div>
         </div>

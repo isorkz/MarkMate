@@ -176,7 +176,7 @@ const VersionHistory: React.FC<VersionHistoryProps> = ({ isOpen, setShowVersionH
             </div>
             <div>
               <h2 className="text-xl font-semibold text-gray-900">Version History</h2>
-              <p className="text-sm text-gray-500 mt-1">{tab.filePath}</p>
+              <p className="text-sm text-gray-500 mt-1 select-text">{tab.filePath}</p>
             </div>
           </div>
 
@@ -201,8 +201,8 @@ const VersionHistory: React.FC<VersionHistoryProps> = ({ isOpen, setShowVersionH
                       <div className="w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center text-xs font-medium text-gray-600">
                         {(selectedVersion.author || 'U').charAt(0).toUpperCase()}
                       </div>
-                      <span>{selectedVersion.message}</span>
-                      <p className="text-xs text-gray-400 font-mono bg-gray-50 px-2 py-1 rounded inline-block">
+                      <span className='select-text'>{selectedVersion.message}</span>
+                      <p className="text-xs text-gray-400 font-mono bg-gray-50 px-2 py-1 rounded inline-block select-text">
                         {selectedVersion.hash.substring(0, 8)}
                       </p>
                     </div>
@@ -259,7 +259,7 @@ const VersionHistory: React.FC<VersionHistoryProps> = ({ isOpen, setShowVersionH
                     // Content view
                     <div className="p-6">
                       <div className="bg-gray-50 rounded-lg border border-gray-200 p-4 max-h-96 overflow-y-auto">
-                        <pre className="text-sm font-mono whitespace-pre-wrap text-gray-700 leading-relaxed">
+                        <pre className="text-sm font-mono whitespace-pre-wrap text-gray-700 leading-relaxed select-text">
                           {previewContent}
                         </pre>
                       </div>
