@@ -10,13 +10,49 @@ import {
   Image,
   Link2,
   Table,
-  Type
+  Type,
+  FileText
 } from 'lucide-react'
+import { useFileSystemStore } from '@renderer/stores/fileSystemStore'
+import { getAllMarkdownFiles } from '@renderer/utils/fileOperations'
 
 export interface Command {
   title: string
   icon: React.ReactNode
   command: ({ editor, range }: { editor: any; range: any }) => void
+}
+
+// Function to show file selector and insert page link
+const handleInsertPageLink = ({ editor, range }: { editor: any; range: any }) => {
+  const { fileTree } = useFileSystemStore.getState()
+  const markdownFiles = getAllMarkdownFiles(fileTree)
+
+  // Delete the slash command text first to close the slash commands menu
+  editor.chain().focus().deleteRange(range).run()
+
+  if (markdownFiles.length === 0) {
+    // No markdown files found, insert a placeholder
+    editor.chain()
+      .focus()
+      .insertContent('[[No pages found]]')
+      .run()
+    return
+  }
+
+  // Get the showSelector function from editor storage
+  const showSelector = editor.storage.pageLink?.showSelector
+  if (!showSelector) {
+    console.error('showSelector function not found in editor storage')
+    return
+  }
+
+  // Get cursor position to show selector (after deleting the slash command)
+  const { view } = editor
+  const currentPos = editor.state.selection.from
+  const start = view.coordsAtPos(currentPos)
+
+  // Show the page link selector using the hook function
+  showSelector(editor, { x: start.left, y: start.bottom }, markdownFiles)
 }
 
 // List of all available slash commands
@@ -46,6 +82,11 @@ export const commandsList: Command[] = [
 
       // The existing LinkBubbleMenu will automatically show up because we have an active link
     },
+  },
+  {
+    title: 'Page Link',
+    icon: <FileText className="w-4 h-4" />,
+    command: handleInsertPageLink,
   },
   {
     title: 'Task List',

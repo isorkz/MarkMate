@@ -30,6 +30,10 @@ import SearchAndReplace from './extensions/search/SearchAndReplace'
 // Slash commands extension
 import { SlashCommands } from './extensions/slash-commands/SlashCommands'
 import { suggestion } from './extensions/slash-commands/suggestion'
+import { PageLink } from './extensions/page-link/PageLink'
+import { PageLinkParser } from './extensions/page-link/PageLinkParser'
+import PageLinkSelector from './extensions/page-link/ui/PageLinkSelector'
+import { usePageLinkSelector } from './extensions/page-link/hooks/usePageLinkSelector'
 // load all languages with "all" or common languages with "common"
 import { common, createLowlight } from 'lowlight'
 
@@ -107,15 +111,21 @@ const RichEditor: React.FC<RichEditorProps> = ({ tab }) => {
       SlashCommands.configure({
         suggestion,
       }),
+      PageLink, // handle the page links in the rich editor
+      PageLinkParser, // parsing [[page link]] in md content to PageLink nodes when loading file
       Typography,
       BubbleMenu,
     ],
     content: tab?.content || '',
-    onUpdate: ({ editor }) => {
+    onUpdate: ({ editor, transaction }) => {
       try {
-        // Only trigger content update if user is actively editing (editor is focused)                                                                                                                                      │ │
+        const hasPageLinkInsertion = transaction?.steps.some((step: any) =>
+          step.slice?.content?.content?.some((node: any) => node.type?.name === 'pageLink')
+        )
+
+        // Only trigger content update if user is actively editing (editor is focused) or inserting page links
         // This prevents marking tabs as dirty when programmatically setting content 
-        if (!editor.isFocused) return
+        if (!editor.isFocused && !hasPageLinkInsertion) return
 
         const markdown = editor.storage.markdown.getMarkdown()
         updateTabContent(tab.id, markdown)
@@ -203,6 +213,25 @@ const RichEditor: React.FC<RichEditorProps> = ({ tab }) => {
     }
   }, [editor, currentWorkspace, tab, tab?.content])
 
+  // Initialize the page link selector state and functions
+  const {
+    showSelector,
+    isOpen,
+    files,
+    position,
+    onSelect,
+    onClose
+  } = usePageLinkSelector()
+
+  // Store the showSelector function for slash commands
+  useEffect(() => {
+    if (editor) {
+      editor.storage.pageLink = {
+        showSelector: showSelector
+      }
+    }
+  }, [editor, showSelector])
+
   // Search functionality
   const {
     showSearch,
@@ -250,6 +279,15 @@ const RichEditor: React.FC<RichEditorProps> = ({ tab }) => {
           />
 
           {editor && <LinkBubbleMenu editor={editor} />}
+
+          {isOpen && (
+            <PageLinkSelector
+              files={files}
+              onSelect={onSelect}
+              onClose={onClose}
+              position={position}
+            />
+          )}
         </div>
       </div>
     </div>

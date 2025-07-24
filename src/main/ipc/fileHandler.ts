@@ -174,4 +174,54 @@ export function setupFileHandlers() {
       throw error
     }
   })
+
+  // Calculate relative path from current file to target file
+  // For example:
+  // currentFilePath: 'src/components/current.md'
+  // targetFilePath: 'src/target.md'
+  // returns: '../target.md'
+  ipcMain.handle('file:get-relative-path', async (_, workspacePath: string, currentFilePath: string, targetFilePath: string) => {
+    try {
+      // Get absolute paths for both files within the workspace
+      const currentFileAbsolutePath = path.join(workspacePath, currentFilePath)
+      const targetFileAbsolutePath = path.join(workspacePath, targetFilePath)
+      
+      // Get the directory of the current file
+      const currentFileDir = path.dirname(currentFileAbsolutePath)
+      
+      // Calculate relative path from current file's directory to target file
+      const relativePath = path.relative(currentFileDir, targetFileAbsolutePath)
+      
+      // Normalize path separators for cross-platform compatibility
+      return relativePath.replace(/\\/g, '/')
+    } catch (error) {
+      console.error('Error calculating relative path:', error)
+      throw error
+    }
+  })
+
+  // Resolve file path relative to current file
+  // For example:
+  // currentFilePath: 'src/components/current.md'
+  // relativeFilePath: '../target.md'
+  // returns: 'src/target.md'
+  ipcMain.handle('file:resolve-relative-path', async (_, workspacePath: string, currentFilePath: string, relativeFilePath: string) => {
+    try {
+      // Get the directory of the current file
+      const currentFileAbsolutePath = path.join(workspacePath, currentFilePath)
+      const currentFileDir = path.dirname(currentFileAbsolutePath)
+      
+      // Resolve the relative path to get absolute path
+      const resolvedAbsolutePath = path.resolve(currentFileDir, relativeFilePath)
+      
+      // Calculate the path relative to workspace
+      const workspaceRelativePath = path.relative(workspacePath, resolvedAbsolutePath)
+      
+      // Normalize path separators for cross-platform compatibility
+      return workspaceRelativePath.replace(/\\/g, '/')
+    } catch (error) {
+      console.error('Error resolving relative path:', error)
+      throw error
+    }
+  })
 }
