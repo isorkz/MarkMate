@@ -5,6 +5,7 @@ import { useWorkspaceStore } from '../../stores/workspaceStore'
 import { Tab, useEditorStore } from '../../stores/editorStore'
 import { formatDate } from '../../../../shared/commonUtils'
 import DiffViewer from './DiffViewer'
+import { adapters } from '../../adapters'
 
 interface VersionHistoryItem {
   hash: string
@@ -43,7 +44,7 @@ const VersionHistory: React.FC<VersionHistoryProps> = ({ isOpen, setShowVersionH
 
     setLoading(true)
     try {
-      const history = await window.electron.ipcRenderer.invoke('git:history', currentWorkspace.path, tab.filePath)
+      const history = await adapters.gitAdapter.getFileHistory(currentWorkspace.path, tab.filePath)
       const versionsWithDates = history.map((item: any) => ({
         ...item,
         date: new Date(item.date)
@@ -64,7 +65,7 @@ const VersionHistory: React.FC<VersionHistoryProps> = ({ isOpen, setShowVersionH
     setLoading(true)
     try {
       // Get the selected version content
-      const content = await window.electron.ipcRenderer.invoke('git:get-file-commit', currentWorkspace.path, tab.filePath, version.hash)
+      const content = await adapters.gitAdapter.getFileAtCommit(currentWorkspace.path, tab.filePath, version.hash)
 
       // Find the previous version for diff
       const currentVersionIndex = versions.findIndex(v => v.hash === version.hash)
@@ -73,10 +74,10 @@ const VersionHistory: React.FC<VersionHistoryProps> = ({ isOpen, setShowVersionH
       let diff = ''
       if (previousVersion) {
         // Get diff between previous and current version
-        diff = await window.electron.ipcRenderer.invoke('git:get-file-commits-diff', currentWorkspace.path, tab.filePath, previousVersion.hash, version.hash)
+        diff = await adapters.gitAdapter.getFileCommitsDiff(currentWorkspace.path, tab.filePath, previousVersion.hash, version.hash)
       } else {
         // This is the first commit, show diff against empty
-        diff = await window.electron.ipcRenderer.invoke('git:get-file-commits-diff', currentWorkspace.path, tab.filePath, '4b825dc642cb6eb9a060e54bf8d69288fbee4904', version.hash) // Empty tree hash
+        diff = await adapters.gitAdapter.getFileCommitsDiff(currentWorkspace.path, tab.filePath, '4b825dc642cb6eb9a060e54bf8d69288fbee4904', version.hash) // Empty tree hash
       }
 
       if (content !== null) {
@@ -99,7 +100,7 @@ const VersionHistory: React.FC<VersionHistoryProps> = ({ isOpen, setShowVersionH
     setLoading(true)
     try {
       // Get uncommitted diff
-      const diff = await window.electron.ipcRenderer.invoke('git:get-uncommitted-diff', currentWorkspace.path, tab.filePath)
+      const diff = await adapters.gitAdapter.getUncommittedDiff(currentWorkspace.path, tab.filePath)
 
       // Use current tab content as preview content
       setPreviewContent(tab.content)
@@ -128,14 +129,14 @@ const VersionHistory: React.FC<VersionHistoryProps> = ({ isOpen, setShowVersionH
     setLoading(true)
     try {
       if (version.hash === 'uncommitted') {
-        await window.electron.ipcRenderer.invoke('git:discard-changes', currentWorkspace.path, tab.filePath)
+        await adapters.gitAdapter.discardChanges(currentWorkspace.path, tab.filePath)
       }
       else {
-        await window.electron.ipcRenderer.invoke('git:restore', currentWorkspace.path, tab.filePath, version.hash)
+        await adapters.gitAdapter.restoreFile(currentWorkspace.path, tab.filePath, version.hash)
       }
 
       // Reload the file in the editor
-      const content = await window.electron.ipcRenderer.invoke('git:get-file-commit', currentWorkspace.path, tab.filePath, 'HEAD')
+      const content = await adapters.gitAdapter.getFileAtCommit(currentWorkspace.path, tab.filePath, 'HEAD')
       if (content) {
         await openFile(tab.filePath, content)
       }

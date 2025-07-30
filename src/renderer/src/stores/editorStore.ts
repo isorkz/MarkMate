@@ -1,8 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { useFilePathEventStore } from './events/filePathEventStore'
-
-export type SyncStatus = 'synced' | 'out-of-date' | 'syncing' | 'error';
+import { SyncStatus } from 'src/shared/types/git'
 
 export interface Tab {
   id: string;

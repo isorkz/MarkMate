@@ -1,6 +1,7 @@
 import { Editor } from '@tiptap/react'
 import toast from 'react-hot-toast'
 import { isImagePathResolved } from '../../../../shared/commonUtils'
+import { adapters } from '../../adapters'
 
 export class ImageElementUtils {
   static IS_SRC_RESOLVED_ATTR = 'is-src-resolved'
@@ -43,8 +44,7 @@ export class ImageElementUtils {
     const src = img.getAttribute('src')
     if (src) {
       if (!isImagePathResolved(src)){
-        const resolvedSrc = await window.electron.ipcRenderer.invoke(
-                  'file:get-image-path',
+        const resolvedSrc = await adapters.fileAdapter.getImagePath(
                   src,
                   workspacePath,
                   currentFilePath
@@ -72,8 +72,7 @@ export class ImageElementUtils {
         try {
           // Save image to local file
           const extension = file.type.split('/')[1] || 'png'
-          const relativePath = await window.electron.ipcRenderer.invoke(
-            'file:save-image',
+          const relativePath = await adapters.fileAdapter.saveImage(
             e.target.result,
             workspacePath,
             currentFilePath,

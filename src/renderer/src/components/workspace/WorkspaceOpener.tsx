@@ -2,6 +2,7 @@ import React from 'react'
 import { useWorkspaceStore } from '../../stores/workspaceStore'
 import { useFileSystemStore } from '../../stores/fileSystemStore'
 import { loadFileTree } from '@renderer/utils/fileOperations'
+import { adapters } from '../../adapters'
 
 const WorkspaceOpener: React.FC = () => {
   const { addWorkspace, setCurrentWorkspace } = useWorkspaceStore()
@@ -9,7 +10,7 @@ const WorkspaceOpener: React.FC = () => {
 
   const handleOpenWorkspace = async () => {
     try {
-      const workspace = await window.electron.ipcRenderer.invoke('workspace:open-dialog')
+      const workspace = await adapters.workspaceAdapter.openDialog()
       if (workspace) {
         addWorkspace(workspace)
         setCurrentWorkspace(workspace)

@@ -4,6 +4,7 @@ import { useWorkspaceStore } from '../stores/workspaceStore'
 import { useEditorStore } from '@renderer/stores/editorStore'
 import { checkSyncStatus } from './checkSyncStatus'
 import { FileNode } from '@renderer/types'
+import { adapters } from '../adapters'
 
 // Helper function to get all markdown files from the file tree
 export const getAllMarkdownFiles = (nodes: FileNode[]): FileNode[] => {
@@ -26,7 +27,7 @@ export const getAllMarkdownFiles = (nodes: FileNode[]): FileNode[] => {
 
 export const loadFileTree = async (workspacePath: string, setFileTree: (tree: any) => void) => {
   try{
-    const newFileTree = await window.electron.ipcRenderer.invoke('workspace:get-file-tree', workspacePath)
+    const newFileTree = await adapters.workspaceAdapter.getFileTree(workspacePath)
     setFileTree(newFileTree)
   } catch (error) {
     console.error('Failed to load workspace file tree:', error)
@@ -49,12 +50,12 @@ export const handleOpenFile = async (workspacePath: string, filePath: string, pi
     } else{
       // File is not open, read content and open it
       const [content, lastModified] = await Promise.all([
-        window.electron.ipcRenderer.invoke('file:read', workspacePath, filePath),
-        window.electron.ipcRenderer.invoke('file:get-last-modified-time', workspacePath, filePath)
+        adapters.fileAdapter.readFile(workspacePath, filePath),
+        adapters.fileAdapter.getLastModifiedTime(workspacePath, filePath)
       ])
       
       // Open the file in the editor
-      tabId = openFile(filePath, content, pinned, new Date(lastModified))
+      tabId = openFile(filePath, content, pinned, lastModified)
       // Add to recent files
       useWorkspaceStore.getState().addRecentFile(filePath)
     }
@@ -81,7 +82,7 @@ export const handleNewFile = async (workspacePath: string, parentPath: string, f
   const filePath = `${parentPath}/${mdFileName}`
   
   try {
-    await window.electron.ipcRenderer.invoke('file:create', workspacePath, filePath, '')
+    await adapters.fileAdapter.createFile(workspacePath, filePath, '')
     await loadFileTree(workspacePath, setFileTree)
     toast.success(`File "${mdFileName}" created successfully`)
   } catch (error) {
@@ -95,7 +96,7 @@ export const handleNewFolder = async (workspacePath: string, parentPath: string,
   const filePath = parentPath ? `${parentPath}/${newFolderName}` : newFolderName
   
   try {
-    await window.electron.ipcRenderer.invoke('file:create-directory', workspacePath, filePath)
+    await adapters.fileAdapter.createDirectory(workspacePath, filePath)
     await loadFileTree(workspacePath, setFileTree)
     toast.success(`Folder "${newFolderName}" created successfully`)
   } catch (error) {
@@ -119,7 +120,7 @@ export const handleRename = async (workspacePath: string, oldPath: string, oldNa
   const newPath = [...pathParts.slice(0, -1), newMdName].join('/')
   
   try {
-    await window.electron.ipcRenderer.invoke('file:rename', workspacePath, oldPath, newPath)
+    await adapters.fileAdapter.renameFile(workspacePath, oldPath, newPath)
     
     // Notify all stores about the path change
     useFilePathEventStore.getState().notifyPathChange(oldPath, newPath)
@@ -132,7 +133,7 @@ export const handleRename = async (workspacePath: string, oldPath: string, oldNa
 
 export const handleSave = async (workspacePath: string, filePath: string, tabId: string, content: string, markTabDirty: (tabId: string, isDirty: boolean) => void) => {
   try {
-    await window.electron.ipcRenderer.invoke('file:write', workspacePath, filePath, content)
+    await adapters.fileAdapter.writeFile(workspacePath, filePath, content)
     markTabDirty(tabId, false)
   } catch (error) {
     console.error('Failed to save file:', error)
@@ -142,7 +143,7 @@ export const handleSave = async (workspacePath: string, filePath: string, tabId:
 
 export const handleDelete = async (workspacePath: string, filePath: string, setFileTree: (tree: any) => void) => {
   try {
-    await window.electron.ipcRenderer.invoke('file:delete', workspacePath, filePath)
+    await adapters.fileAdapter.deleteFile(workspacePath, filePath)
     
     // Notify all stores about the path deletion
     useFilePathEventStore.getState().notifyPathDelete(filePath)

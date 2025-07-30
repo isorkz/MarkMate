@@ -1,7 +1,9 @@
+import { adapters } from '../adapters'
+
 export const checkSyncStatus = async (workspacePath: string, filePath: string) => {
   try {
     // First check if file has local changes
-    const fileStatusResult = await window.electron.ipcRenderer.invoke('git:check-local-status', workspacePath, filePath)
+    const fileStatusResult = await adapters.gitAdapter.checkLocalStatus(workspacePath, filePath)
     
     // File has uncommitted changes
     if (fileStatusResult.hasChanges) {
@@ -9,7 +11,7 @@ export const checkSyncStatus = async (workspacePath: string, filePath: string) =
     }
 
     // File is committed locally, now check if it's pushed to remote
-    const pushStatusResult = await window.electron.ipcRenderer.invoke('git:check-remote-status', workspacePath)
+    const pushStatusResult = await adapters.gitAdapter.checkRemoteStatus(workspacePath)
     
     if (pushStatusResult.hasUnpushedCommits) {
       return 'out-of-date'

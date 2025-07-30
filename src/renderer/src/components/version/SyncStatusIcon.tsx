@@ -1,7 +1,6 @@
 import React from 'react'
 import { CloudCheck, CloudAlert, RefreshCw, GitBranch } from 'lucide-react'
-
-export type SyncStatus = 'out-of-date' | 'syncing' | 'synced' | 'error'
+import { SyncStatus } from 'src/shared/types/git'
 
 interface SyncStatusIconProps {
   status: SyncStatus
