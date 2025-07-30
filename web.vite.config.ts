@@ -17,7 +17,17 @@ export default defineConfig(({ mode }) => {
     },
     build: {
       outDir: resolve(__dirname, 'dist-web'),
-      emptyOutDir: true
+      emptyOutDir: true,
+      chunkSizeWarningLimit: 1500,
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            'react-vendor': ['react', 'react-dom'],
+            'editor-vendor': ['@tiptap/react', '@tiptap/core', '@tiptap/starter-kit'],
+            'ui-vendor': ['lucide-react', 'react-hot-toast']
+          }
+        }
+      }
     }
   }
 })
