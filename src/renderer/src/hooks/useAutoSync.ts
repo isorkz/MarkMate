@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { useWorkspaceStore } from '../stores/workspaceStore'
 import { useEditorStore } from '../stores/editorStore'
 import { formatDate } from '../../../shared/commonUtils'
+import { adapters } from '../adapters'
 
 interface UseAutoSyncOptions {
   delayInSeconds: number
@@ -25,7 +26,7 @@ export const useAutoSync = (options: UseAutoSyncOptions) => {
         tabs.forEach(tab => updateTabSyncStatus(tab.id, 'syncing'))
         
         const commitMessage = `Auto-sync at ${formatDate(new Date())}`
-        await window.electron.ipcRenderer.invoke('git:sync', currentWorkspace.path, commitMessage)
+        await adapters.gitAdapter.syncWorkspace(currentWorkspace.path, commitMessage)
         
         // Set all tabs to synced status
         tabs.forEach(tab => updateTabSyncStatus(tab.id, 'synced'))

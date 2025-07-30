@@ -5,3 +5,11 @@ out
 .eslintcache
 *.log*
 .env.local
+.env
+
+# Web server build output
+dist-web
+web-server/dist/
+web-server/.env
+
+CLAUDE.md

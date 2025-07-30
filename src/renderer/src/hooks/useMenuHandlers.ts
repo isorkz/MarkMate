@@ -29,6 +29,11 @@ export const useMenuHandlers = () => {
   } = useWorkspaceStore()
 
   useEffect(() => {
+    // Skip menu handling in non-Electron environments
+    if (!window.electron) {
+      return
+    }
+    
     // File menu handlers
     const handleCloseTab = () => {
       if (activeTabId) {
@@ -148,6 +153,11 @@ export const useMenuHandlers = () => {
 
   // Update menu when recent files change
   useEffect(() => {
+    // Skip menu handling in non-Electron environments
+    if (!window.electron) {
+      return
+    }
+    
     const updateMenu = async () => {
       try {
         await window.electron.ipcRenderer.invoke('menu:update-recent-files', recentFiles)

@@ -3,6 +3,7 @@ import { useFileSystemStore } from '../stores/fileSystemStore'
 import { useWorkspaceStore } from '../stores/workspaceStore'
 import { FileNode } from '../types'
 import { useDebounce } from './useDebounce'
+import { adapters } from '../adapters'
 
 interface SearchableFile extends FileNode {
   content: string
@@ -32,7 +33,7 @@ export const useFullSearch = () => {
         for (const node of nodeList) {
           if (node.type === 'file') {
             try {
-              const content = await window.electron.ipcRenderer.invoke('file:read', currentWorkspace.path, node.path)
+              const content = await adapters.fileAdapter.readFile(currentWorkspace.path, node.path)
               result.push({ ...node, content })
             } catch (error) {
               console.error(`Failed to read ${node.path}:`, error)

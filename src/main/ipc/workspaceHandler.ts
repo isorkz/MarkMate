@@ -1,6 +1,6 @@
 import { ipcMain, dialog } from 'electron'
-import * as fs from 'fs/promises'
 import * as path from 'path'
+import { WorkspaceService } from '../../shared/services'
 
 export function setupWorkspaceHandlers() {
   // Open workspace folder dialog
@@ -28,53 +28,7 @@ export function setupWorkspaceHandlers() {
   // Get workspace file tree
   ipcMain.handle('workspace:get-file-tree', async (_, workspacePath: string) => {
     try {
-      const buildFileTree = async (dirPath: string, relativePath = ''): Promise<any> => {
-        const items = await fs.readdir(dirPath, { withFileTypes: true })
-        const children: any[] = []
-        
-        for (const item of items) {
-          const itemPath = path.join(dirPath, item.name)
-          const itemRelativePath = path.join(relativePath, item.name)
-          
-          // Skip hidden files and node_modules
-          if (item.name.startsWith('.')) {
-            continue
-          }
-          
-          // const stats = await fs.stat(itemPath)
-          
-          if (item.isDirectory()) {
-            const childNodes = await buildFileTree(itemPath, itemRelativePath)
-            children.push({
-              id: itemRelativePath,
-              name: item.name,
-              path: itemRelativePath,
-              type: 'folder',
-              children: childNodes,
-              // lastModified: stats.mtime,
-              isExpanded: false
-            })
-          } else if (item.name.endsWith('.md')) {
-            children.push({
-              id: itemRelativePath,
-              name: item.name.replace(/\.md$/, ''), // Remove .md extension for display
-              path: itemRelativePath,
-              type: 'file',
-              // lastModified: stats.mtime,
-            })
-          }
-        }
-        
-        // Sort: folders first, then files, both alphabetically
-        return children.sort((a, b) => {
-          if (a.type !== b.type) {
-            return a.type === 'folder' ? -1 : 1
-          }
-          return a.name.localeCompare(b.name)
-        })
-      }
-      
-      return await buildFileTree(workspacePath)
+      return await WorkspaceService.getFileTree(workspacePath)
     } catch (error) {
       console.error('Error reading workspace directory:', error)
       throw error

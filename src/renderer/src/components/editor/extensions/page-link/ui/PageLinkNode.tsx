@@ -5,6 +5,7 @@ import { useWorkspaceStore } from '@renderer/stores/workspaceStore'
 import { useEditorStore } from '@renderer/stores/editorStore'
 import { handleOpenFile } from '@renderer/utils/fileOperations'
 import toast from 'react-hot-toast'
+import { adapters } from '@renderer/adapters'
 
 const PageLinkNode: React.FC<ReactNodeViewProps> = ({ node }) => {
   const { pageName, relativePath } = node.attrs as { pageName: string; relativePath: string }
@@ -25,8 +26,7 @@ const PageLinkNode: React.FC<ReactNodeViewProps> = ({ node }) => {
 
     try {
       // Resolve the relative filepath to workspace-relative path
-      const workspaceRelativePath = await window.electron.ipcRenderer.invoke(
-        'file:resolve-relative-path',
+      const workspaceRelativePath = await adapters.fileAdapter.resolveRelativePath(
         currentWorkspace.path,
         activeTab.filePath,
         relativePath

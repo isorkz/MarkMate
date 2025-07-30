@@ -4,6 +4,7 @@ import { useFileSystemStore } from '../../stores/fileSystemStore'
 import { Folder, ChevronDown, Check, Plus } from 'lucide-react'
 import { loadFileTree } from '../../utils/fileOperations'
 import WorkspaceContextMenu from './WorkspaceContextMenu'
+import { adapters } from '../../adapters'
 
 interface WorkspaceSelectorProps {
   onCreateFile: () => void
@@ -28,7 +29,7 @@ const WorkspaceSelector: React.FC<WorkspaceSelectorProps> = ({ onCreateFile, onC
 
   const handleNewWorkspace = async () => {
     try {
-      const workspace = await window.electron.ipcRenderer.invoke('workspace:open-dialog')
+      const workspace = await adapters.workspaceAdapter.openDialog()
       if (workspace) {
         addWorkspace(workspace)
         await handleWorkspaceSelect(workspace)

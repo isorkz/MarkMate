@@ -3,6 +3,7 @@ import { ExternalLink, AlertTriangle, Cable } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useSettingsStore } from '../../stores/settingsStore'
 import { useWorkspaceStore } from '../../stores/workspaceStore'
+import { adapters } from '../../adapters'
 
 const SyncSettings: React.FC = () => {
   const { syncSettings, updateSyncSettings } = useSettingsStore()
@@ -22,7 +23,7 @@ const SyncSettings: React.FC = () => {
 
     setIsTesting(true)
     try {
-      await window.electron.ipcRenderer.invoke('git:config', currentWorkspace.path, syncSettings.gitUsername, syncSettings.gitEmail, syncSettings.gitRemoteUrl)
+      await adapters.gitAdapter.configGit(currentWorkspace.path, syncSettings.gitUsername, syncSettings.gitEmail, syncSettings.gitRemoteUrl)
       toast.success('Git configuration successful!')
     } catch (error) {
       toast.error(`Git configuration failed: ${error}`)

@@ -3,6 +3,7 @@ import { FileNode } from '@renderer/types'
 import { useWorkspaceStore } from '@renderer/stores/workspaceStore'
 import { useEditorStore } from '@renderer/stores/editorStore'
 import toast from 'react-hot-toast'
+import { adapters } from '@renderer/adapters'
 
 export const usePageLinkSelector = () => {
   const { currentWorkspace } = useWorkspaceStore()
@@ -37,8 +38,7 @@ export const usePageLinkSelector = () => {
 
     try {
       // Calculate relative path from current file to target file
-      const relativePath = await window.electron.ipcRenderer.invoke(
-        'file:get-relative-path',
+      const relativePath = await adapters.fileAdapter.getRelativePath(
         currentWorkspace.path,
         activeTab.filePath,
         file.path
