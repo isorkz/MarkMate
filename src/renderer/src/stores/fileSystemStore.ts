@@ -12,7 +12,7 @@ interface FileSystemStore {
   renameNodeRecursive: (oldPath: string, newName: string) => void;
 }
 
-export const useFileSystemStore = create<FileSystemStore>((set, get) => ({
+export const useFileSystemStore = create<FileSystemStore>((set) => ({
   fileTree: [],
   expandedFolders: new Set(),
   

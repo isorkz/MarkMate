@@ -87,7 +87,7 @@ export const PageLink = Node.create<PageLinkOptions>({
       new InputRule({
         find: /\[\[([^\]]+)\]\]$/,
         handler: ({ commands, range, match }) => {
-          const [fullMatch, linkText] = match
+          const [, linkText] = match
           const relativePath = linkText
           const pageName = linkText.split('/').pop()?.replace(/\.[^.]*$/, '') || linkText
           
@@ -110,7 +110,7 @@ export const PageLink = Node.create<PageLinkOptions>({
       {
         find: /\[\[([^\]]+)\]\]/g,
         handler: ({ commands, range, match }) => {
-          const [fullMatch, linkText] = match
+          const [, linkText] = match
           const relativePath = linkText
           const pageName = linkText.split('/').pop()?.replace(/\.[^.]*$/, '') || linkText
           

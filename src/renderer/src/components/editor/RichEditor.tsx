@@ -140,7 +140,7 @@ const RichEditor: React.FC<RichEditorProps> = ({ tab }) => {
         style: `font-size: 16px; padding: 60px; line-height: 1.6; ${readOnlyMode ? 'user-select: text; -webkit-user-select: text; -moz-user-select: text; -ms-user-select: text;' : ''}`
       },
       // Allow selection and copy even in read-only mode
-      handleKeyDown: (view, event) => {
+      handleKeyDown: (_, event) => {
         if (readOnlyMode) {
           // Allow Ctrl+A (Select All) and Ctrl+C (Copy) in read-only mode
           if ((event.ctrlKey || event.metaKey) && (event.key === 'a' || event.key === 'c')) {
@@ -149,7 +149,7 @@ const RichEditor: React.FC<RichEditorProps> = ({ tab }) => {
         }
         return false
       },
-      handlePaste: (view, event) => {
+      handlePaste: (_, event) => {
         // Handle image paste to save as local file instead of data URL
         if (currentWorkspace && tab && editor) {
           // Check if clipboard contains images
@@ -211,6 +211,7 @@ const RichEditor: React.FC<RichEditorProps> = ({ tab }) => {
 
       return () => clearTimeout(timeoutId)
     }
+    return undefined
   }, [editor, currentWorkspace, tab, tab?.content])
 
   // Initialize the page link selector state and functions

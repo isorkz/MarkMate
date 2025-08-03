@@ -233,7 +233,7 @@ const replaceAll = (
     resultsCopy = rebaseNextResultResponse[1];
   }
 
-  dispatch(tr);
+  dispatch?.(tr);
 };
 
 export const searchAndReplacePluginKey = new PluginKey(

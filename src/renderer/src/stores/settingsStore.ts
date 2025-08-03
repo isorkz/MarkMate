@@ -66,7 +66,7 @@ const defaultSyncSettings: SyncSettings = {
 
 export const useSettingsStore = create<SettingsStore>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       generalSettings: defaultGeneralSettings,
       appearanceSettings: defaultAppearanceSettings,
       syncSettings: defaultSyncSettings,

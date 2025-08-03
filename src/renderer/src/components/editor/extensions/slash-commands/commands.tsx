@@ -7,7 +7,6 @@ import {
   Code,
   Quote,
   Minus,
-  Image,
   Link2,
   Table,
   Type,
