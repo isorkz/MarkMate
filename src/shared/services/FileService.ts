@@ -83,18 +83,50 @@ export class FileService {
     await fs.mkdir(fullPath, { recursive: true })
   }
 
-  // Get resolved image path relative to workspace and file
-  static async getImagePath(src: string, workspacePath: string, currentFilePath: string): Promise<string> {
+  // Get resolved image URL
+  // imagePath: the image path in markdown content (e.g. ../../.images/image.png)
+  // asDataUrl: true - return as data URL (base64 encoded), false - return as file:// URL
+  static async getImageUrl(imagePath: string, workspacePath: string, currentFilePath: string, asDataUrl = false): Promise<string> {
     // If it's already an absolute path, base64, or URL, return as is
-    if (isImagePathResolved(src)) {
-      return src
+    if (isImagePathResolved(imagePath)) {
+      return imagePath
     }
 
-    // Resolve relative path to get absolute path
     const currentFileAbsolutePath = path.join(workspacePath, currentFilePath)
     const currentFileDir = path.dirname(currentFileAbsolutePath)
-    const absolutePath = path.resolve(currentFileDir, src)
-    return `file://${absolutePath}`
+    const absolutePath = path.resolve(currentFileDir, imagePath)
+
+    if (!asDataUrl) {
+      // Return as file:// URL
+      return `file://${absolutePath}`
+    }
+    
+    // Return as data URL (base64 encoded)
+    if (!absolutePath.startsWith(workspacePath)) {
+      throw new Error('Access denied: Path outside workspace')
+    }
+    
+    // Read the image file
+    const imageBuffer = await fs.readFile(absolutePath)
+    
+    // Determine content type based on file extension
+    const ext = path.extname(absolutePath).toLowerCase()
+    const contentTypes: { [key: string]: string } = {
+      '.png': 'image/png',
+      '.jpg': 'image/jpeg',
+      '.jpeg': 'image/jpeg',
+      '.gif': 'image/gif',
+      '.svg': 'image/svg+xml',
+      '.webp': 'image/webp',
+      '.bmp': 'image/bmp',
+      '.ico': 'image/x-icon'
+    }
+    
+    const mimeType = contentTypes[ext] || 'application/octet-stream'
+    
+    // Convert to data URL for web version
+    const base64Data = imageBuffer.toString('base64')
+    return `data:${mimeType};base64,${base64Data}`
   }
 
   // Save image data to local file and return relative path

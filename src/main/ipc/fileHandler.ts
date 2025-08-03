@@ -77,12 +77,12 @@ export function setupFileHandlers() {
     }
   })
 
-  // Get resolved image path relative to workspace and file
-  ipcMain.handle('file:get-image-path', async (_, src: string, workspacePath: string, currentFilePath: string) => {
+  // Get resolved image URL
+  ipcMain.handle('file:get-image-url', async (_, imagePath: string, workspacePath: string, currentFilePath: string) => {
     try {
-      return await FileService.getImagePath(src, workspacePath, currentFilePath)
+      return await FileService.getImageUrl(imagePath, workspacePath, currentFilePath)
     } catch (error) {
-      console.error('Error resolving image path:', error)
+      console.error('Error resolving image URL:', error)
       throw error
     }
   })

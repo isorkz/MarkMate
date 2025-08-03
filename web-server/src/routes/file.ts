@@ -1,4 +1,6 @@
 import express from 'express'
+import path from 'path'
+import fs from 'fs'
 import { FileService } from '../../../src/shared/services'
 import { config } from '../config/environment'
 
@@ -81,16 +83,17 @@ router.post('/create-directory', async (req, res, next) => {
   }
 })
 
-// Get resolved image path relative to workspace and file
-router.post('/get-image-path', async (req, res, next) => {
+// Get resolved image URL for web version
+router.post('/get-image-url', async (req, res, next) => {
   try {
-    const { src, currentFilePath } = req.body
-    const imagePath = await FileService.getImagePath(src, config.workspacePath, currentFilePath)
-    res.json({ imagePath })
+    const { imagePath, workspacePath, currentFilePath } = req.body
+    const imageUrl = await FileService.getImageUrl(imagePath, workspacePath || config.workspacePath, currentFilePath, /* asDataUrl */ true)
+    res.json({ imageUrl })
   } catch (error) {
     next(error)
   }
 })
+
 
 // Save image data to local file and return relative path
 router.post('/save-image', async (req, res, next) => {

@@ -90,9 +90,9 @@ export class WebFileAdapter implements IFileAdapter {
     await ApiClient.post('/file/create-directory', { dirPath })
   }
 
-  async getImagePath(src: string, _workspacePath: string, currentFilePath: string): Promise<string> {
-    const result = await ApiClient.post('/file/get-image-path', { src, currentFilePath })
-    return result.imagePath
+  async getImageUrl(imagePath: string, workspacePath: string, currentFilePath: string): Promise<string> {
+    const result = await ApiClient.post('/file/get-image-url', { imagePath, workspacePath, currentFilePath })
+    return result.imageUrl
   }
 
   async saveImage(imageData: string, _workspacePath: string, currentFilePath: string, extension = 'png'): Promise<string> {

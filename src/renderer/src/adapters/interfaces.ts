@@ -8,7 +8,7 @@ export interface IFileAdapter {
   deleteFile(workspacePath: string, filePath: string): Promise<void>
   renameFile(workspacePath: string, oldPath: string, newPath: string): Promise<void>
   createDirectory(workspacePath: string, dirPath: string): Promise<void>
-  getImagePath(src: string, workspacePath: string, currentFilePath: string): Promise<string>
+  getImageUrl(src: string, workspacePath: string, currentFilePath: string): Promise<string>
   saveImage(imageData: string, workspacePath: string, currentFilePath: string, extension?: string): Promise<string>
   getRelativePath(workspacePath: string, currentFilePath: string, targetFilePath: string): Promise<string>
   resolveRelativePath(workspacePath: string, currentFilePath: string, relativeFilePath: string): Promise<string>

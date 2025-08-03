@@ -44,12 +44,12 @@ export class ImageElementUtils {
     const src = img.getAttribute('src')
     if (src) {
       if (!isImagePathResolved(src)){
-        const resolvedSrc = await adapters.fileAdapter.getImagePath(
+        const imageUrl = await adapters.fileAdapter.getImageUrl(
                   src,
                   workspacePath,
                   currentFilePath
                 )
-        img.setAttribute('src', resolvedSrc)
+        img.setAttribute('src', imageUrl)
         img.setAttribute(ImageElementUtils.ORIGINAL_SRC_ATTR, src)
       }
       img.setAttribute(ImageElementUtils.IS_SRC_RESOLVED_ATTR, 'true')

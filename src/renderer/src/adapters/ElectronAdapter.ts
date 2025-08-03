@@ -31,8 +31,8 @@ export class ElectronFileAdapter implements IFileAdapter {
     await window.electron.ipcRenderer.invoke('file:create-directory', workspacePath, dirPath)
   }
 
-  async getImagePath(src: string, workspacePath: string, currentFilePath: string): Promise<string> {
-    return window.electron.ipcRenderer.invoke('file:get-image-path', src, workspacePath, currentFilePath)
+  async getImageUrl(imagePath: string, workspacePath: string, currentFilePath: string): Promise<string> {
+    return window.electron.ipcRenderer.invoke('file:get-image-url', imagePath, workspacePath, currentFilePath)
   }
 
   async saveImage(imageData: string, workspacePath: string, currentFilePath: string, extension = 'png'): Promise<string> {
