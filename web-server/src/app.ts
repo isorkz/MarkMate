@@ -3,6 +3,7 @@ import cors from 'cors'
 import path from 'path'
 import { config } from './config/environment'
 import { errorHandler } from './middleware/errorHandler'
+import { tokenAuth } from './middleware/auth'
 
 const app = express()
 
@@ -24,6 +25,8 @@ import fileRoutes from './routes/file'
 import gitRoutes from './routes/git'
 import workspaceRoutes from './routes/workspace'
 
+// Apply authentication to all API routes
+app.use('/api', tokenAuth)
 app.use('/api/file', fileRoutes)
 app.use('/api/git', gitRoutes)
 app.use('/api/workspace', workspaceRoutes)

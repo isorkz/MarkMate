@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useWorkspaceStore } from '../stores/workspaceStore'
 import { useEditorStore } from '../stores/editorStore'
-import { formatDate } from '../../../shared/commonUtils'
+import { formatDate } from '../../../shared/commonUtils.ts'
 import { adapters } from '../adapters'
 
 interface UseAutoSyncOptions {

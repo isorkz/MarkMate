@@ -1,12 +1,16 @@
 import React from 'react'
-import { PanelLeft } from 'lucide-react'
+import { PanelLeft, Settings } from 'lucide-react'
 import { useSettingsStore } from '../../stores/settingsStore'
 
 const LeftSideTopBar: React.FC = () => {
-  const { appearanceSettings, updateAppearanceSettings } = useSettingsStore()
+  const { appearanceSettings, updateAppearanceSettings, openSettings } = useSettingsStore()
 
   const toggleSidebar = () => {
     updateAppearanceSettings({ sidebarVisible: !appearanceSettings.sidebarVisible })
+  }
+
+  const handleOpenSettings = () => {
+    openSettings('general')
   }
 
   return (
@@ -19,6 +23,16 @@ const LeftSideTopBar: React.FC = () => {
         style={{ WebkitAppRegion: 'no-drag' }}
       >
         <PanelLeft className="w-4 h-4 text-gray-600" />
+      </button>
+      
+      {/* Settings button */}
+      <button
+        onClick={handleOpenSettings}
+        className="ml-1 p-1 rounded-md hover:bg-gray-200 transition-colors"
+        title="Open settings"
+        style={{ WebkitAppRegion: 'no-drag' }}
+      >
+        <Settings className="w-4 h-4 text-gray-600" />
       </button>
     </div>
   )

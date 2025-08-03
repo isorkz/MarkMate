@@ -6,6 +6,7 @@ export type SettingsType = 'general' | 'appearance' | 'sync'
 interface GeneralSettings {
   autoSaveEnabled: boolean;
   autoSaveDelayInSeconds: number;
+  accessToken: string;
 }
 
 interface AppearanceSettings {
@@ -44,7 +45,8 @@ interface SettingsStore {
 
 const defaultGeneralSettings: GeneralSettings = {
   autoSaveEnabled: true,
-  autoSaveDelayInSeconds: 10
+  autoSaveDelayInSeconds: 10,
+  accessToken: ''
 };
 
 const defaultAppearanceSettings: AppearanceSettings = {

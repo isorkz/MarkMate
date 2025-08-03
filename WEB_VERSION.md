@@ -60,25 +60,29 @@
 
 ### Quick Start
 
+1. Setup environment variable
+
 ```bash
-# Setup environment variable for workspace path
-export WORKSPACE_PATH=/path/to/your/markdown/workspace
+ for workspace path
+export MARKMATE_WORKSPACE_PATH=/path/to/your/markdown/workspace
 
-# Setup your git repo, including github username, email, remote-url
-# https://username:your_token@github.com/username/repo.git
+# Setup environment variable for API authentication
+export MARKMATE_ACCESS_TOKEN=your-secret-access-token
+```
 
-# Start web version
+2. Setup your git repo for markdown workspace, including github username, email, remote-url:
+https://username:your_token@github.com/username/repo.git
+
+3. Start web version
+
+```bash
 npm run dev:web
 ```
 
+4. Setup `your-secret-access-token` in MarkMate settings modal.
+
 ### Environment Configuration
 
-Create `.env` file in project root:
+Create `.env` file in project root.
 
-```bash
-# Required: Workspace path for web version
-WORKSPACE_PATH=/path/to/your/markdown/workspace
-
-# Optional: Web server configuration  
-PORT=3001
-```
+See `./web-server/.env.example`.

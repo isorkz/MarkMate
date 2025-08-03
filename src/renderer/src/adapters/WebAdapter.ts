@@ -3,13 +3,30 @@ import { GitCommit, GitStatus, GitRemoteStatus } from '../../../shared/types/git
 
 const API_BASE_URL = '/api'
 
+// Function to get access token from settings
+const getAccessToken = (): string => {
+  try {
+    const settings = JSON.parse(localStorage.getItem('settings-storage') || '{}')
+    return settings?.state?.generalSettings?.accessToken || ''
+  } catch {
+    return ''
+  }
+}
+
 class ApiClient {
   static async post(endpoint: string, data: any = {}) {
+    const token = getAccessToken()
+    const headers: any = {
+      'Content-Type': 'application/json'
+    }
+    
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
+    }
+
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers,
       body: JSON.stringify(data)
     })
 
@@ -22,7 +39,16 @@ class ApiClient {
   }
 
   static async get(endpoint: string) {
-    const response = await fetch(`${API_BASE_URL}${endpoint}`)
+    const token = getAccessToken()
+    const headers: any = {}
+    
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
+    }
+
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      headers
+    })
 
     if (!response.ok) {
       const error = await response.json()
