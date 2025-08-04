@@ -16,7 +16,7 @@ export default defineConfig(({ mode }) => {
       __IS_WEB__: mode === 'web'
     },
     build: {
-      outDir: resolve(__dirname, 'dist-web'),
+      outDir: resolve(__dirname, 'web-server/dist/frontend'),
       emptyOutDir: true,
       chunkSizeWarningLimit: 1500,
       rollupOptions: {

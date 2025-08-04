@@ -12,7 +12,12 @@ app.use(cors())
 app.use(express.json())
 
 // Serve static files (React frontend)
-const frontendPath = path.join(__dirname, '../../dist-web')
+// In development (ts-node): __dirname = /Users/.../web-server/src
+// In production (compiled): __dirname = /Users/.../web-server/dist/backend/web-server/src
+const isDevelopment = !__dirname.includes('/dist/backend/')
+const frontendPath = isDevelopment
+  ? path.join(__dirname, '../dist/frontend')  // Development
+  : path.join(__dirname, '../../../frontend')  // Production
 app.use(express.static(frontendPath))
 
 // Health check endpoint

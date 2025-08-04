@@ -10,6 +10,8 @@ out
 # Web server build output
 dist-web
 web-server/dist/
+web-server/node_modules/
 web-server/.env
+web-server/.env.local
 
 CLAUDE.md

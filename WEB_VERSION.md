@@ -1,4 +1,43 @@
-# MarkMate Web Version Architecture
+# MarkMate Web Version
+
+## Web Version Setup
+
+### Quick Start
+
+1. Setup environment variable
+
+For MarkMate web version, workspace path and access token are required:
+* Workspace path must be specified in the environment variable for web version.
+* Access token is used for API authentication.
+
+```bash
+export MARKMATE_WORKSPACE_PATH=/path/to/your/markdown/workspace
+
+export MARKMATE_ACCESS_TOKEN=your-secret-access-token
+```
+
+Or you can create a `.env` file and edit it:
+
+```bash
+cp web-server/.env.example web-server/.env
+```
+
+2. Setup your git repo for markdown workspace, including github username, email, remote-url:
+https://username:your_token@github.com/username/repo.git
+
+3. Start web version
+
+```bash
+# For DEV
+npm run dev:web
+
+# For PROD
+npm run build:web-frontend
+npm run build:web
+npm run start:web
+```
+
+4. Setup `your-secret-access-token` in MarkMate settings modal.
 
 ## Layered Architecture Design
 
@@ -55,34 +94,3 @@
 │         Node.js FS API + simple-git + Path Utils         │
 └────────────────────────────────────────────────────────────┘
 ```
-
-## Web Version Setup
-
-### Quick Start
-
-1. Setup environment variable
-
-```bash
- for workspace path
-export MARKMATE_WORKSPACE_PATH=/path/to/your/markdown/workspace
-
-# Setup environment variable for API authentication
-export MARKMATE_ACCESS_TOKEN=your-secret-access-token
-```
-
-2. Setup your git repo for markdown workspace, including github username, email, remote-url:
-https://username:your_token@github.com/username/repo.git
-
-3. Start web version
-
-```bash
-npm run dev:web
-```
-
-4. Setup `your-secret-access-token` in MarkMate settings modal.
-
-### Environment Configuration
-
-Create `.env` file in project root.
-
-See `./web-server/.env.example`.
