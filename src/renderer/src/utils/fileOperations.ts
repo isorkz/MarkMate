@@ -154,3 +154,34 @@ export const handleDelete = async (workspacePath: string, filePath: string, setF
     toast.error('Failed to delete:' + error)
   }
 }
+
+export const handleMoveFile = async (
+  workspacePath: string,
+  sourceNode: FileNode,
+  targetPath: string,
+  setFileTree: (tree: any) => void
+) => {
+  try {
+    const sourcePathParts = sourceNode.path.split('/')
+    const fileName = sourcePathParts[sourcePathParts.length - 1]
+    
+    // if targetPath === '', means move to workspace root
+    const newPath = targetPath === '' ? fileName : `${targetPath}/${fileName}`
+    
+    if (sourceNode.path === newPath) {
+      return
+    }
+    
+    if (sourceNode.type === 'folder' && newPath.startsWith(sourceNode.path + '/')) {
+      return
+    }
+    
+    console.log('Moving file from', sourceNode.path, 'to', newPath)
+    await adapters.fileAdapter.renameFile(workspacePath, sourceNode.path, newPath)
+    useFilePathEventStore.getState().notifyPathChange(sourceNode.path, newPath)
+    await loadFileTree(workspacePath, setFileTree)
+  } catch (error) {
+    console.error('Failed to move file:', error)
+    toast.error('Failed to move: ' + error)
+  }
+}

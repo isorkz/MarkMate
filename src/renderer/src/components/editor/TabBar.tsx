@@ -14,6 +14,7 @@ interface TabProps {
   tab: {
     id: string
     title: string
+    filePath: string
     hasUnsavedChanges: boolean
     isPinned?: boolean
   }
@@ -52,7 +53,10 @@ const Tab: React.FC<TabProps> = ({ tab, isActive, onClose, onSelect, onPin }) =>
       onClick={() => onSelect(tab.id)}
       onDoubleClick={() => onPin(tab.id)}
     >
-      <span className={`text-sm truncate max-w-32 ${!tab.isPinned ? 'italic' : ''}`}>
+      <span 
+        className={`text-sm truncate max-w-32 ${!tab.isPinned ? 'italic' : ''}`}
+        title={tab.filePath}
+      >
         {tab.title}
       </span>
       {tab.hasUnsavedChanges && (

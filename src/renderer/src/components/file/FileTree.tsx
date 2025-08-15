@@ -6,8 +6,10 @@ import { useWorkspaceStore } from '../../stores/workspaceStore'
 import { useEditorStore } from '../../stores/editorStore'
 import FileContextMenu from './FileContextMenu'
 import InlineInput from './InlineInput'
-import { handleNewFile, handleNewFolder, handleRename, handleDelete, loadFileTree, handleOpenFile } from '../../utils/fileOperations'
 import { FileNode } from '@renderer/types'
+import { handleNewFile, handleNewFolder, handleRename, handleDelete, loadFileTree, handleOpenFile, handleMoveFile } from '../../utils/fileOperations'
+import { DndContext, DragEndEvent, DragStartEvent, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
+import { DraggableFileNode, DroppableFolder, RootDropZone } from './DraggableFileNode'
 
 const FileTree: React.FC = () => {
   const { fileTree, expandedFolders, toggleFolder, setFileTree } = useFileSystemStore()
@@ -23,6 +25,52 @@ const FileTree: React.FC = () => {
     path: string // For rename: the item path, for new: the parent path
     initialValue?: string // For rename: current display name, for new: undefined
   } | null>(null)
+
+  const [draggedNode, setDraggedNode] = useState<FileNode | null>(null)
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    })
+  )
+
+  const handleDragStart = (event: DragStartEvent) => {
+    const node = event.active.data.current?.node as FileNode
+    if (node) {
+      setDraggedNode(node)
+    }
+  }
+
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { over } = event
+
+    const sourceNode = draggedNode
+    setDraggedNode(null)
+
+    if (!over || !currentWorkspace || !sourceNode) {
+      return
+    }
+
+    let targetPath = ''
+    if (over.data.current?.node) {
+      const overNode = over.data.current.node as FileNode
+      if (overNode.type === 'folder') {
+        targetPath = overNode.path
+      } else {
+        // If dropped on a file, move to the parent folder of that file
+        const pathParts = overNode.path.split('/')
+        pathParts.pop() // Remove the file name
+        targetPath = pathParts.join('/')
+      }
+    }
+
+    await handleMoveFile(currentWorkspace.path, sourceNode, targetPath, setFileTree)
+
+
+  }
 
   // Helper function to check if a path contains any open files
   const hasOpenFiles = (nodePath: string, nodeType: string): boolean => {
@@ -150,62 +198,71 @@ const FileTree: React.FC = () => {
     const isActiveTab = !isFolder && activeTabId && tabs.find(tab => tab.id === activeTabId)?.filePath === node.path
     // Check if this folder contains the currently active tab
     const hasActiveTab = isFolder && activeTabId && tabs.find(tab => tab.id === activeTabId)?.filePath.startsWith(node.path + '/')
+    const isDraggedItem = draggedNode?.path === node.path
+
+    const nodeContent = (
+      <div
+        className={`
+          flex items-center px-2 py-1.5 text-sm cursor-pointer rounded-md transition-colors hover:bg-gray-100
+          ${isActiveTab || hasActiveTab ? 'text-blue-500' : 'text-gray-700'}
+        `}
+        onClick={() => handleNodeClick(node, isFolder)}
+        onDoubleClick={() => handleNodeDoubleClick(node, isFolder)}
+        onContextMenu={(e) => handleContextMenu(e, node)}
+      >
+        <div
+          className="w-4 flex items-center justify-center mr-1 flex-shrink-0"
+          style={{ marginLeft: `${depth * 16}px` }}
+        >
+          {isFolder && (
+            isExpanded ? (
+              <ChevronDown className="w-3 h-3 text-gray-500" />
+            ) : (
+              <ChevronRight className="w-3 h-3 text-gray-500" />
+            )
+          )}
+        </div>
+
+        <div className="flex items-center gap-1.5 min-w-0 flex-1">
+          {isFolder ? (
+            isExpanded ? (
+              <FolderOpen className="w-4 h-4 flex-shrink-0" />
+            ) : (
+              <Folder className="w-4 h-4 flex-shrink-0" />
+            )
+          ) : (
+            <FileText className="w-4 h-4 flex-shrink-0" />
+          )}
+
+          {editingMode && editingMode.mode.startsWith('rename') && editingMode.path === node.path ? (
+            <InlineInput
+              type={isFolder ? 'folder' : 'file'}
+              mode="rename"
+              defaultValue={editingMode.initialValue}
+              onConfirm={handleEditConfirm}
+              onCancel={handleEditCancel}
+              inlineOnly
+            />
+          ) : (
+            <span className={`truncate text-sm min-w-0 ${isActiveTab || hasActiveTab || hasOpenFile ? 'font-medium' : ''}`}>
+              {node.name}
+            </span>
+          )}
+
+          {isNodeFavorite && (
+            <Star className="w-3 h-3 fill-yellow-400 text-yellow-400 ml-1 flex-shrink-0" />
+          )}
+        </div>
+      </div>
+    )
 
     return (
       <div key={node.path}>
-        <div
-          className={`
-            flex items-center px-2 py-1.5 text-sm cursor-pointer rounded-md transition-colors hover:bg-gray-100
-            ${isActiveTab || hasActiveTab ? 'text-blue-500' : 'text-gray-700'}
-          `}
-          onClick={() => handleNodeClick(node, isFolder)}
-          onDoubleClick={() => handleNodeDoubleClick(node, isFolder)}
-          onContextMenu={(e) => handleContextMenu(e, node)}
-        >
-          <div
-            className="w-4 flex items-center justify-center mr-1 flex-shrink-0"
-            style={{ marginLeft: `${depth * 16}px` }}
-          >
-            {isFolder && (
-              isExpanded ? (
-                <ChevronDown className="w-3 h-3 text-gray-500" />
-              ) : (
-                <ChevronRight className="w-3 h-3 text-gray-500" />
-              )
-            )}
-          </div>
-
-          <div className="flex items-center gap-1.5 min-w-0 flex-1">
-            {isFolder ? (
-              isExpanded ? (
-                <FolderOpen className="w-4 h-4 flex-shrink-0" />
-              ) : (
-                <Folder className="w-4 h-4 flex-shrink-0" />
-              )
-            ) : (
-              <FileText className="w-4 h-4 flex-shrink-0" />
-            )}
-
-            {editingMode && editingMode.mode.startsWith('rename') && editingMode.path === node.path ? (
-              <InlineInput
-                type={isFolder ? 'folder' : 'file'}
-                mode="rename"
-                defaultValue={editingMode.initialValue}
-                onConfirm={handleEditConfirm}
-                onCancel={handleEditCancel}
-                inlineOnly
-              />
-            ) : (
-              <span className={`truncate text-sm min-w-0 ${isActiveTab || hasActiveTab || hasOpenFile ? 'font-medium' : ''}`}>
-                {node.name}
-              </span>
-            )}
-
-            {isNodeFavorite && (
-              <Star className="w-3 h-3 fill-yellow-400 text-yellow-400 ml-1 flex-shrink-0" />
-            )}
-          </div>
-        </div>
+        <DroppableFolder node={node}>
+          <DraggableFileNode node={node} isDraggedItem={isDraggedItem}>
+            {nodeContent}
+          </DraggableFileNode>
+        </DroppableFolder>
 
         {isFolder && isExpanded && (
           <div>
@@ -221,7 +278,6 @@ const FileTree: React.FC = () => {
             )}
           </div>
         )}
-
       </div>
     )
   }
@@ -270,7 +326,16 @@ const FileTree: React.FC = () => {
       )}
 
       {/* Regular File Tree */}
-      {fileTree.map(node => renderNode(node))}
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+      >
+        <RootDropZone>
+          {fileTree.map(node => renderNode(node))}
+        </RootDropZone>
+      </DndContext>
 
       {contextMenu && (
         <FileContextMenu
