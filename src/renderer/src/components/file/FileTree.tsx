@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import toast from 'react-hot-toast'
-import { Folder, FolderOpen, FileText, ChevronRight, ChevronDown, Star } from 'lucide-react'
+import { Folder, FolderOpen, FileText, ChevronRight, ChevronDown, Star, Plus } from 'lucide-react'
 import { useFileSystemStore } from '../../stores/fileSystemStore'
 import { useWorkspaceStore } from '../../stores/workspaceStore'
 import { useEditorStore } from '../../stores/editorStore'
@@ -27,6 +27,7 @@ const FileTree: React.FC = () => {
   } | null>(null)
 
   const [draggedNode, setDraggedNode] = useState<FileNode | null>(null)
+  const [showCreateMenu, setShowCreateMenu] = useState<{ x: number; y: number } | null>(null)
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -123,6 +124,7 @@ const FileTree: React.FC = () => {
     }
     setEditingMode({ mode: 'create', type: 'file', path: parentPath })
     setContextMenu(null)
+    setShowCreateMenu(null)
   }
 
   const onNewFolder = (parentPath: string) => {
@@ -132,6 +134,7 @@ const FileTree: React.FC = () => {
     }
     setEditingMode({ mode: 'create', type: 'folder', path: parentPath })
     setContextMenu(null)
+    setShowCreateMenu(null)
   }
 
   const handleEditConfirm = async (value: string) => {
@@ -269,7 +272,9 @@ const FileTree: React.FC = () => {
         {isFolder && isExpanded && (
           <div>
             {node.children && node.children.map((child: any) => renderNode(child, depth + 1))}
-            {editingMode && (editingMode.mode === 'create') && editingMode.path === node.path && (
+
+            {/* Folder level create input */}
+            {editingMode && editingMode.mode === 'create' && editingMode.path === node.path && (
               <InlineInput
                 type={editingMode.type}
                 mode="create"
@@ -328,16 +333,48 @@ const FileTree: React.FC = () => {
       )}
 
       {/* Regular File Tree */}
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
-      >
-        <RootDropZone>
-          {fileTree.map(node => renderNode(node))}
-        </RootDropZone>
-      </DndContext>
+      <div>
+        <div className="flex items-center justify-between px-2 mb-2">
+          <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+            Workspace
+          </h3>
+          <div className="relative">
+            <button
+              onClick={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect()
+                setShowCreateMenu({
+                  x: rect.right, // Adjust position to show menu on the right side of button
+                  y: rect.bottom
+                })
+              }}
+              className="p-1 hover:bg-gray-200 rounded transition-colors"
+            >
+              <Plus className="w-3 h-3 text-gray-500" />
+            </button>
+          </div>
+        </div>
+
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+        >
+          <RootDropZone>
+            {/* Root level create input */}
+            {editingMode && editingMode.mode === 'create' && editingMode.path === '' && (
+              <InlineInput
+                type={editingMode.type}
+                mode="create"
+                depth={0}
+                onConfirm={handleEditConfirm}
+                onCancel={handleEditCancel}
+              />
+            )}
+            {fileTree.map(node => renderNode(node))}
+          </RootDropZone>
+        </DndContext>
+      </div>
 
       {contextMenu && (
         <FileContextMenu
@@ -351,6 +388,21 @@ const FileTree: React.FC = () => {
           onDelete={onDelete}
           onToggleFavorite={toggleFavorite}
           isFavorite={isFavorite(contextMenu.node.path)}
+        />
+      )}
+
+      {showCreateMenu && (
+        <FileContextMenu
+          node={{ id: 'root', name: 'root', path: '', type: 'folder' }}
+          position={showCreateMenu}
+          onClose={() => setShowCreateMenu(null)}
+          onNewFile={onNewFile}
+          onNewFolder={onNewFolder}
+          onOpenInNewTab={() => { }}
+          onRename={() => { }}
+          onDelete={() => { }}
+          onToggleFavorite={() => { }}
+          isFavorite={false}
         />
       )}
     </div>

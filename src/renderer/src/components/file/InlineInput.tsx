@@ -1,5 +1,5 @@
 import React from 'react'
-import { File, Folder } from 'lucide-react'
+import { FileText, Folder } from 'lucide-react'
 
 interface InlineInputProps {
   type: 'file' | 'folder'
@@ -52,7 +52,7 @@ const InlineInput: React.FC<InlineInputProps> = ({
 
   return (
     <div className="flex items-center px-2 py-1.5 text-sm">
-      <div 
+      <div
         className="w-4 flex items-center justify-center mr-1 flex-shrink-0"
         style={{ marginLeft: `${depth * 16}px` }}
       >
@@ -62,7 +62,7 @@ const InlineInput: React.FC<InlineInputProps> = ({
         {type === 'folder' ? (
           <Folder className="w-4 h-4 flex-shrink-0" />
         ) : (
-          <File className="w-4 h-4 flex-shrink-0" />
+          <FileText className="w-4 h-4 flex-shrink-0" />
         )}
         {inputElement}
       </div>

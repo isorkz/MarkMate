@@ -35,6 +35,8 @@ const FileContextMenu: React.FC<FileContextMenuProps> = ({
   isFavorite
 }) => {
 
+  const isRootNode = node.id === 'root'
+
   const menuItems = [
     ...(node.type === 'file' ? [{
       label: 'Open in New Tab',
@@ -62,28 +64,29 @@ const FileContextMenu: React.FC<FileContextMenuProps> = ({
         onClose()
       }
     },
-    {
+    ...(!isRootNode ? [{
       label: 'Rename',
       icon: <Edit3 className="w-4 h-4" />,
       onClick: () => {
         onRename()
         onClose()
       }
-    },
-    {
+    }] : []),
+    ...(!isRootNode ? [{
       label: isFavorite ? 'Remove from Favorites' : 'Add to Favorites',
       icon: <Star className={`w-4 h-4 ${isFavorite ? 'fill-yellow-400 text-yellow-400' : ''}`} />,
       onClick: () => {
         onToggleFavorite(node.path)
         onClose()
       }
-    },
-    {
+    }] : []),
+    ...(!isRootNode ? [{
       label: '',
       icon: null,
-      onClick: () => { }
-    },
-    {
+      onClick: () => { },
+      className: ''
+    }] : []),
+    ...(!isRootNode ? [{
       label: 'Delete',
       icon: <Trash2 className="w-4 h-4" />,
       onClick: () => {
@@ -95,7 +98,7 @@ const FileContextMenu: React.FC<FileContextMenuProps> = ({
           onClose()
         }
       }
-    }
+    }] : [])
   ]
 
   return (
