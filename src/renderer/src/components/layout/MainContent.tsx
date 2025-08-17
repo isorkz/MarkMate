@@ -5,6 +5,7 @@ import { useAutoSave } from '../../hooks/useAutoSave'
 import { useAutoSync } from '../../hooks/useAutoSync'
 import TabBar from '../editor/TabBar'
 import Editor from '../editor/Editor'
+import StatusBar from '../editor/StatusBar'
 
 const MainContent: React.FC = () => {
   const { tabs, activeTabId } = useEditorStore()
@@ -23,7 +24,7 @@ const MainContent: React.FC = () => {
   })
 
   return (
-    <div className="flex-1 flex flex-col h-full overflow-x-hidden">
+    <div className="flex-1 flex flex-col h-full overflow-x-hidden relative">
       <TabBar />
 
       {tabs.length > 0 ? (
@@ -34,6 +35,10 @@ const MainContent: React.FC = () => {
               <Editor tab={tab} />
             </div>
           ))}
+          
+          <div className="absolute bottom-0 right-0 z-10">
+            <StatusBar />
+          </div>
         </div>
       ) : (
         <div className="flex-1 flex items-center justify-center bg-gray-50">

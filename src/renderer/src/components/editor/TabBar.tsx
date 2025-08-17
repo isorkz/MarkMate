@@ -2,7 +2,6 @@ import React, { useState } from 'react'
 import { X, History } from 'lucide-react'
 import { useEditorStore } from '../../stores/editorStore'
 import { useSettingsStore } from '../../stores/settingsStore'
-import { formatDate } from '../../../../shared/commonUtils'
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
 import { SortableContext, sortableKeyboardCoordinates, horizontalListSortingStrategy } from '@dnd-kit/sortable'
 import { useSortable } from '@dnd-kit/sortable'
@@ -147,10 +146,9 @@ const TabBar: React.FC = () => {
           {/* Right side info - fixed width */}
           {activeTab && (
             <div
-              className="flex w-sidebar items-center px-4 text-xs text-gray-500 border-l border-gray-200 whitespace-nowrap flex-shrink-0"
+              className="flex items-center px-4 text-xs text-gray-500 whitespace-nowrap flex-shrink-0"
               style={{ WebkitAppRegion: 'drag' }}
             >
-              <span className="mr-3">Modified {formatDate(activeTab.lastModified)}</span>
 
               <div style={{ WebkitAppRegion: 'no-drag' }}>
                 <SyncStatusIcon status={activeTab.syncStatus} className="mr-2" />
