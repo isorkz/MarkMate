@@ -204,7 +204,7 @@ const FileTree: React.FC = () => {
       <div
         className={`
           flex items-center px-2 py-1.5 text-sm cursor-pointer rounded-md transition-colors hover:bg-gray-100
-          ${isActiveTab || hasActiveTab ? 'text-blue-500' : 'text-gray-700'}
+          ${isActiveTab || hasActiveTab ? 'text-blue-500' : 'text-gray-900'}
         `}
         onClick={() => handleNodeClick(node, isFolder)}
         onDoubleClick={() => handleNodeDoubleClick(node, isFolder)}
@@ -224,15 +224,17 @@ const FileTree: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-1.5 min-w-0 flex-1">
-          {isFolder ? (
-            isExpanded ? (
-              <FolderOpen className="w-4 h-4 flex-shrink-0" />
+          <span className="text-gray-700">
+            {isFolder ? (
+              isExpanded ? (
+                <FolderOpen className="w-4 h-4 flex-shrink-0" />
+              ) : (
+                <Folder className="w-4 h-4 flex-shrink-0" />
+              )
             ) : (
-              <Folder className="w-4 h-4 flex-shrink-0" />
-            )
-          ) : (
-            <FileText className="w-4 h-4 flex-shrink-0" />
-          )}
+              <FileText className="w-4 h-4 flex-shrink-0" />
+            )}
+          </span>
 
           {editingMode && editingMode.mode.startsWith('rename') && editingMode.path === node.path ? (
             <InlineInput

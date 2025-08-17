@@ -36,6 +36,14 @@ const FileContextMenu: React.FC<FileContextMenuProps> = ({
 }) => {
 
   const menuItems = [
+    ...(node.type === 'file' ? [{
+      label: 'Open in New Tab',
+      icon: <ExternalLink className="w-4 h-4" />,
+      onClick: () => {
+        onOpenInNewTab(node.path)
+        onClose()
+      }
+    }] : []),
     {
       label: 'New File',
       icon: <FileText className="w-4 h-4" />,
@@ -54,14 +62,6 @@ const FileContextMenu: React.FC<FileContextMenuProps> = ({
         onClose()
       }
     },
-    ...(node.type === 'file' ? [{
-      label: 'Open in New Tab',
-      icon: <ExternalLink className="w-4 h-4" />,
-      onClick: () => {
-        onOpenInNewTab(node.path)
-        onClose()
-      }
-    }] : []),
     {
       label: 'Rename',
       icon: <Edit3 className="w-4 h-4" />,
@@ -79,8 +79,13 @@ const FileContextMenu: React.FC<FileContextMenuProps> = ({
       }
     },
     {
+      label: '',
+      icon: null,
+      onClick: () => { }
+    },
+    {
       label: 'Delete',
-      icon: <Trash2 className="w-4 h-4 text-red-500" />,
+      icon: <Trash2 className="w-4 h-4" />,
       onClick: () => {
         const confirmed = window.confirm(
           `Are you sure you want to delete "${node.name}"?${node.type === 'folder' ? ' This will delete all contents.' : ''}`
@@ -89,8 +94,7 @@ const FileContextMenu: React.FC<FileContextMenuProps> = ({
           onDelete(node.path)
           onClose()
         }
-      },
-      className: 'text-red-500 hover:bg-red-50'
+      }
     }
   ]
 
@@ -111,14 +115,21 @@ const FileContextMenu: React.FC<FileContextMenuProps> = ({
         }}
       >
         {menuItems.map((item, index) => (
-          <button
-            key={index}
-            onClick={item.onClick}
-            className={`w-full flex items-center gap-3 px-3 py-2 text-sm text-left hover:bg-gray-100 ${item.className || ''}`}
-          >
-            {item.icon}
-            {item.label}
-          </button>
+          item.label === '' ? (
+            <div
+              key={index}
+              className="mx-3 border-t border-gray-200 my-1"
+            />
+          ) : (
+            <button
+              key={index}
+              onClick={item.onClick}
+              className={`w-full flex items-center gap-3 px-3 py-2 text-sm text-left hover:bg-gray-100 ${item.className || ''}`}
+            >
+              {item.icon}
+              {item.label}
+            </button>
+          )
         ))}
       </div>
     </>
