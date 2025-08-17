@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { X, History } from 'lucide-react'
+import { X } from 'lucide-react'
 import { useEditorStore } from '../../stores/editorStore'
 import { useSettingsStore } from '../../stores/settingsStore'
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
@@ -8,6 +8,7 @@ import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import VersionHistory from '../version/VersionHistory'
 import SyncStatusIcon from '../version/SyncStatusIcon'
+import OptionsMenu from '../options/OptionsMenu'
 
 interface TabProps {
   tab: {
@@ -154,14 +155,9 @@ const TabBar: React.FC = () => {
                 <SyncStatusIcon status={activeTab.syncStatus} className="mr-2" />
               </div>
 
-              <button
-                onClick={() => setShowVersionHistory(true)}
-                className="p-1 hover:bg-gray-200 rounded transition-colors"
-                style={{ WebkitAppRegion: 'no-drag' }}
-                title="View version history"
-              >
-                <History className="w-4 h-4" />
-              </button>
+              <div style={{ WebkitAppRegion: 'no-drag' }}>
+                <OptionsMenu onShowVersionHistory={() => setShowVersionHistory(true)} />
+              </div>
             </div>
           )}
         </>
