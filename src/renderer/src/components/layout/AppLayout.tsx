@@ -22,6 +22,7 @@ const AppLayout: React.FC = () => {
     searchTerm,
     setSearchTerm,
     searchResults,
+    isSearching,
   } = useFullSearch()
 
   const toggleSidebar = () => {
@@ -84,6 +85,7 @@ const AppLayout: React.FC = () => {
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
         searchResults={searchResults}
+        isSearching={isSearching}
       />
     </div>
   )

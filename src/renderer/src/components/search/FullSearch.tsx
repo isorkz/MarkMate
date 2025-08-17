@@ -9,6 +9,7 @@ interface FullSearchProps {
   searchTerm: string
   setSearchTerm: (term: string) => void
   searchResults: any[]
+  isSearching: boolean
 }
 
 const FullSearch: React.FC<FullSearchProps> = ({
@@ -17,6 +18,7 @@ const FullSearch: React.FC<FullSearchProps> = ({
   searchTerm,
   setSearchTerm,
   searchResults,
+  isSearching,
 }) => {
   const [selectedIndex, setSelectedIndex] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -138,7 +140,14 @@ const FullSearch: React.FC<FullSearchProps> = ({
 
         {/* Results */}
         <div className="flex-1 overflow-y-auto">
-          {searchTerm && searchResults.length === 0 ? (
+          {isSearching ? (
+            <div className="p-8 text-center text-gray-500">
+              <div className="flex items-center justify-center gap-2">
+                <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
+                Searching...
+              </div>
+            </div>
+          ) : searchTerm && searchResults.length === 0 ? (
             <div className="p-8 text-center text-gray-500">
               No files found for "{searchTerm}"
             </div>

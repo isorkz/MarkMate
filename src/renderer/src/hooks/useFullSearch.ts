@@ -113,6 +113,8 @@ export const useFullSearch = () => {
     setSearchTerm('')
   }
 
+  const isSearching = searchTerm.trim() !== '' && searchTerm !== debouncedSearchTerm
+
   return {
     showSearch,
     openSearch,
@@ -120,5 +122,6 @@ export const useFullSearch = () => {
     searchTerm,
     setSearchTerm,
     searchResults,
+    isSearching,
   }
 }
