@@ -1,6 +1,5 @@
 import React from 'react'
 import { useEditorStore } from '../../stores/editorStore'
-import { useSettingsStore } from '../../stores/settingsStore'
 import { useAutoSave } from '../../hooks/useAutoSave'
 import { useAutoSync } from '../../hooks/useAutoSync'
 import TabBar from '../editor/TabBar'
@@ -9,19 +8,12 @@ import StatusBar from '../editor/StatusBar'
 
 const MainContent: React.FC = () => {
   const { tabs, activeTabId } = useEditorStore()
-  const { generalSettings, syncSettings } = useSettingsStore()
 
   // Auto-save all tabs
-  useAutoSave({
-    enabled: generalSettings.autoSaveEnabled,
-    delayInSeconds: generalSettings.autoSaveDelayInSeconds
-  })
+  useAutoSave()
 
   // Auto-sync all tabs
-  useAutoSync({
-    enabled: syncSettings.autoSyncEnabled,
-    delayInSeconds: syncSettings.autoSyncDelayInSeconds
-  })
+  useAutoSync()
 
   return (
     <div className="flex-1 flex flex-col h-full overflow-x-hidden relative">
@@ -35,7 +27,7 @@ const MainContent: React.FC = () => {
               <Editor tab={tab} />
             </div>
           ))}
-          
+
           <div className="absolute bottom-0 right-0 z-10">
             <StatusBar />
           </div>

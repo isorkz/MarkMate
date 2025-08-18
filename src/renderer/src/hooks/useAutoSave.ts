@@ -3,19 +3,15 @@ import toast from 'react-hot-toast'
 import { useWorkspaceStore } from '../stores/workspaceStore'
 import { useEditorStore } from '../stores/editorStore'
 import { handleSave } from '../utils/fileOperations'
+import { useSettingsStore } from '@renderer/stores/settingsStore'
 
-interface UseAutoSaveOptions {
-  delayInSeconds?: number
-  enabled?: boolean
-}
-
-export const useAutoSave = (options: UseAutoSaveOptions = {}) => {
-  const { delayInSeconds = 10, enabled = true } = options
+export const useAutoSave = () => {
   const { currentWorkspace } = useWorkspaceStore()
   const { tabs, markTabDirty } = useEditorStore()
+  const { generalSettings } = useSettingsStore()
 
   useEffect(() => {
-    if (!currentWorkspace || !enabled) return
+    if (!currentWorkspace || !generalSettings.autoSaveEnabled) return
 
     const saveAllDirtyTabs = async () => {
       const dirtyTabs = tabs.filter(tab => tab.hasUnsavedChanges)
@@ -34,7 +30,7 @@ export const useAutoSave = (options: UseAutoSaveOptions = {}) => {
       }
     }
 
-    const timer = setInterval(saveAllDirtyTabs, delayInSeconds * 1000)
+    const timer = setInterval(saveAllDirtyTabs, generalSettings.autoSaveDelayInSeconds * 1000)
     return () => clearInterval(timer)
-  }, [tabs, currentWorkspace, delayInSeconds, enabled, markTabDirty])
+  }, [tabs, currentWorkspace, generalSettings.autoSaveDelayInSeconds, generalSettings.autoSaveEnabled, markTabDirty])
 }

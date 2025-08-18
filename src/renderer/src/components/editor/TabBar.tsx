@@ -76,7 +76,7 @@ const Tab: React.FC<TabProps> = ({ tab, isActive, onClose, onSelect, onPin }) =>
 
 const TabBar: React.FC = () => {
   const { tabs, activeTabId, setActiveTab, closeTab, reorderTabs, pinTab } = useEditorStore()
-  const { appearanceSettings } = useSettingsStore()
+  const { appearanceSettings, syncSettings } = useSettingsStore()
 
   const activeTab = tabs.find(tab => tab.id === activeTabId) || null
 
@@ -142,26 +142,24 @@ const TabBar: React.FC = () => {
             </DndContext>
           </div>
 
-          {/* Right side info - fixed width */}
-          {activeTab && (
-            <div
-              className="flex items-center px-4 text-xs text-gray-500 whitespace-nowrap flex-shrink-0"
-              style={{ WebkitAppRegion: 'drag' }}
-            >
-
-              <div style={{ WebkitAppRegion: 'no-drag' }}>
-                <SyncStatusIcon status={activeTab.syncStatus} className="mr-2" />
-              </div>
-
-              <div style={{ WebkitAppRegion: 'no-drag' }}>
-                <OptionsMenu />
-              </div>
-            </div>
-          )}
         </>
       ) : (
         <div className="flex-1" />
       )}
+
+      {/* Status and Options */}
+      <div
+        className="flex items-center px-4 text-xs text-gray-500 whitespace-nowrap flex-shrink-0"
+        style={{ WebkitAppRegion: 'drag' }}
+      >
+        <div style={{ WebkitAppRegion: 'no-drag' }} className="flex items-center gap-2">
+          {activeTab && syncSettings.autoSyncEnabled && (
+            <SyncStatusIcon status={activeTab.syncStatus} />
+          )}
+
+          <OptionsMenu />
+        </div>
+      </div>
     </div>
   )
 }
