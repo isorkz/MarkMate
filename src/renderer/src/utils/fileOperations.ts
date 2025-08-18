@@ -2,9 +2,9 @@ import toast from 'react-hot-toast'
 import { useFilePathEventStore } from '../stores/events/filePathEventStore'
 import { useWorkspaceStore } from '../stores/workspaceStore'
 import { useEditorStore } from '@renderer/stores/editorStore'
-import { checkSyncStatus } from './checkSyncStatus'
 import { FileNode } from '@renderer/types'
 import { adapters } from '../adapters'
+import { checkSyncStatus } from './syncOperation'
 
 // Helper function to get all markdown files from the file tree
 export const getAllMarkdownFiles = (nodes: FileNode[]): FileNode[] => {

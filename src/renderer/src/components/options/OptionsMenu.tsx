@@ -1,15 +1,24 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { MoreHorizontal, Settings, GalleryVerticalEnd } from 'lucide-react'
+import { MoreHorizontal, Settings, GalleryVerticalEnd, RefreshCw } from 'lucide-react'
+import VersionHistory from '../version/VersionHistory'
+import toast from 'react-hot-toast'
 import { useSettingsStore } from '../../stores/settingsStore'
+import { useWorkspaceStore } from '@renderer/stores/workspaceStore'
+import { useEditorStore } from '@renderer/stores/editorStore'
+import { syncWorkspace } from '@renderer/utils/syncOperation'
+import { formatDate } from '../../../../shared/commonUtils'
 
-interface OptionsMenuProps {
-  onShowVersionHistory: () => void
-}
-
-const OptionsMenu: React.FC<OptionsMenuProps> = ({ onShowVersionHistory }) => {
+const OptionsMenu: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false)
+  const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'success' | 'error'>('idle')
+  const [showVersionHistory, setShowVersionHistory] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
+
+  const { tabs, activeTabId, updateTabSyncStatus } = useEditorStore()
   const { openSettings } = useSettingsStore()
+  const { currentWorkspace } = useWorkspaceStore()
+
+  const activeTab = tabs.find(tab => tab.id === activeTabId) || null
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -33,8 +42,34 @@ const OptionsMenu: React.FC<OptionsMenuProps> = ({ onShowVersionHistory }) => {
   }
 
   const handleShowVersionHistory = () => {
-    onShowVersionHistory()
-    setIsOpen(false)
+    if (activeTab) {
+      setShowVersionHistory(true)
+      setIsOpen(false)
+    }
+  }
+
+  const handleManualSync = async () => {
+    if (!currentWorkspace || syncStatus === 'syncing') {
+      return
+    }
+
+    setSyncStatus('syncing')
+
+    try {
+      const commitMessage = `Manual sync at ${formatDate(new Date())}`
+      await syncWorkspace(currentWorkspace.path, tabs, commitMessage, updateTabSyncStatus)
+      setSyncStatus('success')
+      toast.success('Workspace synced successfully')
+    } catch (error) {
+      console.error('Manual sync failed:', error)
+      setSyncStatus('error')
+      toast.error('Sync failed')
+    }
+
+    // Reset status to idle after 5 seconds
+    setTimeout(() => {
+      setSyncStatus('idle')
+    }, 5000)
   }
 
   return (
@@ -50,12 +85,32 @@ const OptionsMenu: React.FC<OptionsMenuProps> = ({ onShowVersionHistory }) => {
 
       {isOpen && (
         <div className="absolute right-0 top-full mt-1 w-48 text-sm text-gray-900 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+          {activeTab && (
+            <>
+              <button
+                onClick={handleShowVersionHistory}
+                className="flex items-center gap-2 w-full px-3 py-2 hover:bg-gray-100 transition-colors"
+              >
+                <GalleryVerticalEnd className="w-4 h-4" />
+                Version History
+              </button>
+
+              <div className="mx-3 border-t border-gray-100 my-0.5" />
+            </>
+          )}
+
           <button
-            onClick={handleShowVersionHistory}
-            className="flex items-center gap-2 w-full px-3 py-2 hover:bg-gray-100 transition-colors"
+            onClick={handleManualSync}
+            disabled={syncStatus === 'syncing'}
+            className="flex items-center gap-2 w-full px-3 py-2 hover:bg-gray-100 transition-colors disabled:opacity-50"
           >
-            <GalleryVerticalEnd className="w-4 h-4" />
-            Version History
+            <RefreshCw
+              className={`w-4 h-4 ${syncStatus === 'syncing' ? 'animate-spin' : ''
+                } ${syncStatus === 'success' ? 'text-green-500' :
+                  syncStatus === 'error' ? 'text-red-500' : ''
+                }`}
+            />
+            Sync Workspace
           </button>
 
           <div className="mx-3 border-t border-gray-100 my-0.5" />
@@ -68,6 +123,15 @@ const OptionsMenu: React.FC<OptionsMenuProps> = ({ onShowVersionHistory }) => {
             Settings
           </button>
         </div>
+      )}
+
+      {/* Version History Modal */}
+      {activeTab && (
+        <VersionHistory
+          isOpen={showVersionHistory}
+          setShowVersionHistory={setShowVersionHistory}
+          tab={activeTab}
+        />
       )}
     </div>
   )
