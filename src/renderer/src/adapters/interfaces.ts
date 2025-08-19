@@ -1,4 +1,4 @@
-import { GitCommit, GitStatus, GitRemoteStatus } from '../../../shared/types/git'
+import { GitCommit, GitStatus } from '../../../shared/types/git'
 
 export interface IFileAdapter {
   readFile(workspacePath: string, filePath: string): Promise<string>
@@ -22,9 +22,9 @@ export interface IGitAdapter {
   getUncommittedDiff(workspacePath: string, filePath: string): Promise<string>
   restoreFile(workspacePath: string, filePath: string, commitHash: string): Promise<void>
   discardChanges(workspacePath: string, filePath: string): Promise<void>
+  completeMerge(workspacePath: string, commitMessage: string): Promise<void>
   syncWorkspace(workspacePath: string, commitMessage: string, remote?: string, branch?: string): Promise<void>
-  checkLocalStatus(workspacePath: string, filePath: string): Promise<GitStatus>
-  checkRemoteStatus(workspacePath: string, remote?: string, branch?: string): Promise<GitRemoteStatus>
+  getFileSync(workspacePath: string, filePath: string, remote?: string, branch?: string): Promise<GitStatus>
 }
 
 export interface IWorkspaceAdapter {

@@ -35,10 +35,49 @@ const SyncSettings: React.FC = () => {
   return (
     <div className="space-y-8">
       <div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Sync Settings</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Save & Sync Settings</h3>
         <p className="text-sm text-gray-600 mb-6">
-          Configure synchronization and Git repository settings.
+          Configure how your notes are saved and synced with your git repository.
         </p>
+      </div>
+
+      {/* Auto Save */}
+      <div className="space-y-4">
+        <h4 className="font-medium text-gray-900">Auto Save</h4>
+
+        <div className="flex items-center justify-between">
+          <div>
+            <label className="text-sm font-medium text-gray-700">Enable Auto Save</label>
+            <p className="text-xs text-gray-500">Automatically save changes as you type</p>
+          </div>
+          <input
+            type="checkbox"
+            checked={syncSettings.autoSaveEnabled}
+            onChange={(e) => updateSyncSettings({ autoSaveEnabled: e.target.checked })}
+            className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+          />
+        </div>
+
+        {syncSettings.autoSaveEnabled && (
+          <div className="space-y-3">
+            <label className="block text-sm font-medium text-gray-700">Auto Save Interval</label>
+            <div className="flex items-center space-x-3">
+              <input
+                type="range"
+                min="5"
+                max="60"
+                step="5"
+                value={syncSettings.autoSaveDelayInSeconds}
+                onChange={(e) => updateSyncSettings({ autoSaveDelayInSeconds: parseInt(e.target.value) })}
+                className="flex-1"
+              />
+              <span className="text-sm text-gray-600 w-16">{syncSettings.autoSaveDelayInSeconds}s</span>
+            </div>
+            <p className="text-xs text-gray-500">
+              Files will be saved automatically every {syncSettings.autoSaveDelayInSeconds} seconds
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Auto Sync */}
@@ -142,29 +181,6 @@ const SyncSettings: React.FC = () => {
           <p className="text-xs text-gray-500">
             Full repository URL with authentication token included
           </p>
-        </div>
-      </div>
-
-      {/* Sync Status Info */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <h5 className="text-sm font-medium text-blue-900 mb-2">Sync Status Legend</h5>
-        <div className="space-y-2 text-xs">
-          <div className="flex items-center space-x-2">
-            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-            <span className="text-blue-800">Synced - All changes are committed and pushed</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-            <span className="text-blue-800">Out of date - Changes need to be synced</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-            <span className="text-blue-800">Syncing - Currently syncing changes</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-            <span className="text-blue-800">Error - Sync failed or git not configured</span>
-          </div>
         </div>
       </div>
 

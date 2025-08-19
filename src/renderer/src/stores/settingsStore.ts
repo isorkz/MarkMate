@@ -1,12 +1,10 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-export type SettingsType = 'general' | 'appearance' | 'sync'
+export type SettingsType = 'general' | 'appearance' | 'sync' | 'web'
 
 interface GeneralSettings {
-  autoSaveEnabled: boolean;
-  autoSaveDelayInSeconds: number;
-  accessToken: string;
+  
 }
 
 interface AppearanceSettings {
@@ -17,6 +15,8 @@ interface AppearanceSettings {
 }
 
 interface SyncSettings {
+  autoSaveEnabled: boolean;
+  autoSaveDelayInSeconds: number;
   autoSyncEnabled: boolean;
   autoSyncDelayInSeconds: number;
   gitUsername: string;
@@ -24,10 +24,15 @@ interface SyncSettings {
   gitRemoteUrl: string;
 }
 
+interface WebSettings {
+  accessToken: string;
+}
+
 interface SettingsStore {
   generalSettings: GeneralSettings;
   appearanceSettings: AppearanceSettings;
   syncSettings: SyncSettings;
+  webSettings: WebSettings;
   
   // UI state
   isOpen: boolean;
@@ -40,13 +45,11 @@ interface SettingsStore {
   updateGeneralSettings: (settings: Partial<GeneralSettings>) => void;
   updateAppearanceSettings: (settings: Partial<AppearanceSettings>) => void;
   updateSyncSettings: (settings: Partial<SyncSettings>) => void;
+  updateWebSettings: (settings: Partial<WebSettings>) => void;
   resetSettings: () => void;
 }
 
 const defaultGeneralSettings: GeneralSettings = {
-  autoSaveEnabled: true,
-  autoSaveDelayInSeconds: 10,
-  accessToken: ''
 };
 
 const defaultAppearanceSettings: AppearanceSettings = {
@@ -57,11 +60,17 @@ const defaultAppearanceSettings: AppearanceSettings = {
 };
 
 const defaultSyncSettings: SyncSettings = {
+  autoSaveEnabled: true,
+  autoSaveDelayInSeconds: 10,
   autoSyncEnabled: true,
   autoSyncDelayInSeconds: 300, // 5 minutes
   gitUsername: '',
   gitEmail: '',
   gitRemoteUrl: ''
+};
+
+const defaultWebSettings: WebSettings = {
+  accessToken: ''
 };
 
 export const useSettingsStore = create<SettingsStore>()(
@@ -70,6 +79,7 @@ export const useSettingsStore = create<SettingsStore>()(
       generalSettings: defaultGeneralSettings,
       appearanceSettings: defaultAppearanceSettings,
       syncSettings: defaultSyncSettings,
+      webSettings: defaultWebSettings,
       
       // UI state
       isOpen: false,
@@ -91,6 +101,10 @@ export const useSettingsStore = create<SettingsStore>()(
       updateSyncSettings: (settings) => set(state => ({
         syncSettings: { ...state.syncSettings, ...settings }
       })),
+
+      updateWebSettings: (settings) => set(state => ({
+        webSettings: { ...state.webSettings, ...settings }
+      })),
       
       resetSettings: () => set({ 
         generalSettings: defaultGeneralSettings, 
@@ -99,7 +113,22 @@ export const useSettingsStore = create<SettingsStore>()(
       })
     }),
     {
-      name: 'settings-storage'
+      name: 'settings-storage',
+      partialize: (state) => ({
+        generalSettings: state.generalSettings,
+        appearanceSettings: state.appearanceSettings,
+        syncSettings: {
+          autoSaveEnabled: state.syncSettings.autoSaveEnabled,
+          autoSaveDelayInSeconds: state.syncSettings.autoSaveDelayInSeconds,
+          autoSyncEnabled: state.syncSettings.autoSyncEnabled,
+          autoSyncDelayInSeconds: state.syncSettings.autoSyncDelayInSeconds,
+          // Git credentials are excluded from persistence
+          gitUsername: '',
+          gitEmail: '',
+          gitRemoteUrl: ''
+        },
+        webSettings: state.webSettings
+      })
     }
   )
 )

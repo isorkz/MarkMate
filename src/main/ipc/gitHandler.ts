@@ -72,6 +72,16 @@ export function setupGitHandlers() {
     }
   })
 
+  // Complete merge by staging and committing resolved files
+  ipcMain.handle('git:complete-merge', async (_, workspacePath: string, commitMessage: string) => {
+    try {
+      await GitService.completeMerge(workspacePath, commitMessage)
+    } catch (error) {
+      console.error('Failed to complete merge:', error)
+      throw error
+    }
+  })
+
   // Sync workspace: pull + commit + push
   ipcMain.handle('git:sync', async (_, workspacePath: string, commitMessage: string, remote: string = 'origin', branch: string = 'main') => {
     try {
@@ -82,22 +92,12 @@ export function setupGitHandlers() {
     }
   })
 
-  // Get Git status for a specific file
-  ipcMain.handle('git:check-local-status', async (_, workspacePath: string, filePath: string) => {
+  // Get file sync status (combines local and remote checks)
+  ipcMain.handle('git:get-file-sync', async (_, workspacePath: string, filePath: string, remote: string = 'origin', branch: string = 'main') => {
     try {
-      return await GitService.checkLocalStatus(workspacePath, filePath)
+      return await GitService.getFileSync(workspacePath, filePath, remote, branch)
     } catch (error) {
-      console.error('Failed to get git file status:', error)
-      throw error
-    }
-  })
-
-  // Check if local branch is ahead of remote (has unpushed commits)
-  ipcMain.handle('git:check-remote-status', async (_, workspacePath: string, remote: string = 'origin', branch: string = 'main') => {
-    try {
-      return await GitService.checkRemoteStatus(workspacePath, remote, branch)
-    } catch (error) {
-      console.error('Failed to check push status:', error)
+      console.error('Failed to get file sync status:', error)
       throw error
     }
   })

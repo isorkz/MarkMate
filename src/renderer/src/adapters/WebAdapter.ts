@@ -1,5 +1,5 @@
 import { IFileAdapter, IGitAdapter, IWorkspaceAdapter } from './interfaces'
-import { GitCommit, GitStatus, GitRemoteStatus } from '../../../shared/types/git'
+import { GitCommit, GitStatus } from '../../../shared/types/git'
 
 const API_BASE_URL = '/api'
 
@@ -7,7 +7,7 @@ const API_BASE_URL = '/api'
 const getAccessToken = (): string => {
   try {
     const settings = JSON.parse(localStorage.getItem('settings-storage') || '{}')
-    return settings?.state?.generalSettings?.accessToken || ''
+    return settings?.state?.webSettings?.accessToken || ''
   } catch {
     return ''
   }
@@ -143,16 +143,16 @@ export class WebGitAdapter implements IGitAdapter {
     await ApiClient.post('/git/discard-changes', { filePath })
   }
 
+  async completeMerge(_workspacePath: string, commitMessage: string): Promise<void> {
+    await ApiClient.post('/git/complete-merge', { commitMessage })
+  }
+
   async syncWorkspace(_workspacePath: string, commitMessage: string, remote = 'origin', branch = 'main'): Promise<void> {
     await ApiClient.post('/git/sync', { commitMessage, remote, branch })
   }
 
-  async checkLocalStatus(_workspacePath: string, filePath: string): Promise<GitStatus> {
-    return ApiClient.post('/git/check-local-status', { filePath })
-  }
-
-  async checkRemoteStatus(_workspacePath: string, remote = 'origin', branch = 'main'): Promise<GitRemoteStatus> {
-    return ApiClient.post('/git/check-remote-status', { remote, branch })
+  async getFileSync(_workspacePath: string, filePath: string, remote = 'origin', branch = 'main'): Promise<GitStatus> {
+    return ApiClient.post('/git/get-file-sync', { filePath, remote, branch })
   }
 }
 
