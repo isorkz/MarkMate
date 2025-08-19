@@ -1,5 +1,5 @@
-import { ipcMain } from 'electron'
-import { FileService } from '../../shared/services'
+import { ipcMain, BrowserWindow } from 'electron'
+import { FileService, FileWatchEvent } from '../../shared/services/FileService'
 
 export function setupFileHandlers() {
   // Read file content
@@ -115,5 +115,50 @@ export function setupFileHandlers() {
       console.error('Error resolving relative path:', error)
       throw error
     }
+  })
+
+  // File watching handlers
+  ipcMain.handle('file:watch-workspace', async (_, workspacePath: string) => {
+    try {
+      const callback = (event: FileWatchEvent) => {
+        // Send file change event to all renderer processes
+        BrowserWindow.getAllWindows().forEach(window => {
+          window.webContents.send('file:external-change', {
+            workspacePath,
+            ...event
+          })
+        })
+      }
+
+      FileService.watchWorkspace(workspacePath, callback)
+      return true
+    } catch (error) {
+      console.error('Error watching workspace:', error)
+      throw error
+    }
+  })
+
+  ipcMain.handle('file:unwatch-workspace', async (_, workspacePath: string) => {
+    try {
+      FileService.unwatchWorkspace(workspacePath)
+      return true
+    } catch (error) {
+      console.error('Error unwatching workspace:', error)
+      throw error
+    }
+  })
+
+  ipcMain.handle('file:is-watching', async (_, workspacePath: string) => {
+    try {
+      return FileService.isWatching(workspacePath)
+    } catch (error) {
+      console.error('Error checking watch status:', error)
+      throw error
+    }
+  })
+
+  // Cleanup watchers when app quits
+  ipcMain.on('app:before-quit', () => {
+    FileService.unwatchAll()
   })
 }

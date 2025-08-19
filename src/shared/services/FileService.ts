@@ -1,8 +1,19 @@
 import * as fs from 'fs/promises'
 import * as path from 'path'
+import * as chokidar from 'chokidar'
 import { isImagePathResolved } from '../commonUtils'
 
+export interface FileWatchEvent {
+  type: 'change' | 'add' | 'unlink' | 'addDir' | 'unlinkDir'
+  path: string
+  stats?: any
+}
+
+export type FileWatchCallback = (event: FileWatchEvent) => void
+
 export class FileService {
+  private static watchers = new Map<string, chokidar.FSWatcher>()
+  private static callbacks = new Map<string, Set<FileWatchCallback>>()
   // Read file content
   static async readFile(workspacePath: string, filePath: string): Promise<string> {
     const fullPath = path.join(workspacePath, filePath)
@@ -205,5 +216,129 @@ export class FileService {
     
     // Normalize path separators for cross-platform compatibility
     return workspaceRelativePath.replace(/\\/g, '/')
+  }
+
+  // File watching methods
+  static watchWorkspace(workspacePath: string, callback: FileWatchCallback): void {
+    const absolutePath = path.resolve(workspacePath)
+    
+    // Add callback to the set for this workspace
+    if (!this.callbacks.has(absolutePath)) {
+      this.callbacks.set(absolutePath, new Set())
+    }
+    this.callbacks.get(absolutePath)!.add(callback)
+
+    // If watcher already exists for this workspace, don't create a new one
+    if (this.watchers.has(absolutePath)) {
+      return
+    }
+
+    const watcher = chokidar.watch(absolutePath, {
+      ignored: [
+        /(^|[\/\\])\../, // ignore dotfiles
+        '**/node_modules/**',
+        '**/.git/**',
+        '**/.DS_Store',
+        '**/Thumbs.db'
+      ],
+      persistent: true,
+      ignoreInitial: true,
+      followSymlinks: false,
+      depth: 50
+    })
+
+    const notifyCallbacks = (event: FileWatchEvent) => {
+      const callbacks = this.callbacks.get(absolutePath)
+      if (callbacks) {
+        callbacks.forEach(cb => {
+          try {
+            cb(event)
+          } catch (error) {
+            console.error('Error in file watch callback:', error)
+          }
+        })
+      }
+    }
+
+    watcher
+      .on('change', (filePath, stats) => {
+        notifyCallbacks({
+          type: 'change',
+          path: path.relative(absolutePath, filePath),
+          stats
+        })
+      })
+      .on('add', (filePath, stats) => {
+        notifyCallbacks({
+          type: 'add',
+          path: path.relative(absolutePath, filePath),
+          stats
+        })
+      })
+      .on('unlink', (filePath) => {
+        notifyCallbacks({
+          type: 'unlink',
+          path: path.relative(absolutePath, filePath)
+        })
+      })
+      .on('addDir', (dirPath, stats) => {
+        notifyCallbacks({
+          type: 'addDir',
+          path: path.relative(absolutePath, dirPath),
+          stats
+        })
+      })
+      .on('unlinkDir', (dirPath) => {
+        notifyCallbacks({
+          type: 'unlinkDir',
+          path: path.relative(absolutePath, dirPath)
+        })
+      })
+      .on('error', (error) => {
+        console.error('File watcher error:', error)
+      })
+
+    this.watchers.set(absolutePath, watcher)
+  }
+
+  static unwatchWorkspace(workspacePath: string, callback?: FileWatchCallback): void {
+    const absolutePath = path.resolve(workspacePath)
+    
+    if (callback) {
+      // Remove specific callback
+      const callbacks = this.callbacks.get(absolutePath)
+      if (callbacks) {
+        callbacks.delete(callback)
+        
+        // If no more callbacks, close the watcher
+        if (callbacks.size === 0) {
+          this.callbacks.delete(absolutePath)
+          const watcher = this.watchers.get(absolutePath)
+          if (watcher) {
+            watcher.close()
+            this.watchers.delete(absolutePath)
+          }
+        }
+      }
+    } else {
+      // Remove all callbacks and close watcher
+      this.callbacks.delete(absolutePath)
+      const watcher = this.watchers.get(absolutePath)
+      if (watcher) {
+        watcher.close()
+        this.watchers.delete(absolutePath)
+      }
+    }
+  }
+
+  static unwatchAll(): void {
+    this.watchers.forEach(watcher => watcher.close())
+    this.watchers.clear()
+    this.callbacks.clear()
+  }
+
+  static isWatching(workspacePath: string): boolean {
+    const absolutePath = path.resolve(workspacePath)
+    return this.watchers.has(absolutePath)
   }
 }

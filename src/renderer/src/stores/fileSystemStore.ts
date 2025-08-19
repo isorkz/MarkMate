@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { useFilePathEventStore } from './events/filePathEventStore'
+import { useWorkspaceStore } from './workspaceStore'
 import { FileNode } from '../types'
 
 interface FileSystemStore {
@@ -10,6 +11,7 @@ interface FileSystemStore {
   setFileTree: (tree: FileNode[]) => void;
   toggleFolder: (path: string) => void;
   renameNodeRecursive: (oldPath: string, newName: string) => void;
+  refreshFileTree: () => Promise<void>;
 }
 
 export const useFileSystemStore = create<FileSystemStore>((set) => ({
@@ -61,6 +63,18 @@ export const useFileSystemStore = create<FileSystemStore>((set) => ({
     };
     
     set(state => ({ fileTree: updateNodeAndChildren(state.fileTree) }));
+  },
+
+  refreshFileTree: async () => {
+    const { currentWorkspace } = useWorkspaceStore.getState()
+    if (!currentWorkspace?.path) return
+
+    try {
+      const fileTree = await window.electron.ipcRenderer.invoke('workspace:get-file-tree', currentWorkspace.path)
+      set({ fileTree })
+    } catch (error) {
+      console.error('Failed to refresh file tree:', error)
+    }
   }
 }))
 

@@ -175,11 +175,11 @@ const RichEditor: React.FC<RichEditorProps> = ({ tab }) => {
     }
   })
 
-  // Update Rich editor content when user is typing on Source editor
+  // Update Rich editor content when user is typing on Source editor or when content changes externally 
   useEffect(() => {
     // '!editor.isFocused' ensures when user is only typing on Source editor
     // If user is typing in the Rich editor, only use onUpdate() to update content
-    if (showSourceEditor && tab && editor && !editor.isFocused) {
+    if (tab && editor && !editor.isFocused) {
       try {
         const markdown = editor.storage.markdown.getMarkdown()
         if (markdown !== tab.content) {
