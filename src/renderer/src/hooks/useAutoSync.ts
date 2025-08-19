@@ -16,9 +16,8 @@ export const useAutoSync = () => {
     }
 
     const timer = setInterval(() => {
-      console.log('Auto-sync triggered for workspace:', currentWorkspace.path)
       const commitMessage = `Auto sync at ${formatDate(new Date())}`
-      syncWorkspace(currentWorkspace.path, tabs, commitMessage, updateTabSyncStatus)
+      syncWorkspace(currentWorkspace.path, tabs, commitMessage)
     }, syncSettings.autoSyncDelayInSeconds * 1000)
     return () => clearInterval(timer)
   }, [tabs, currentWorkspace, syncSettings.autoSyncDelayInSeconds, syncSettings.autoSyncEnabled, updateTabSyncStatus])

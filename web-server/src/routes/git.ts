@@ -81,6 +81,17 @@ router.post('/discard-changes', async (req, res, next) => {
   }
 })
 
+// Complete merge by staging and committing resolved files
+router.post('/complete-merge', async (req, res, next) => {
+  try {
+    const { commitMessage } = req.body
+    await GitService.completeMerge(config.workspacePath, commitMessage)
+    res.json({ success: true })
+  } catch (error) {
+    next(error)
+  }
+})
+
 // Sync workspace: pull + commit + push
 router.post('/sync', async (req, res, next) => {
   try {
@@ -92,23 +103,12 @@ router.post('/sync', async (req, res, next) => {
   }
 })
 
-// Get Git status for a specific file
-router.post('/check-local-status', async (req, res, next) => {
+// Get file sync status
+router.post('/get-file-sync', async (req, res, next) => {
   try {
-    const { filePath } = req.body
-    const status = await GitService.checkLocalStatus(config.workspacePath, filePath)
-    res.json(status)
-  } catch (error) {
-    next(error)
-  }
-})
-
-// Check if local branch is ahead of remote
-router.post('/check-remote-status', async (req, res, next) => {
-  try {
-    const { remote = 'origin', branch = 'main' } = req.body
-    const status = await GitService.checkRemoteStatus(config.workspacePath, remote, branch)
-    res.json(status)
+    const { filePath, remote = 'origin', branch = 'main' } = req.body
+    const syncStatus = await GitService.getFileSync(config.workspacePath, filePath, remote, branch)
+    res.json(syncStatus)
   } catch (error) {
     next(error)
   }

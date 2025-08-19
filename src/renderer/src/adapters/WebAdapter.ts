@@ -7,7 +7,7 @@ const API_BASE_URL = '/api'
 const getAccessToken = (): string => {
   try {
     const settings = JSON.parse(localStorage.getItem('settings-storage') || '{}')
-    return settings?.state?.generalSettings?.accessToken || ''
+    return settings?.state?.webSettings?.accessToken || ''
   } catch {
     return ''
   }
@@ -141,6 +141,10 @@ export class WebGitAdapter implements IGitAdapter {
 
   async discardChanges(_workspacePath: string, filePath: string): Promise<void> {
     await ApiClient.post('/git/discard-changes', { filePath })
+  }
+
+  async completeMerge(_workspacePath: string, commitMessage: string): Promise<void> {
+    await ApiClient.post('/git/complete-merge', { commitMessage })
   }
 
   async syncWorkspace(_workspacePath: string, commitMessage: string, remote = 'origin', branch = 'main'): Promise<void> {

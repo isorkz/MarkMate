@@ -22,6 +22,7 @@ export interface IGitAdapter {
   getUncommittedDiff(workspacePath: string, filePath: string): Promise<string>
   restoreFile(workspacePath: string, filePath: string, commitHash: string): Promise<void>
   discardChanges(workspacePath: string, filePath: string): Promise<void>
+  completeMerge(workspacePath: string, commitMessage: string): Promise<void>
   syncWorkspace(workspacePath: string, commitMessage: string, remote?: string, branch?: string): Promise<void>
   getFileSync(workspacePath: string, filePath: string, remote?: string, branch?: string): Promise<GitStatus>
 }

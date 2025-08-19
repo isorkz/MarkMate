@@ -77,6 +77,10 @@ export class ElectronGitAdapter implements IGitAdapter {
     await window.electron.ipcRenderer.invoke('git:discard-changes', workspacePath, filePath)
   }
 
+  async completeMerge(workspacePath: string, commitMessage: string): Promise<void> {
+    await window.electron.ipcRenderer.invoke('git:complete-merge', workspacePath, commitMessage)
+  }
+
   async syncWorkspace(workspacePath: string, commitMessage: string, remote = 'origin', branch = 'main'): Promise<void> {
     await window.electron.ipcRenderer.invoke('git:sync', workspacePath, commitMessage, remote, branch)
   }

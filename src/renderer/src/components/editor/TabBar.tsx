@@ -76,7 +76,7 @@ const Tab: React.FC<TabProps> = ({ tab, isActive, onClose, onSelect, onPin }) =>
 
 const TabBar: React.FC = () => {
   const { tabs, activeTabId, setActiveTab, closeTab, reorderTabs, pinTab } = useEditorStore()
-  const { appearanceSettings, syncSettings } = useSettingsStore()
+  const { appearanceSettings } = useSettingsStore()
 
   const activeTab = tabs.find(tab => tab.id === activeTabId) || null
 
@@ -153,7 +153,8 @@ const TabBar: React.FC = () => {
         style={{ WebkitAppRegion: 'drag' }}
       >
         <div style={{ WebkitAppRegion: 'no-drag' }} className="flex items-center gap-2">
-          {activeTab && syncSettings.autoSyncEnabled && (
+          {/* {activeTab && syncSettings.autoSyncEnabled && ( */}
+          {activeTab && (
             <SyncStatusIcon status={activeTab.syncStatus} />
           )}
 

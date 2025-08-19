@@ -1,9 +1,10 @@
 import React from 'react'
-import { X, Settings, Monitor, RefreshCw, Settings2 } from 'lucide-react'
+import { X, Settings, Monitor, RefreshCw, Settings2, Globe } from 'lucide-react'
 import { useSettingsStore, SettingsType } from '../../stores/settingsStore'
 import GeneralSettings from './GeneralSettings'
 import AppearanceSettings from './AppearanceSettings'
 import SyncSettings from './SyncSettings'
+import WebSettings from './WebSettings'
 
 const SettingsModal: React.FC = () => {
   const { isOpen, activeSettings, closeSettings, setActiveSettings } = useSettingsStore()
@@ -13,7 +14,8 @@ const SettingsModal: React.FC = () => {
   const tabs: { id: SettingsType; label: string; icon: React.ReactNode }[] = [
     { id: 'general', label: 'General', icon: <Settings2 className="w-4 h-4" /> },
     { id: 'appearance', label: 'Appearance', icon: <Monitor className="w-4 h-4" /> },
-    { id: 'sync', label: 'Sync', icon: <RefreshCw className="w-4 h-4" /> }
+    { id: 'sync', label: 'Save & Sync', icon: <RefreshCw className="w-4 h-4" /> },
+    { id: 'web', label: 'Web', icon: <Globe className="w-4 h-4" /> }
   ]
 
   const renderContent = () => {
@@ -24,6 +26,8 @@ const SettingsModal: React.FC = () => {
         return <AppearanceSettings />
       case 'sync':
         return <SyncSettings />
+      case 'web':
+        return <WebSettings />
       default:
         return <AppearanceSettings />
     }

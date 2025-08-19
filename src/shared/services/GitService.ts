@@ -35,7 +35,9 @@ export class GitService {
     await git.fetch(remote, branch)
 
     const status = await git.status()
-    console.log('Git status for', filePath, ':' ,status)
+    
+    // Check if this specific file is in conflict state
+    const isFileInConflict = status.conflicted && status.conflicted.includes(filePath)
     
     // Check if file has any local changes (working dir + staging area)
     const hasLocalChanges = status.modified.includes(filePath) || 
@@ -46,7 +48,8 @@ export class GitService {
     
     return {
       hasLocalChanges,
-      hasRemoteUpdates
+      hasRemoteUpdates,
+      isConflicted: isFileInConflict
     }
   }
 
@@ -79,6 +82,26 @@ export class GitService {
     // Push local commits to origin
     if (status.files.length > 0) {
       await git.push(remote, branch)
+    }
+  }
+
+  // Complete merge by staging and committing resolved files
+  static async completeMerge(
+    workspacePath: string,
+    commitMessage: string
+  ): Promise<void> {
+    const git = simpleGit(workspacePath)
+    
+    // Stage all resolved files
+    await git.add('.')
+    
+    try {
+      // Try to continue rebase first (if in rebase state)
+      // Use : as editor to avoid interactive mode
+      await git.env('GIT_EDITOR', ':').rebase(['--continue'])
+    } catch (rebaseError) {
+      // If rebase continue fails, try regular commit (for merge conflicts)
+      await git.commit(commitMessage)
     }
   }
 

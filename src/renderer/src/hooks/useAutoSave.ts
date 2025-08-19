@@ -8,10 +8,10 @@ import { useSettingsStore } from '@renderer/stores/settingsStore'
 export const useAutoSave = () => {
   const { currentWorkspace } = useWorkspaceStore()
   const { tabs, markTabDirty } = useEditorStore()
-  const { generalSettings } = useSettingsStore()
+  const { syncSettings } = useSettingsStore()
 
   useEffect(() => {
-    if (!currentWorkspace || !generalSettings.autoSaveEnabled) return
+    if (!currentWorkspace || !syncSettings.autoSaveEnabled) return
 
     const saveAllDirtyTabs = async () => {
       const dirtyTabs = tabs.filter(tab => tab.hasUnsavedChanges)
@@ -30,7 +30,7 @@ export const useAutoSave = () => {
       }
     }
 
-    const timer = setInterval(saveAllDirtyTabs, generalSettings.autoSaveDelayInSeconds * 1000)
+    const timer = setInterval(saveAllDirtyTabs, syncSettings.autoSaveDelayInSeconds * 1000)
     return () => clearInterval(timer)
-  }, [tabs, currentWorkspace, generalSettings.autoSaveDelayInSeconds, generalSettings.autoSaveEnabled, markTabDirty])
+  }, [tabs, currentWorkspace, syncSettings.autoSaveDelayInSeconds, syncSettings.autoSaveEnabled, markTabDirty])
 }

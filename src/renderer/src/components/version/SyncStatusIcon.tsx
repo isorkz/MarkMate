@@ -17,7 +17,7 @@ const SyncStatusIcon: React.FC<SyncStatusIconProps> = ({ status, className = '' 
       case 'error':
         return <CloudAlert className="w-4 h-4 text-red-500" />
       case 'conflict':
-        return <FileWarning className="w-4 h-4 text-yellow-500" />
+        return <FileWarning className="w-4 h-4 text-orange-500" />
       case 'out-of-date':
         return <FileClock className="w-4 h-4 text-blue-500" />
       default:

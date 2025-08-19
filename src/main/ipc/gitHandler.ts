@@ -72,6 +72,16 @@ export function setupGitHandlers() {
     }
   })
 
+  // Complete merge by staging and committing resolved files
+  ipcMain.handle('git:complete-merge', async (_, workspacePath: string, commitMessage: string) => {
+    try {
+      await GitService.completeMerge(workspacePath, commitMessage)
+    } catch (error) {
+      console.error('Failed to complete merge:', error)
+      throw error
+    }
+  })
+
   // Sync workspace: pull + commit + push
   ipcMain.handle('git:sync', async (_, workspacePath: string, commitMessage: string, remote: string = 'origin', branch: string = 'main') => {
     try {

@@ -4,8 +4,7 @@ import { useWorkspaceStore } from '../stores/workspaceStore'
 import { useEditorStore } from '@renderer/stores/editorStore'
 import { FileNode } from '@renderer/types'
 import { adapters } from '../adapters'
-import { getSyncStatus } from './syncOperation'
-import { useSettingsStore } from '@renderer/stores/settingsStore'
+import { getSyncStatus, completeGitMerge } from './syncOperation'
 
 // Helper function to get all markdown files from the file tree
 export const getAllMarkdownFiles = (nodes: FileNode[]): FileNode[] => {
@@ -37,13 +36,13 @@ export const loadFileTree = async (workspacePath: string, setFileTree: (tree: an
 }
 
 const checkAndUpdateFileSyncStatusAsync = async (workspacePath: string, filePath: string, tabId: string) => {
-  if (useSettingsStore.getState().syncSettings.autoSyncEnabled) {
+  // if (useSettingsStore.getState().syncSettings.autoSyncEnabled) {
     // Async check sync status, to avoid blocking opening the file
     // getSyncStatus will always return a result without throwing an error
     getSyncStatus(workspacePath, filePath).then((syncStatus) => {
       useEditorStore.getState().updateTabSyncStatus(tabId, syncStatus)
     })
-  }
+  // }
 }
 
 export const handleOpenFile = async (workspacePath: string, filePath: string, pinned: boolean) => {
@@ -76,6 +75,39 @@ export const handleOpenFile = async (workspacePath: string, filePath: string, pi
   } catch (error) {
     console.error('Failed to open file:', error)
     toast.error('Failed to open file: ' + error)
+  }
+}
+
+export const handleSave = async (workspacePath: string, filePath: string, tabId: string, content: string, markTabDirty: (tabId: string, isDirty: boolean) => void) => {
+  try {
+    await adapters.fileAdapter.writeFile(workspacePath, filePath, content)
+    markTabDirty(tabId, false)
+    
+    // If tab was in conflict state, check if conflicts are resolved
+    const { tabs, updateTabSyncStatus } = useEditorStore.getState()
+    const tab = tabs.find(t => t.id === tabId)
+    const wasInConflict = tab?.syncStatus === 'conflict'
+    if (wasInConflict) {
+      const hasConflictMarkers = content.includes('<<<<<<< HEAD') || 
+                                content.includes('=======') || 
+                                content.includes('>>>>>>> ')
+      
+      if (!hasConflictMarkers) {
+        // No more conflict markers, complete the git merge
+        try {
+          await completeGitMerge(workspacePath)
+          updateTabSyncStatus(tabId, 'synced')
+        } catch (mergeError) {
+          console.error('Failed to complete git merge:', mergeError)
+        }
+      }
+    } else {
+      // Normal save, update sync status as usual
+      checkAndUpdateFileSyncStatusAsync(workspacePath, filePath, tabId)
+    }
+  } catch (error) {
+    console.error('Failed to save file:', error)
+    throw error
   }
 }
 
@@ -134,17 +166,6 @@ export const handleRename = async (workspacePath: string, oldPath: string, oldNa
   } catch (error) {
     console.error('Failed to rename:', error)
     toast.error('Failed to rename:' + error)
-  }
-}
-
-export const handleSave = async (workspacePath: string, filePath: string, tabId: string, content: string, markTabDirty: (tabId: string, isDirty: boolean) => void) => {
-  try {
-    await adapters.fileAdapter.writeFile(workspacePath, filePath, content)
-    markTabDirty(tabId, false)
-    checkAndUpdateFileSyncStatusAsync(workspacePath, filePath, tabId)
-  } catch (error) {
-    console.error('Failed to save file:', error)
-    throw error
   }
 }
 

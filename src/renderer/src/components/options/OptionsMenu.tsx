@@ -10,11 +10,11 @@ import { formatDate } from '../../../../shared/commonUtils'
 
 const OptionsMenu: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false)
-  const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'success' | 'error'>('idle')
+  const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'success' | 'error' | 'conflict' | 'out-of-date'>('idle')
   const [showVersionHistory, setShowVersionHistory] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
 
-  const { tabs, activeTabId, updateTabSyncStatus } = useEditorStore()
+  const { tabs, activeTabId } = useEditorStore()
   const { openSettings } = useSettingsStore()
   const { currentWorkspace } = useWorkspaceStore()
 
@@ -55,15 +55,22 @@ const OptionsMenu: React.FC = () => {
 
     setSyncStatus('syncing')
 
-    try {
-      const commitMessage = `Manual sync at ${formatDate(new Date())}`
-      await syncWorkspace(currentWorkspace.path, tabs, commitMessage, updateTabSyncStatus)
-      setSyncStatus('success')
-      toast.success('Workspace synced successfully')
-    } catch (error) {
-      console.error('Manual sync failed:', error)
-      setSyncStatus('error')
-      toast.error('Sync failed')
+    const commitMessage = `Manual sync at ${formatDate(new Date())}`
+    const result = await syncWorkspace(currentWorkspace.path, tabs, commitMessage)
+    setSyncStatus(result === 'synced' ? 'success' : result)
+
+    switch (result) {
+      case 'synced':
+        toast.success('Workspace synced successfully')
+        break
+      case 'conflict':
+        toast.error('Sync conflict: Please save all files first or resolve conflicts')
+        break
+      case 'error':
+        toast.error('Sync failed: Network or git error occurred')
+        break
+      default:
+        toast.error('Unknown sync status')
     }
 
     // Reset status to idle after 5 seconds
@@ -107,7 +114,8 @@ const OptionsMenu: React.FC = () => {
             <RefreshCw
               className={`w-4 h-4 ${syncStatus === 'syncing' ? 'animate-spin' : ''
                 } ${syncStatus === 'success' ? 'text-green-500' :
-                  syncStatus === 'error' ? 'text-red-500' : ''
+                  syncStatus === 'error' ? 'text-red-500' :
+                    syncStatus === 'conflict' ? 'text-yellow-500' : ''
                 }`}
             />
             Sync Workspace
