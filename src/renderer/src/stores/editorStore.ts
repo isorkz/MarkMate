@@ -118,7 +118,7 @@ export const useEditorStore = create<EditorStore>()(
         set(state => ({
           tabs: state.tabs.map(tab => 
             tab.id === tabId 
-              ? { ...tab, content, hasUnsavedChanges: true, lastModified: new Date(), isPinned: true, syncStatus: 'out-of-date' }
+              ? { ...tab, content, hasUnsavedChanges: true, lastModified: new Date(), isPinned: true }
               : tab
           )
         })),

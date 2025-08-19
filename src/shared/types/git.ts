@@ -7,11 +7,8 @@ export interface GitCommit {
 }
 
 export interface GitStatus {
-  hasChanges: boolean
+  hasLocalChanges: boolean   // Whether file has local changes (working dir + staging)
+  hasRemoteUpdates: boolean  // Whether remote has updates to pull
 }
 
-export interface GitRemoteStatus {
-  hasUnpushedCommits: boolean
-}
-
-export type SyncStatus = 'out-of-date' | 'syncing' | 'synced' | 'error'
+export type SyncStatus = 'synced' | 'out-of-date' | 'conflict' | 'syncing' | 'error'

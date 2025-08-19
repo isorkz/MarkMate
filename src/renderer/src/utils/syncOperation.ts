@@ -1,44 +1,56 @@
 import { adapters } from '../adapters'
-import { Tab } from '@renderer/stores/editorStore'
+import { Tab, useEditorStore } from '@renderer/stores/editorStore'
 import { SyncStatus } from '../../../shared/types/git'
+import { useSettingsStore } from '@renderer/stores/settingsStore'
 
-export const checkSyncStatus = async (workspacePath: string, filePath: string) => {
+export const getSyncStatus = async (workspacePath: string, filePath: string) => {
   try {
-    // First check if file has local changes
-    const fileStatusResult = await adapters.gitAdapter.checkLocalStatus(workspacePath, filePath)
+    // Get sync status for the file, including local changes and remote updates
+    const syncInfo = await adapters.gitAdapter.getFileSync(workspacePath, filePath)
     
-    // File has uncommitted changes
-    if (fileStatusResult.hasChanges) {
+    if (syncInfo.hasLocalChanges || syncInfo.hasRemoteUpdates) {
       return 'out-of-date'
     }
-
-    // File is committed locally, now check if it's pushed to remote
-    const pushStatusResult = await adapters.gitAdapter.checkRemoteStatus(workspacePath)
     
-    if (pushStatusResult.hasUnpushedCommits) {
-      return 'out-of-date'
-    } else {
-      return 'synced'
-    }
+    return 'synced'
   } catch (error) {
-    console.error('Failed to check sync status:', error)
+    console.error('Failed to get sync status:', error)
     return 'error'
   }
 }
 
-export const syncWorkspace = async (workspacePath: string, tabs: Tab[], commitMessage: string, updateTabSyncStatus: (tabId: string, status: SyncStatus) => void) => {
-  // TODO: based on last modified time in workspace, decide if we need to commit and push
+export const syncWorkspace = async (workspacePath: string, tabs: Tab[], commitMessage: string) => {
   try {
     // Set all tabs to syncing status
-    tabs.forEach(tab => updateTabSyncStatus(tab.id, 'syncing'))
+    tabs.forEach(tab => useEditorStore.getState().updateTabSyncStatus(tab.id, 'syncing'))
     
     await adapters.gitAdapter.syncWorkspace(workspacePath, commitMessage)
     
-    // Set all tabs to synced status
-    tabs.forEach(tab => updateTabSyncStatus(tab.id, 'synced'))
+    for (const tab of tabs) {
+      // After sync with remote, reload content for tabs that don't have unsaved changes
+      if (!tab.hasUnsavedChanges) {
+        try {
+          const [newContent, lastModified] = await Promise.all([
+            adapters.fileAdapter.readFile(workspacePath, tab.filePath),
+            adapters.fileAdapter.getLastModifiedTime(workspacePath, tab.filePath)
+          ])
+          
+          // Update tab content through the store
+          useEditorStore.getState().saveTabState(tab.id, {
+            content: newContent,
+            lastModified: lastModified
+          })
+
+          // Update sync status to synced
+          useEditorStore.getState().updateTabSyncStatus(tab.id, 'synced')
+        } catch (fileError) {
+          console.error(`Failed to reload content for tab ${tab.filePath}:`, fileError)
+        }
+      }
+    }
   } catch (error) {
     console.error('Auto-sync failed:', error)
     // Set all tabs to error status
-    tabs.forEach(tab => updateTabSyncStatus(tab.id, 'error'))
+    tabs.forEach(tab => useEditorStore.getState().updateTabSyncStatus(tab.id, 'error'))
   }
 }

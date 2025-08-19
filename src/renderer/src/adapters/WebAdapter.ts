@@ -1,5 +1,5 @@
 import { IFileAdapter, IGitAdapter, IWorkspaceAdapter } from './interfaces'
-import { GitCommit, GitStatus, GitRemoteStatus } from '../../../shared/types/git'
+import { GitCommit, GitStatus } from '../../../shared/types/git'
 
 const API_BASE_URL = '/api'
 
@@ -147,12 +147,8 @@ export class WebGitAdapter implements IGitAdapter {
     await ApiClient.post('/git/sync', { commitMessage, remote, branch })
   }
 
-  async checkLocalStatus(_workspacePath: string, filePath: string): Promise<GitStatus> {
-    return ApiClient.post('/git/check-local-status', { filePath })
-  }
-
-  async checkRemoteStatus(_workspacePath: string, remote = 'origin', branch = 'main'): Promise<GitRemoteStatus> {
-    return ApiClient.post('/git/check-remote-status', { remote, branch })
+  async getFileSync(_workspacePath: string, filePath: string, remote = 'origin', branch = 'main'): Promise<GitStatus> {
+    return ApiClient.post('/git/get-file-sync', { filePath, remote, branch })
   }
 }
 

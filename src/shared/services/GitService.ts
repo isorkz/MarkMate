@@ -1,8 +1,55 @@
 import simpleGit from 'simple-git'
 import path from 'path'
-import { GitCommit, GitStatus, GitRemoteStatus } from '../types/git'
+import { GitCommit, GitStatus } from '../types/git'
 
 export class GitService {
+  // Configure Git
+  static async configGit(
+    workspacePath: string, 
+    gitUsername: string, 
+    gitEmail: string, 
+    gitRemoteUrl: string
+  ): Promise<void> {
+    const git = simpleGit(workspacePath)
+    
+    // Set user config
+    await git.addConfig('user.name', gitUsername)
+    await git.addConfig('user.email', gitEmail)
+    
+    await git.remote(['set-url', 'origin', gitRemoteUrl])
+
+    // Test remote URL by setting it and fetching
+    await git.fetch('origin')
+  }
+  
+  // get file sync status (combines local and remote checks)
+  static async getFileSync(
+    workspacePath: string, 
+    filePath: string,
+    remote: string = 'origin', 
+    branch: string = 'main'
+  ): Promise<GitStatus> {
+    // Check if remote exists
+    // Fetch latest remote info (without merging)
+    const git = simpleGit(workspacePath)
+    await git.fetch(remote, branch)
+
+    const status = await git.status()
+    console.log('Git status for', filePath, ':' ,status)
+    
+    // Check if file has any local changes (working dir + staging area)
+    const hasLocalChanges = status.modified.includes(filePath) || 
+                           status.staged.includes(filePath) ||     // staged changes
+                           status.created.includes(filePath) ||
+                           status.not_added.includes(filePath)
+    const hasRemoteUpdates = (status.behind || 0) > 0
+    
+    return {
+      hasLocalChanges,
+      hasRemoteUpdates
+    }
+  }
+
   // Sync workspace: pull + commit + push
   static async syncWorkspace(
     workspacePath: string, 
@@ -113,64 +160,5 @@ export class GitService {
     const git = simpleGit(workspacePath)
     // Reset the file to HEAD (discard working directory changes)
     await git.checkout(['HEAD', '--', filePath])
-  }
-
-  // Get Git status for a specific file
-  static async checkLocalStatus(
-    workspacePath: string, 
-    filePath: string
-  ): Promise<GitStatus> {
-    const git = simpleGit(workspacePath)
-    const status = await git.status()
-    
-    // Check if specific file has changes
-    const isModified = status.modified.includes(filePath) || 
-                      status.created.includes(filePath) || 
-                      status.not_added.includes(filePath)
-    return { hasChanges: isModified }
-  }
-
-  // Check if local branch is ahead of remote (has unpushed commits)
-  static async checkRemoteStatus(
-    workspacePath: string, 
-    remote: string = 'origin', 
-    branch: string = 'main'
-  ): Promise<GitRemoteStatus> {
-    const git = simpleGit(workspacePath)
-    
-    // Check if remote exists
-    const remotes = await git.getRemotes(true)
-    const remoteExists = remotes.some(r => r.name === remote)
-    if (!remoteExists) {
-      throw new Error(`Remote '${remote}' does not exist`)
-    }
-
-    // Fetch latest remote info (without merging)
-    await git.fetch(remote, branch)
-    
-    // Get commits ahead of remote
-    const status = await git.status()
-    const aheadCount = status.ahead || 0
-    
-    return { hasUnpushedCommits: aheadCount > 0 }
-  }
-
-  // Configure Git
-  static async configGit(
-    workspacePath: string, 
-    gitUsername: string, 
-    gitEmail: string, 
-    gitRemoteUrl: string
-  ): Promise<void> {
-    const git = simpleGit(workspacePath)
-    
-    // Set user config
-    await git.addConfig('user.name', gitUsername)
-    await git.addConfig('user.email', gitEmail)
-    
-    await git.remote(['set-url', 'origin', gitRemoteUrl])
-
-    // Test remote URL by setting it and fetching
-    await git.fetch('origin')
   }
 }

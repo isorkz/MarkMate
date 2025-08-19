@@ -4,7 +4,8 @@ import { useWorkspaceStore } from '../stores/workspaceStore'
 import { useEditorStore } from '@renderer/stores/editorStore'
 import { FileNode } from '@renderer/types'
 import { adapters } from '../adapters'
-import { checkSyncStatus } from './syncOperation'
+import { getSyncStatus } from './syncOperation'
+import { useSettingsStore } from '@renderer/stores/settingsStore'
 
 // Helper function to get all markdown files from the file tree
 export const getAllMarkdownFiles = (nodes: FileNode[]): FileNode[] => {
@@ -35,14 +36,25 @@ export const loadFileTree = async (workspacePath: string, setFileTree: (tree: an
   }
 }
 
+const checkAndUpdateFileSyncStatusAsync = async (workspacePath: string, filePath: string, tabId: string) => {
+  if (useSettingsStore.getState().syncSettings.autoSyncEnabled) {
+    // Async check sync status, to avoid blocking opening the file
+    // getSyncStatus will always return a result without throwing an error
+    getSyncStatus(workspacePath, filePath).then((syncStatus) => {
+      useEditorStore.getState().updateTabSyncStatus(tabId, syncStatus)
+    })
+  }
+}
+
 export const handleOpenFile = async (workspacePath: string, filePath: string, pinned: boolean) => {
   try {
     // Check if file is already open
-    const { tabs, setActiveTab, pinTab, openFile, updateTabSyncStatus } = useEditorStore.getState()
+    const { tabs, setActiveTab, pinTab, openFile } = useEditorStore.getState()
     const existingTab = tabs.find(tab => tab.filePath === filePath)
-    let tabId = existingTab?.id
+    let tabId: string
     if (existingTab) {
       // File is already open, just switch to that tab
+      tabId = existingTab.id
       setActiveTab(existingTab.id)
       if (pinned && !existingTab.isPinned) {
         pinTab(existingTab.id)
@@ -60,13 +72,7 @@ export const handleOpenFile = async (workspacePath: string, filePath: string, pi
       useWorkspaceStore.getState().addRecentFile(filePath)
     }
     
-    // Async check sync status, to avoid blocking opening the file
-    // checkSyncStatus will always return a result without throwing an error
-    checkSyncStatus(workspacePath, filePath).then((syncStatus) => {
-      if (tabId){
-        updateTabSyncStatus(tabId, syncStatus)
-      }
-    })
+    checkAndUpdateFileSyncStatusAsync(workspacePath, filePath, tabId)
   } catch (error) {
     console.error('Failed to open file:', error)
     toast.error('Failed to open file: ' + error)
@@ -135,6 +141,7 @@ export const handleSave = async (workspacePath: string, filePath: string, tabId:
   try {
     await adapters.fileAdapter.writeFile(workspacePath, filePath, content)
     markTabDirty(tabId, false)
+    checkAndUpdateFileSyncStatusAsync(workspacePath, filePath, tabId)
   } catch (error) {
     console.error('Failed to save file:', error)
     throw error

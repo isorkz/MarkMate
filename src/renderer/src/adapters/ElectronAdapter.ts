@@ -1,5 +1,5 @@
 import { IFileAdapter, IGitAdapter, IWorkspaceAdapter } from './interfaces'
-import { GitCommit, GitStatus, GitRemoteStatus } from '../../../shared/types/git'
+import { GitCommit, GitStatus } from '../../../shared/types/git'
 
 export class ElectronFileAdapter implements IFileAdapter {
   async readFile(workspacePath: string, filePath: string): Promise<string> {
@@ -81,12 +81,8 @@ export class ElectronGitAdapter implements IGitAdapter {
     await window.electron.ipcRenderer.invoke('git:sync', workspacePath, commitMessage, remote, branch)
   }
 
-  async checkLocalStatus(workspacePath: string, filePath: string): Promise<GitStatus> {
-    return window.electron.ipcRenderer.invoke('git:check-local-status', workspacePath, filePath)
-  }
-
-  async checkRemoteStatus(workspacePath: string, remote = 'origin', branch = 'main'): Promise<GitRemoteStatus> {
-    return window.electron.ipcRenderer.invoke('git:check-remote-status', workspacePath, remote, branch)
+  async getFileSync(workspacePath: string, filePath: string, remote = 'origin', branch = 'main'): Promise<GitStatus> {
+    return window.electron.ipcRenderer.invoke('git:get-file-sync', workspacePath, filePath, remote, branch)
   }
 }
 
