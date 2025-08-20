@@ -10,7 +10,7 @@ import { formatDate } from '../../../../shared/commonUtils'
 
 const OptionsMenu: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false)
-  const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'success' | 'error' | 'conflict' | 'out-of-date'>('idle')
+  const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'success' | 'error' | 'conflict' | 'needs-sync'>('idle')
   const [showVersionHistory, setShowVersionHistory] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
 

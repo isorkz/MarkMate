@@ -18,7 +18,7 @@ const SyncStatusIcon: React.FC<SyncStatusIconProps> = ({ status, className = '' 
         return <CloudAlert className="w-4 h-4 text-red-500" />
       case 'conflict':
         return <FileWarning className="w-4 h-4 text-orange-500" />
-      case 'out-of-date':
+      case 'needs-sync':
         return <FileClock className="w-4 h-4 text-blue-500" />
       default:
         return <ShieldQuestion className="w-4 h-4 text-red-500" />
@@ -35,8 +35,8 @@ const SyncStatusIcon: React.FC<SyncStatusIconProps> = ({ status, className = '' 
         return 'Sync failed'
       case 'conflict':
         return 'Conflicts need to be resolved'
-      case 'out-of-date':
-        return 'File is out of date, waiting for sync'
+      case 'needs-sync':
+        return 'File is waiting for sync'
       default:
         return 'Unknown sync status'
     }

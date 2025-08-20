@@ -14,7 +14,7 @@ export const getSyncStatus = async (workspacePath: string, filePath: string) => 
     }
     
     if (syncInfo.hasLocalChanges || syncInfo.hasRemoteUpdates) {
-      return 'out-of-date'
+      return 'needs-sync'
     }
     
     return 'synced'

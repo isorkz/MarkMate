@@ -35,6 +35,7 @@ export class GitService {
     await git.fetch(remote, branch)
 
     const status = await git.status()
+    console.log('Git status for', filePath, ':', status)
     
     // Check if this specific file is in conflict state
     const isFileInConflict = status.conflicted && status.conflicted.includes(filePath)

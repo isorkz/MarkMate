@@ -12,4 +12,4 @@ export interface GitStatus {
   isConflicted: boolean      // Whether file is in conflict state
 }
 
-export type SyncStatus = 'synced' | 'out-of-date' | 'conflict' | 'syncing' | 'error'
+export type SyncStatus = 'synced' | 'needs-sync' | 'conflict' | 'syncing' | 'error'
