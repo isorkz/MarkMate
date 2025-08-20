@@ -3,7 +3,6 @@ import { useWorkspaceStore } from '../stores/workspaceStore'
 import { useEditorStore } from '../stores/editorStore'
 import { syncWorkspace } from '@renderer/utils/syncOperation'
 import { useSettingsStore } from '@renderer/stores/settingsStore'
-import { formatDate } from '../../../shared/commonUtils'
 
 export const useAutoSync = () => {
   const { currentWorkspace } = useWorkspaceStore()
@@ -16,8 +15,7 @@ export const useAutoSync = () => {
     }
 
     const timer = setInterval(() => {
-      const commitMessage = `Auto sync at ${formatDate(new Date())}`
-      syncWorkspace(currentWorkspace.path, tabs, commitMessage)
+      syncWorkspace(currentWorkspace.path, "Auto sync")
     }, syncSettings.autoSyncDelayInSeconds * 1000)
     return () => clearInterval(timer)
   }, [tabs, currentWorkspace, syncSettings.autoSyncDelayInSeconds, syncSettings.autoSyncEnabled, updateTabSyncStatus])

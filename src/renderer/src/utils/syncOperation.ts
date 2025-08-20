@@ -24,7 +24,9 @@ export const getSyncStatus = async (workspacePath: string, filePath: string) => 
   }
 }
 
-export const syncWorkspace = async (workspacePath: string, tabs: Tab[], commitMessage: string): Promise<SyncStatus> => {
+export const syncWorkspace = async (workspacePath: string, commitMessagePrefix: string | undefined): Promise<SyncStatus> => {
+  const { tabs, markTabDirty, updateTabSyncStatus } = useEditorStore.getState()
+
   try {
     // Skip sync if there are 'conflict' tabs
     const hasConflicts = tabs.some(tab => tab.syncStatus === 'conflict')
@@ -32,6 +34,13 @@ export const syncWorkspace = async (workspacePath: string, tabs: Tab[], commitMe
       console.warn('Cannot sync workspace: Please resolve conflicts first.')
       return 'conflict'
     }
+
+    // Skip sync if there are 'syncing' tabs
+    // const hasSyncing = tabs.some(tab => tab.syncStatus === 'syncing')
+    // if (hasSyncing) {
+    //   console.warn('Skip sync, waiting for other sync operations to complete.')
+    //   return 'syncing'
+    // }
 
     const { syncSettings } = useSettingsStore.getState()
     const tabsWithUnsavedChanges = tabs.filter(tab => tab.hasUnsavedChanges)
@@ -44,21 +53,23 @@ export const syncWorkspace = async (workspacePath: string, tabs: Tab[], commitMe
         // Auto-save enabled: force save all unsaved files before sync
         for (const tab of tabsWithUnsavedChanges) {
           await adapters.fileAdapter.writeFile(workspacePath, tab.filePath, tab.content)
-          useEditorStore.getState().markTabDirty(tab.id, false)
+          markTabDirty(tab.id, false)
         }
       } else {
         // Auto-save disabled: abort sync and return conflict
         tabsWithUnsavedChanges.forEach(tab => {
-          useEditorStore.getState().updateTabSyncStatus(tab.id, 'conflict')
+          updateTabSyncStatus(tab.id, 'conflict')
         })
         return 'conflict'
       }
     }
     
     // Set all tabs to syncing status
-    tabs.forEach(tab => useEditorStore.getState().updateTabSyncStatus(tab.id, 'syncing'))
+    tabs.forEach(tab => updateTabSyncStatus(tab.id, 'syncing'))
     
     try {
+      let commitMessage = commitMessagePrefix || 'Auto sync'
+      commitMessage += ` at ${formatDate(new Date())}`
       await adapters.gitAdapter.syncWorkspace(workspacePath, commitMessage)
     } catch (gitError) {
       console.error('Git sync failed:', gitError)
@@ -80,7 +91,7 @@ export const syncWorkspace = async (workspacePath: string, tabs: Tab[], commitMe
     
   } catch (error) {
     console.error('Sync failed:', error)
-    tabs.forEach(tab => useEditorStore.getState().updateTabSyncStatus(tab.id, 'error'))
+    tabs.forEach(tab => updateTabSyncStatus(tab.id, 'error'))
     return 'error'
   }
 }

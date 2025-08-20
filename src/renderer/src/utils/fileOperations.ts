@@ -4,7 +4,8 @@ import { useWorkspaceStore } from '../stores/workspaceStore'
 import { useEditorStore } from '@renderer/stores/editorStore'
 import { FileNode } from '@renderer/types'
 import { adapters } from '../adapters'
-import { getSyncStatus, completeGitMerge } from './syncOperation'
+import { getSyncStatus, completeGitMerge, syncWorkspace } from './syncOperation'
+import { useSettingsStore } from '@renderer/stores/settingsStore'
 
 // Helper function to get all markdown files from the file tree
 export const getAllMarkdownFiles = (nodes: FileNode[]): FileNode[] => {
@@ -50,10 +51,8 @@ export const handleOpenFile = async (workspacePath: string, filePath: string, pi
     // Check if file is already open
     const { tabs, setActiveTab, pinTab, openFile } = useEditorStore.getState()
     const existingTab = tabs.find(tab => tab.filePath === filePath)
-    let tabId: string
     if (existingTab) {
       // File is already open, just switch to that tab
-      tabId = existingTab.id
       setActiveTab(existingTab.id)
       if (pinned && !existingTab.isPinned) {
         pinTab(existingTab.id)
@@ -66,12 +65,14 @@ export const handleOpenFile = async (workspacePath: string, filePath: string, pi
       ])
       
       // Open the file in the editor
-      tabId = openFile(filePath, content, pinned, lastModified)
+      openFile(filePath, content, pinned, lastModified)
       // Add to recent files
       useWorkspaceStore.getState().addRecentFile(filePath)
     }
     
-    checkAndUpdateFileSyncStatusAsync(workspacePath, filePath, tabId)
+    if (useSettingsStore.getState().syncSettings.autoSyncEnabled) {
+      syncWorkspace(workspacePath, "Auto sync")
+    }
   } catch (error) {
     console.error('Failed to open file:', error)
     toast.error('Failed to open file: ' + error)

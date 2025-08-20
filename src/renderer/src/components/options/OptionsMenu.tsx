@@ -6,7 +6,6 @@ import { useSettingsStore } from '../../stores/settingsStore'
 import { useWorkspaceStore } from '@renderer/stores/workspaceStore'
 import { useEditorStore } from '@renderer/stores/editorStore'
 import { syncWorkspace } from '@renderer/utils/syncOperation'
-import { formatDate } from '../../../../shared/commonUtils'
 
 const OptionsMenu: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false)
@@ -55,8 +54,7 @@ const OptionsMenu: React.FC = () => {
 
     setSyncStatus('syncing')
 
-    const commitMessage = `Manual sync at ${formatDate(new Date())}`
-    const result = await syncWorkspace(currentWorkspace.path, tabs, commitMessage)
+    const result = await syncWorkspace(currentWorkspace.path, "Manual sync")
     setSyncStatus(result === 'synced' ? 'success' : result)
 
     switch (result) {
