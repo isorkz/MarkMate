@@ -16,6 +16,7 @@ export const useFullSearch = () => {
   const { fileTree } = useFileSystemStore()
   const { currentWorkspace } = useWorkspaceStore()
   const [filesWithContent, setFilesWithContent] = useState<SearchableFile[]>([])
+  const [isLoadingFiles, setIsLoadingFiles] = useState(false)
 
   // Load markdown files with content
   useEffect(() => {
@@ -23,10 +24,12 @@ export const useFullSearch = () => {
     
     if (!currentWorkspace) {
       setFilesWithContent([])
+      setIsLoadingFiles(false)
       return
     }
     
     const loadMarkdownFiles = async () => {
+      setIsLoadingFiles(true)
       const result: SearchableFile[] = []
       
       const traverse = async (nodeList: FileNode[]) => {
@@ -47,6 +50,7 @@ export const useFullSearch = () => {
       
       await traverse(fileTree)
       setFilesWithContent(result)
+      setIsLoadingFiles(false)
     }
     
     loadMarkdownFiles()
@@ -113,7 +117,7 @@ export const useFullSearch = () => {
     setSearchTerm('')
   }
 
-  const isSearching = searchTerm.trim() !== '' && searchTerm !== debouncedSearchTerm
+  const isSearching = (searchTerm.trim() !== '' && searchTerm !== debouncedSearchTerm) || isLoadingFiles
 
   return {
     showSearch,
