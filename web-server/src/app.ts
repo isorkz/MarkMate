@@ -9,7 +9,7 @@ const app = express()
 
 // Middleware
 app.use(cors())
-app.use(express.json())
+app.use(express.json({ limit: '3mb' })) // By default, Express limits JSON body size to 100kb, we increase it to 3mb for image pasting
 
 // Serve static files (React frontend)
 // In development (ts-node): __dirname = /Users/.../web-server/src
