@@ -6,16 +6,19 @@ interface DraggableFileNodeProps {
   node: FileNode
   children: React.ReactNode
   isDraggedItem?: boolean
+  isEditing?: boolean
 }
 
 export const DraggableFileNode: React.FC<DraggableFileNodeProps> = ({ 
   node, 
   children, 
-  isDraggedItem = false 
+  isDraggedItem = false,
+  isEditing = false
 }) => {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: node.path,
-    data: { node }
+    data: { node },
+    disabled: isEditing
   })
 
   const style = transform ? {
@@ -28,9 +31,9 @@ export const DraggableFileNode: React.FC<DraggableFileNodeProps> = ({
     <div
       ref={setNodeRef}
       style={style}
-      {...listeners}
-      {...attributes}
-      className={`${isDragging ? 'cursor-grabbing' : 'cursor-grab'} ${isDraggedItem ? 'opacity-50' : ''}`}
+      {...(isEditing ? {} : listeners)}
+      {...(isEditing ? {} : attributes)}
+      className={`${!isEditing && isDragging ? 'cursor-grabbing' : !isEditing ? 'cursor-grab' : ''} ${isDraggedItem ? 'opacity-50' : ''}`}
     >
       {children}
     </div>

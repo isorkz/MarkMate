@@ -44,7 +44,6 @@ const FileTree: React.FC = () => {
     }
   }
 
-
   const handleDragEnd = async (event: DragEndEvent) => {
     const { over } = event
 
@@ -202,6 +201,7 @@ const FileTree: React.FC = () => {
     // Check if this folder contains the currently active tab
     const hasActiveTab = isFolder && activeTabId && tabs.find(tab => tab.id === activeTabId)?.filePath.startsWith(node.path + '/')
     const isDraggedItem = draggedNode?.path === node.path
+    const isEditing = editingMode != null
 
     const nodeContent = (
       <div
@@ -264,7 +264,7 @@ const FileTree: React.FC = () => {
     return (
       <div key={node.path}>
         <DroppableFolder node={node}>
-          <DraggableFileNode node={node} isDraggedItem={isDraggedItem}>
+          <DraggableFileNode node={node} isDraggedItem={isDraggedItem} isEditing={isEditing}>
             {nodeContent}
           </DraggableFileNode>
         </DroppableFolder>
