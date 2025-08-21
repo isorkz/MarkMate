@@ -249,7 +249,7 @@ const FileTree: React.FC = () => {
               inlineOnly
             />
           ) : (
-            <span className={`truncate text-sm min-w-0 ${isActiveTab || hasActiveTab || hasOpenFile ? 'font-medium' : ''}`}>
+            <span className={'truncate text-sm min-w-0'}>
               {node.name}
             </span>
           )}
