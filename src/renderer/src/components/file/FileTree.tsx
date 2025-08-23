@@ -72,16 +72,6 @@ const FileTree: React.FC = () => {
 
   }
 
-  // Helper function to check if a path contains any open files
-  const hasOpenFiles = (nodePath: string, nodeType: string): boolean => {
-    if (nodeType === 'file') {
-      // For files, check if this exact file is open
-      return tabs.some(tab => tab.filePath === nodePath)
-    }
-    // For folders, check if any open tab's file path starts with this folder path
-    return tabs.some(tab => tab.filePath.startsWith(nodePath + '/'))
-  }
-
   const handleNodeClick = async (node: FileNode, isFolder: boolean) => {
     if (isFolder) {
       toggleFolder(node.path)
@@ -191,17 +181,17 @@ const FileTree: React.FC = () => {
     }
   }, [currentWorkspace, setFileTree])
 
-  const renderNode = (node: any, depth = 0) => {
+  const renderNode = (node: FileNode, depth = 0) => {
     const isExpanded = expandedFolders.has(node.path)
     const isFolder = node.type === 'folder'
-    const hasOpenFile = hasOpenFiles(node.path, node.type)
     const isNodeFavorite = isFavorite(node.path)
     // Check if this file is the currently active tab
     const isActiveTab = !isFolder && activeTabId && tabs.find(tab => tab.id === activeTabId)?.filePath === node.path
     // Check if this folder contains the currently active tab
     const hasActiveTab = isFolder && activeTabId && tabs.find(tab => tab.id === activeTabId)?.filePath.startsWith(node.path + '/')
+    const tab = tabs.find(tab => tab.filePath === node.path)
     const isDraggedItem = draggedNode?.path === node.path
-    const isEditing = editingMode != null
+    const isEditing = editingMode != null || tab?.hasUnsavedChanges
 
     const nodeContent = (
       <div
