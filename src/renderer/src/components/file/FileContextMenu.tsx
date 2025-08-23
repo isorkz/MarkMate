@@ -7,7 +7,7 @@ import {
   Star,
   ExternalLink
 } from 'lucide-react'
-import { FileNode } from '@renderer/types';
+import { FileNode } from '@shared/types/file';
 
 interface FileContextMenuProps {
   node: FileNode

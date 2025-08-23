@@ -2,6 +2,7 @@ import * as fs from 'fs/promises'
 import * as path from 'path'
 import * as chokidar from 'chokidar'
 import { isImagePathResolved } from '../commonUtils'
+import { FileContentWithDate } from '../types/file'
 
 export interface FileWatchEvent {
   type: 'change' | 'add' | 'unlink' | 'addDir' | 'unlinkDir'
@@ -14,17 +15,17 @@ export type FileWatchCallback = (event: FileWatchEvent) => void
 export class FileService {
   private static watchers = new Map<string, chokidar.FSWatcher>()
   private static callbacks = new Map<string, Set<FileWatchCallback>>()
-  // Read file content
-  static async readFile(workspacePath: string, filePath: string): Promise<string> {
+  // Read file content with last modified time
+  static async readFile(workspacePath: string, filePath: string): Promise<FileContentWithDate> {
     const fullPath = path.join(workspacePath, filePath)
-    return await fs.readFile(fullPath, 'utf-8')
-  }
-
-  // Get file last modified time
-  static async getLastModifiedTime(workspacePath: string, filePath: string): Promise<Date> {
-    const fullPath = path.join(workspacePath, filePath)
-    const stats = await fs.stat(fullPath)
-    return stats.mtime
+    const [content, stats] = await Promise.all([
+      fs.readFile(fullPath, 'utf-8'),
+      fs.stat(fullPath)
+    ])
+    return {
+      content,
+      lastModified: stats.mtime
+    }
   }
 
   // Write file content

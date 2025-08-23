@@ -1,5 +1,6 @@
 import { IFileAdapter, IGitAdapter, IWorkspaceAdapter } from './interfaces'
 import { GitCommit, GitStatus } from '../../../shared/types/git'
+import { FileContentWithDate } from '@shared/types/file'
 
 const API_BASE_URL = '/api'
 
@@ -60,15 +61,14 @@ class ApiClient {
 }
 
 export class WebFileAdapter implements IFileAdapter {
-  async readFile(_workspacePath: string, filePath: string): Promise<string> {
+  async readFile(_workspacePath: string, filePath: string): Promise<FileContentWithDate> {
     const result = await ApiClient.post('/file/read', { filePath })
-    return result.content
+    return {
+      content: result.content,
+      lastModified: new Date(result.lastModified)
+    }
   }
 
-  async getLastModifiedTime(_workspacePath: string, filePath: string): Promise<Date> {
-    const result = await ApiClient.post('/file/get-last-modified-time', { filePath })
-    return new Date(result.lastModified)
-  }
 
   async writeFile(_workspacePath: string, filePath: string, content: string): Promise<void> {
     await ApiClient.post('/file/write', { filePath, content })

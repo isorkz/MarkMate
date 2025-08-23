@@ -6,3 +6,8 @@ export interface FileNode {
   children?: FileNode[];
   // lastModified: Date;
 }
+
+export interface FileContentWithDate {
+  content: string
+  lastModified: Date
+}

@@ -6,10 +6,10 @@ import { useWorkspaceStore } from '../../stores/workspaceStore'
 import { useEditorStore } from '../../stores/editorStore'
 import FileContextMenu from './FileContextMenu'
 import InlineInput from './InlineInput'
-import { FileNode } from '@renderer/types'
 import { handleNewFile, handleNewFolder, handleRename, handleDelete, loadFileTree, handleOpenFile, handleMoveFile } from '../../utils/fileOperations'
 import { DndContext, DragEndEvent, DragStartEvent, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
 import { DraggableFileNode, DroppableFolder, RootDropZone } from './DraggableFileNode'
+import { FileNode } from '@shared/types/file'
 
 const FileTree: React.FC = () => {
   const { fileTree, expandedFolders, toggleFolder, setFileTree } = useFileSystemStore()

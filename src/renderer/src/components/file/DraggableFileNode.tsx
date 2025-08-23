@@ -1,6 +1,6 @@
 import React from 'react'
 import { useDraggable, useDroppable } from '@dnd-kit/core'
-import { FileNode } from '@renderer/types'
+import { FileNode } from '@shared/types/file'
 
 interface DraggableFileNodeProps {
   node: FileNode
@@ -9,9 +9,9 @@ interface DraggableFileNodeProps {
   isEditing?: boolean
 }
 
-export const DraggableFileNode: React.FC<DraggableFileNodeProps> = ({ 
-  node, 
-  children, 
+export const DraggableFileNode: React.FC<DraggableFileNodeProps> = ({
+  node,
+  children,
   isDraggedItem = false,
   isEditing = false
 }) => {
@@ -46,9 +46,9 @@ interface DroppableFolderProps {
   isOver?: boolean
 }
 
-export const DroppableFolder: React.FC<DroppableFolderProps> = ({ 
-  node, 
-  children 
+export const DroppableFolder: React.FC<DroppableFolderProps> = ({
+  node,
+  children
 }) => {
   const { setNodeRef, isOver } = useDroppable({
     id: node.path,

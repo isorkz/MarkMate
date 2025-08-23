@@ -10,23 +10,16 @@ const router = express.Router()
 router.post('/read', async (req, res, next) => {
   try {
     const { filePath } = req.body
-    const content = await FileService.readFile(config.workspacePath, filePath)
-    res.json({ content })
+    const fileData = await FileService.readFile(config.workspacePath, filePath)
+    res.json({ 
+      content: fileData.content,
+      lastModified: fileData.lastModified
+    })
   } catch (error) {
     next(error)
   }
 })
 
-// Get file last modified time
-router.post('/get-last-modified-time', async (req, res, next) => {
-  try {
-    const { filePath } = req.body
-    const lastModified = await FileService.getLastModifiedTime(config.workspacePath, filePath)
-    res.json({ lastModified })
-  } catch (error) {
-    next(error)
-  }
-})
 
 // Write file content
 router.post('/write', async (req, res, next) => {

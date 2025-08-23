@@ -1,15 +1,12 @@
 import { IFileAdapter, IGitAdapter, IWorkspaceAdapter } from './interfaces'
 import { GitCommit, GitStatus } from '../../../shared/types/git'
+import { FileContentWithDate } from '@shared/types/file'
 
 export class ElectronFileAdapter implements IFileAdapter {
-  async readFile(workspacePath: string, filePath: string): Promise<string> {
+  async readFile(workspacePath: string, filePath: string): Promise<FileContentWithDate> {
     return window.electron.ipcRenderer.invoke('file:read', workspacePath, filePath)
   }
 
-  async getLastModifiedTime(workspacePath: string, filePath: string): Promise<Date> {
-    const result = await window.electron.ipcRenderer.invoke('file:get-last-modified-time', workspacePath, filePath)
-    return new Date(result)
-  }
 
   async writeFile(workspacePath: string, filePath: string, content: string): Promise<void> {
     await window.electron.ipcRenderer.invoke('file:write', workspacePath, filePath, content)

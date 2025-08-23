@@ -27,10 +27,10 @@ interface EditorStore {
   setActiveTab: (tabId: string) => void;
   pinTab: (tabId) => void;
   updateTabContent: (tabId: string, content: string) => void;
+  reloadTabContent: (tabId: string, content: string, lastModified: Date) => void;
   markTabDirty: (tabId: string, hasUnsavedChanges: boolean) => void;
   updateTabSyncStatus: (tabId: string, syncStatus: SyncStatus) => void;
   reorderTabs: (dragIndex: number, hoverIndex: number) => void;
-  saveTabState: (tabId: string, state: Partial<Tab>) => void;
   toggleTOC: () => void;
   toggleSourceEditor: () => void;
   toggleReadOnlyMode: () => void;
@@ -122,6 +122,15 @@ export const useEditorStore = create<EditorStore>()(
               : tab
           )
         })),
+
+      reloadTabContent: (tabId, content, lastModified) => 
+        set(state => ({
+          tabs: state.tabs.map(tab => 
+            tab.id === tabId 
+              ? { ...tab, content, lastModified: lastModified }
+              : tab
+          )
+        })),
       
       markTabDirty: (tabId, hasUnsavedChanges) => 
         set(state => ({
@@ -144,13 +153,6 @@ export const useEditorStore = create<EditorStore>()(
         tabs.splice(hoverIndex, 0, draggedTab);
         set({ tabs });
       },
-      
-      saveTabState: (tabId, state) => 
-        set(currentState => ({
-          tabs: currentState.tabs.map(tab => 
-            tab.id === tabId ? { ...tab, ...state } : tab
-          )
-        })),
       
       toggleTOC: () => set(state => ({ showTOC: !state.showTOC })),
       

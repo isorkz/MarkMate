@@ -1,8 +1,8 @@
 import { GitCommit, GitStatus } from '../../../shared/types/git'
+import { FileContentWithDate } from '@shared/types/file'
 
 export interface IFileAdapter {
-  readFile(workspacePath: string, filePath: string): Promise<string>
-  getLastModifiedTime(workspacePath: string, filePath: string): Promise<Date>
+  readFile(workspacePath: string, filePath: string): Promise<FileContentWithDate>
   writeFile(workspacePath: string, filePath: string, content: string): Promise<void>
   createFile(workspacePath: string, filePath: string, content?: string): Promise<void>
   deleteFile(workspacePath: string, filePath: string): Promise<void>

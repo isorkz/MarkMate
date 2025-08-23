@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { useFilePathEventStore } from './events/filePathEventStore'
-import { FileNode } from '../types'
+import { FileNode } from '@shared/types/file';
 
 interface FileSystemStore {
   fileTree: FileNode[];

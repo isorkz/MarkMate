@@ -1,9 +1,9 @@
 import { useState, useCallback } from 'react'
-import { FileNode } from '@renderer/types'
 import { useWorkspaceStore } from '@renderer/stores/workspaceStore'
 import { useEditorStore } from '@renderer/stores/editorStore'
 import toast from 'react-hot-toast'
 import { adapters } from '@renderer/adapters'
+import { FileNode } from '@shared/types/file'
 
 export const usePageLinkSelector = () => {
   const { currentWorkspace } = useWorkspaceStore()

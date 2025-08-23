@@ -99,19 +99,16 @@ export const syncWorkspace = async (workspacePath: string, commitMessagePrefix: 
 // Helper function to reload tab content and update status
 const reloadTabContent = async (workspacePath: string, tab: Tab): Promise<SyncStatus> => {
   try {
-    const [newContent, lastModified] = await Promise.all([
-      adapters.fileAdapter.readFile(workspacePath, tab.filePath),
-      adapters.fileAdapter.getLastModifiedTime(workspacePath, tab.filePath)
-    ])
+    const fileData = await adapters.fileAdapter.readFile(workspacePath, tab.filePath)
     
     // Check for conflict markers
-    if (newContent.includes('<<<<<<< HEAD') || newContent.includes('=======') || newContent.includes('>>>>>>> ')) {
+    if (fileData.content.includes('<<<<<<< HEAD') || fileData.content.includes('=======') || fileData.content.includes('>>>>>>> ')) {
       useEditorStore.getState().updateTabSyncStatus(tab.id, 'conflict')
-      useEditorStore.getState().saveTabState(tab.id, { content: newContent, lastModified })
+      useEditorStore.getState().reloadTabContent(tab.id, fileData.content, fileData.lastModified)
       return 'conflict'
     } else {
       useEditorStore.getState().updateTabSyncStatus(tab.id, 'synced')
-      useEditorStore.getState().saveTabState(tab.id, { content: newContent, lastModified })
+      useEditorStore.getState().reloadTabContent(tab.id, fileData.content, fileData.lastModified)
       return 'synced'
     }
   } catch (fileError) {

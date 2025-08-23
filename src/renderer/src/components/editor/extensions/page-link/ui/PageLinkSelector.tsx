@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { FileText, Search } from 'lucide-react'
-import { FileNode } from '@renderer/types'
+import { FileNode } from '@shared/types/file';
 
 interface PageLinkSelectorProps {
   files: FileNode[]

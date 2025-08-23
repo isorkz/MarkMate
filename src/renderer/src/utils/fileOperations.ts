@@ -2,10 +2,10 @@ import toast from 'react-hot-toast'
 import { useFilePathEventStore } from '../stores/events/filePathEventStore'
 import { useWorkspaceStore } from '../stores/workspaceStore'
 import { useEditorStore } from '@renderer/stores/editorStore'
-import { FileNode } from '@renderer/types'
 import { adapters } from '../adapters'
 import { getSyncStatus, completeGitMerge, syncWorkspace } from './syncOperation'
 import { useSettingsStore } from '@renderer/stores/settingsStore'
+import { FileNode } from '@shared/types/file'
 
 // Helper function to get all markdown files from the file tree
 export const getAllMarkdownFiles = (nodes: FileNode[]): FileNode[] => {
@@ -59,13 +59,10 @@ export const handleOpenFile = async (workspacePath: string, filePath: string, pi
       }
     } else{
       // File is not open, read content and open it
-      const [content, lastModified] = await Promise.all([
-        adapters.fileAdapter.readFile(workspacePath, filePath),
-        adapters.fileAdapter.getLastModifiedTime(workspacePath, filePath)
-      ])
+      const fileData = await adapters.fileAdapter.readFile(workspacePath, filePath)
       
       // Open the file in the editor
-      openFile(filePath, content, pinned, lastModified)
+      openFile(filePath, fileData.content, pinned, fileData.lastModified)
       // Add to recent files
       useWorkspaceStore.getState().addRecentFile(filePath)
     }

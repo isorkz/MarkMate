@@ -1,8 +1,8 @@
 import React, { useRef, useEffect } from 'react'
 import { File } from 'lucide-react'
 import { useWorkspaceStore } from '../../stores/workspaceStore'
-import { FileNode } from '../../types'
 import { handleOpenFile } from '@renderer/utils/fileOperations'
+import { FileNode } from '@shared/types/file'
 
 interface FileSearchResultsProps {
   searchTerm: string

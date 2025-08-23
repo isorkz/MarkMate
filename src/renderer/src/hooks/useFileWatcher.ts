@@ -60,10 +60,10 @@ export function useFileWatcher() {
         if (openTab) {
           try {
             // Read the current file content
-            const fileContent = await adapters.fileAdapter.readFile(workspacePath, relativePath)
+            const fileData = await adapters.fileAdapter.readFile(workspacePath, relativePath)
             
             // If content is the same as tab content, ignore the change
-            if (fileContent === openTab.content) {
+            if (fileData.content === openTab.content) {
               return
             }
             
@@ -74,7 +74,7 @@ export function useFileWatcher() {
             
             if (shouldReload) {
               // Update the tab with new content
-              updateTabContent(openTab.id, fileContent)
+              updateTabContent(openTab.id, fileData.content)
               markTabDirty(openTab.id, false)
               
               toast.success(`File "${relativePath}" has been reloaded`)
