@@ -28,6 +28,10 @@ export class ElectronFileAdapter implements IFileAdapter {
     await window.electron.ipcRenderer.invoke('file:create-directory', workspacePath, dirPath)
   }
 
+  async isFileExists(workspacePath: string, filePath: string): Promise<boolean> {
+    return window.electron.ipcRenderer.invoke('file:exists', workspacePath, filePath)
+  }
+
   async getImageUrl(imagePath: string, workspacePath: string, currentFilePath: string): Promise<string> {
     return window.electron.ipcRenderer.invoke('file:get-image-url', imagePath, workspacePath, currentFilePath)
   }

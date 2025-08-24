@@ -90,6 +90,11 @@ export class WebFileAdapter implements IFileAdapter {
     await ApiClient.post('/file/create-directory', { dirPath })
   }
 
+  async isFileExists(_workspacePath: string, filePath: string): Promise<boolean> {
+    const result = await ApiClient.post('/file/exists', { filePath })
+    return result.exists
+  }
+
   async getImageUrl(imagePath: string, workspacePath: string, currentFilePath: string): Promise<string> {
     const result = await ApiClient.post('/file/get-image-url', { imagePath, workspacePath, currentFilePath })
     return result.imageUrl

@@ -68,6 +68,16 @@ export function setupFileHandlers() {
     }
   })
 
+  // Check if file exists
+  ipcMain.handle('file:exists', async (_, workspacePath: string, filePath: string) => {
+    try {
+      return await FileService.fileExists(workspacePath, filePath)
+    } catch (error) {
+      console.error('Error checking file existence:', error)
+      throw error
+    }
+  })
+
   // Get resolved image URL
   ipcMain.handle('file:get-image-url', async (_, imagePath: string, workspacePath: string, currentFilePath: string) => {
     try {

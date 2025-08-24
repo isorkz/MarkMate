@@ -95,6 +95,17 @@ export class FileService {
     await fs.mkdir(fullPath, { recursive: true })
   }
 
+  // Check if file exists
+  static async fileExists(workspacePath: string, filePath: string): Promise<boolean> {
+    try {
+      const fullPath = path.join(workspacePath, filePath)
+      await fs.access(fullPath)
+      return true
+    } catch (error) {
+      return false
+    }
+  }
+
   // Get resolved image URL
   // imagePath: the image path in markdown content (e.g. ../../.images/image.png)
   // asDataUrl: true - return as data URL (base64 encoded), false - return as file:// URL

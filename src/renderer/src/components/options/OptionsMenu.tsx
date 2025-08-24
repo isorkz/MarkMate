@@ -1,16 +1,23 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { MoreHorizontal, Settings, GalleryVerticalEnd, RefreshCw } from 'lucide-react'
+import { MoreHorizontal, Settings, GalleryVerticalEnd, RefreshCw, Wrench } from 'lucide-react'
 import VersionHistory from '../version/VersionHistory'
 import toast from 'react-hot-toast'
 import { useSettingsStore } from '../../stores/settingsStore'
 import { useWorkspaceStore } from '@renderer/stores/workspaceStore'
 import { useEditorStore } from '@renderer/stores/editorStore'
 import { syncWorkspace } from '@renderer/utils/syncOperation'
+import { PageLinkValidator, PageLinkValidationResult } from '@renderer/utils/PageLinkValidator'
+import BrokenPageLinksDialog from './BrokenPageLinksDialog'
 
 const OptionsMenu: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false)
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'success' | 'error' | 'conflict' | 'needs-sync'>('idle')
   const [showVersionHistory, setShowVersionHistory] = useState(false)
+
+  const [showBrokenPageLinks, setShowBrokenPageLinks] = useState(false)
+  const [brokenPageLinksResults, setBrokenPageLinksResults] = useState<PageLinkValidationResult[]>([])
+  const [isValidatingPageLinks, setIsValidatingPagePageLinks] = useState(false)
+
   const menuRef = useRef<HTMLDivElement>(null)
 
   const { tabs, activeTabId } = useEditorStore()
@@ -77,6 +84,30 @@ const OptionsMenu: React.FC = () => {
     }, 5000)
   }
 
+  const handleCheckBrokenPageLinks = async () => {
+    if (!currentWorkspace || isValidatingPageLinks) {
+      return
+    }
+
+    setIsValidatingPagePageLinks(true)
+    setIsOpen(false)
+
+    try {
+      const results = await PageLinkValidator.validateAllPageLinks(currentWorkspace.path)
+      setBrokenPageLinksResults(results)
+      setShowBrokenPageLinks(true)
+
+      if (results.length === 0) {
+        toast.success('All pagelinks are valid!')
+      }
+    } catch (error) {
+      console.error('Failed to validate pagelinks:', error)
+      toast.error('Failed to check pagelinks')
+    } finally {
+      setIsValidatingPagePageLinks(false)
+    }
+  }
+
   return (
     <div ref={menuRef} className="relative">
       <button
@@ -122,6 +153,19 @@ const OptionsMenu: React.FC = () => {
           <div className="mx-3 border-t border-gray-100 my-0.5" />
 
           <button
+            onClick={handleCheckBrokenPageLinks}
+            disabled={isValidatingPageLinks}
+            className="flex items-center gap-2 w-full px-3 py-2 hover:bg-gray-100 transition-colors disabled:opacity-50"
+          >
+            <Wrench
+              className={`w-4 h-4 ${isValidatingPageLinks ? 'animate-pulse text-yellow-500' : 'text-gray-600'}`}
+            />
+            Check Broken Links
+          </button>
+
+          <div className="mx-3 border-t border-gray-100 my-0.5" />
+
+          <button
             onClick={handleOpenSettings}
             className="flex items-center gap-2 w-full px-3 py-2 hover:bg-gray-100 transition-colors"
           >
@@ -139,6 +183,13 @@ const OptionsMenu: React.FC = () => {
           tab={activeTab}
         />
       )}
+
+      {/* Broken Links Dialog */}
+      <BrokenPageLinksDialog
+        isOpen={showBrokenPageLinks}
+        onClose={() => setShowBrokenPageLinks(false)}
+        results={brokenPageLinksResults}
+      />
     </div>
   )
 }
