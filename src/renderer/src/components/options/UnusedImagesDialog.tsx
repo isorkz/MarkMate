@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { X, Trash2, CheckSquare, Square, Image, AlertCircle } from 'lucide-react'
 import { UnusedImage } from '../../utils/link-validator/UnusedImageLinksValidator'
 import toast from 'react-hot-toast'
+import { formatDate } from '../../../../shared/commonUtils'
 
 interface UnusedImagesDialogProps {
   isOpen: boolean
@@ -68,12 +69,6 @@ const UnusedImagesDialog: React.FC<UnusedImagesDialogProps> = ({
     } finally {
       setIsDeleting(false)
     }
-  }
-
-
-  const formatDate = (date?: Date) => {
-    if (!date) return 'Unknown date'
-    return date.toLocaleDateString('zh-CN') + ' ' + date.toLocaleTimeString('zh-CN')
   }
 
   return (

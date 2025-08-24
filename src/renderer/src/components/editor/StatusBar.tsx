@@ -12,7 +12,7 @@ const StatusBar: React.FC = () => {
 
   return (
     <div className="inline-flex items-center px-3 py-1 bg-gray-50 border-t border-l border-gray-200 text-xs text-gray-500 h-6 rounded-tl-md shadow-sm">
-      <span>Modified {formatDate(activeTab.lastModified)}</span>
+      <span>{formatDate(activeTab.lastModified)}</span>
     </div>
   )
 }

@@ -16,20 +16,15 @@ export const isImagePathResolved = (src: string): boolean => {
  * @param date - The date to format
  * @returns Formatted date string
  */
-export const formatDate = (date: Date | string): string => {
+export const formatDate = (date?: Date | string): string => {
+  if (!date) return 'Unknown date'
   try {
     const dateObj = typeof date === 'string' ? new Date(date) : date
     if (isNaN(dateObj.getTime())) {
-      return 'Unknown'
+      return 'Unknown date'
     }
-    return new Intl.DateTimeFormat('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    }).format(dateObj)
+    return dateObj.toLocaleDateString('zh-CN') + ' ' + dateObj.toLocaleTimeString('zh-CN')
   } catch (error) {
-    return 'Unknown'
+    return 'Unknown date'
   }
 }
