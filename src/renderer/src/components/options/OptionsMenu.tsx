@@ -6,8 +6,8 @@ import { useSettingsStore } from '../../stores/settingsStore'
 import { useWorkspaceStore } from '@renderer/stores/workspaceStore'
 import { useEditorStore } from '@renderer/stores/editorStore'
 import { syncWorkspace } from '@renderer/utils/syncOperation'
-import { PageLinkValidator, PageLinkValidationResult } from '@renderer/utils/PageLinkValidator'
-import { ImageLinkValidator, ImageLinkValidationResult } from '@renderer/utils/ImageLinkValidator'
+import { BrokenPageLinksValidator, PageLinkValidationResult } from '@renderer/utils/link-validator/BrokenPageLinksValidator'
+import { BrokenImageLinksValidator, ImageLinkValidationResult } from '@renderer/utils/link-validator/BrokenImageLinksValidator'
 import BrokenPageLinksDialog from './BrokenPageLinksDialog'
 import BrokenImagesDialog from './BrokenImagesDialog'
 
@@ -99,7 +99,7 @@ const OptionsMenu: React.FC = () => {
     setIsOpen(false)
 
     try {
-      const results = await PageLinkValidator.validateAllPageLinks(currentWorkspace.path)
+      const results = await BrokenPageLinksValidator.validateAllPageLinks(currentWorkspace.path)
       setBrokenPageLinksResults(results)
       setShowBrokenPageLinks(true)
 
@@ -123,7 +123,7 @@ const OptionsMenu: React.FC = () => {
     setIsOpen(false)
 
     try {
-      const results = await ImageLinkValidator.validateAllImageLinks(currentWorkspace.path)
+      const results = await BrokenImageLinksValidator.validateAllImageLinks(currentWorkspace.path)
       setBrokenImagesResults(results)
       setShowBrokenImages(true)
 

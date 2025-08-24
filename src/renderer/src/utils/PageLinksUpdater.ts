@@ -9,7 +9,7 @@ import { markFileAsUnwatched } from '../hooks/useFileWatcher'
 /**
  * Utility for updating pagelink paths when files are moved
  */
-export class PageLinkUpdater {
+export class PageLinksUpdater {
   /**
    * Update pagelinks after a folder is moved
    * @param workspacePath - Workspace root path

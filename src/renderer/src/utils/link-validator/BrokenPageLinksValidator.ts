@@ -1,5 +1,5 @@
-import { adapters } from '../adapters'
-import { getAllMarkdownFiles } from './fileOperations'
+import { adapters } from "@renderer/adapters"
+import { getAllMarkdownFiles } from "../fileOperations"
 
 export interface BrokenPageLink {
   filePath: string
@@ -14,9 +14,9 @@ export interface PageLinkValidationResult {
 }
 
 /**
- * Utility for validating pagelinks in markdown files
+ * Utility for validating broken page links in markdown files
  */
-export class PageLinkValidator {
+export class BrokenPageLinksValidator {
   /**
    * Check all markdown files for broken pagelinks
    * @param workspacePath - Workspace root path

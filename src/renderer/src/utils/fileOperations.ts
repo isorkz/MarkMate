@@ -6,7 +6,7 @@ import { adapters } from '../adapters'
 import { getSyncStatus, completeGitMerge, syncWorkspace } from './syncOperation'
 import { useSettingsStore } from '@renderer/stores/settingsStore'
 import { FileNode } from '@shared/types/file'
-import { PageLinkUpdater } from './PageLinkUpdater'
+import { PageLinksUpdater } from './PageLinksUpdater'
 
 // Helper function to get all markdown files from the file tree
 export const getAllMarkdownFiles = (nodes: FileNode[]): FileNode[] => {
@@ -211,9 +211,9 @@ export const handleMoveFile = async (
 
     // Update pagelinks after file/folder move
     if (sourceNode.type === 'folder') {
-      await PageLinkUpdater.updatePageLinksAfterFolderMove(workspacePath, sourceNode.path, newPath)
+      await PageLinksUpdater.updatePageLinksAfterFolderMove(workspacePath, sourceNode.path, newPath)
     } else if (sourceNode.path.endsWith('.md')) {
-      await PageLinkUpdater.updatePageLinksAfterFileMove(workspacePath, sourceNode.path, newPath)
+      await PageLinksUpdater.updatePageLinksAfterFileMove(workspacePath, sourceNode.path, newPath)
     }
   } catch (error) {
     console.error('Failed to move file:', error)

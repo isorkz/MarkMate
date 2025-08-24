@@ -1,6 +1,6 @@
 import React from 'react'
 import { X, ExternalLink, FileText, AlertTriangle, Unlink } from 'lucide-react'
-import { PageLinkValidationResult } from '../../utils/PageLinkValidator'
+import { PageLinkValidationResult } from '../../utils/link-validator/BrokenPageLinksValidator'
 import { useWorkspaceStore } from '@renderer/stores/workspaceStore'
 import { handleOpenFile } from '@renderer/utils/fileOperations'
 

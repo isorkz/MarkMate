@@ -1,8 +1,8 @@
 import React from 'react'
 import { X, ExternalLink, FileText, AlertTriangle, Image } from 'lucide-react'
-import { ImageLinkValidationResult } from '../../utils/ImageLinkValidator'
 import { useWorkspaceStore } from '@renderer/stores/workspaceStore'
 import { handleOpenFile } from '@renderer/utils/fileOperations'
+import { ImageLinkValidationResult } from '@renderer/utils/link-validator/BrokenImageLinksValidator'
 
 interface BrokenImagesDialogProps {
   isOpen: boolean

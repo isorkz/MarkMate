@@ -1,5 +1,5 @@
-import { adapters } from '../adapters'
-import { getAllMarkdownFiles } from './fileOperations'
+import { adapters } from "@renderer/adapters"
+import { getAllMarkdownFiles } from "../fileOperations"
 
 export interface BrokenImageLink {
   filePath: string
@@ -15,9 +15,9 @@ export interface ImageLinkValidationResult {
 }
 
 /**
- * Utility for validating image links in markdown files
+ * Utility for validating broken image links in markdown files
  */
-export class ImageLinkValidator {
+export class BrokenImageLinksValidator {
   /**
    * Check all markdown files for broken image links
    * @param workspacePath - Workspace root path
