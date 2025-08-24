@@ -6,6 +6,14 @@ import { useFileSystemStore } from '../stores/fileSystemStore'
 import { adapters } from '@renderer/adapters'
 import { loadFileTree } from '../utils/fileOperations'
 
+// Files to ignore in file watcher
+const unwatchFiles = new Set<string>()
+
+export const markFileAsUnwatched = (filePath: string, duration = 1000) => {
+  unwatchFiles.add(filePath)
+  setTimeout(() => unwatchFiles.delete(filePath), duration)
+}
+
 export interface ExternalFileChangeEvent {
   workspacePath: string
   type: 'change' | 'add' | 'unlink' | 'addDir' | 'unlinkDir'
@@ -54,6 +62,11 @@ export function useFileWatcher() {
 
     switch (type) {
       case 'change': {
+        // Skip if file is being unwatched
+        if (unwatchFiles.has(relativePath)) {
+          return
+        }
+        
         // Check if the changed file is currently open in a tab
         const openTab = tabs.find(tab => tab.filePath === relativePath)
         
