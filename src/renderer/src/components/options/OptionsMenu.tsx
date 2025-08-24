@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { MoreHorizontal, Settings, GalleryVerticalEnd, RefreshCw, Wrench } from 'lucide-react'
+import { MoreHorizontal, Settings, GalleryVerticalEnd, RefreshCw, Unlink, Image } from 'lucide-react'
 import VersionHistory from '../version/VersionHistory'
 import toast from 'react-hot-toast'
 import { useSettingsStore } from '../../stores/settingsStore'
@@ -7,7 +7,9 @@ import { useWorkspaceStore } from '@renderer/stores/workspaceStore'
 import { useEditorStore } from '@renderer/stores/editorStore'
 import { syncWorkspace } from '@renderer/utils/syncOperation'
 import { PageLinkValidator, PageLinkValidationResult } from '@renderer/utils/PageLinkValidator'
+import { ImageLinkValidator, ImageLinkValidationResult } from '@renderer/utils/ImageLinkValidator'
 import BrokenPageLinksDialog from './BrokenPageLinksDialog'
+import BrokenImagesDialog from './BrokenImagesDialog'
 
 const OptionsMenu: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false)
@@ -17,6 +19,10 @@ const OptionsMenu: React.FC = () => {
   const [showBrokenPageLinks, setShowBrokenPageLinks] = useState(false)
   const [brokenPageLinksResults, setBrokenPageLinksResults] = useState<PageLinkValidationResult[]>([])
   const [isValidatingPageLinks, setIsValidatingPagePageLinks] = useState(false)
+
+  const [showBrokenImages, setShowBrokenImages] = useState(false)
+  const [brokenImagesResults, setBrokenImagesResults] = useState<ImageLinkValidationResult[]>([])
+  const [isValidatingImages, setIsValidatingImages] = useState(false)
 
   const menuRef = useRef<HTMLDivElement>(null)
 
@@ -108,6 +114,30 @@ const OptionsMenu: React.FC = () => {
     }
   }
 
+  const handleCheckBrokenImages = async () => {
+    if (!currentWorkspace || isValidatingImages) {
+      return
+    }
+
+    setIsValidatingImages(true)
+    setIsOpen(false)
+
+    try {
+      const results = await ImageLinkValidator.validateAllImageLinks(currentWorkspace.path)
+      setBrokenImagesResults(results)
+      setShowBrokenImages(true)
+
+      if (results.length === 0) {
+        toast.success('All image links are valid!')
+      }
+    } catch (error) {
+      console.error('Failed to validate image links:', error)
+      toast.error('Failed to check image links')
+    } finally {
+      setIsValidatingImages(false)
+    }
+  }
+
   return (
     <div ref={menuRef} className="relative">
       <button
@@ -120,7 +150,7 @@ const OptionsMenu: React.FC = () => {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-full mt-1 w-48 text-sm text-gray-900 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+        <div className="absolute right-0 top-full mt-1 w-56 text-sm text-gray-900 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
           {activeTab && (
             <>
               <button
@@ -157,10 +187,21 @@ const OptionsMenu: React.FC = () => {
             disabled={isValidatingPageLinks}
             className="flex items-center gap-2 w-full px-3 py-2 hover:bg-gray-100 transition-colors disabled:opacity-50"
           >
-            <Wrench
+            <Unlink
               className={`w-4 h-4 ${isValidatingPageLinks ? 'animate-pulse text-yellow-500' : 'text-gray-600'}`}
             />
-            Check Broken Links
+            Check Broken PageLinks
+          </button>
+
+          <button
+            onClick={handleCheckBrokenImages}
+            disabled={isValidatingImages}
+            className="flex items-center gap-2 w-full px-3 py-2 hover:bg-gray-100 transition-colors disabled:opacity-50"
+          >
+            <Image
+              className={`w-4 h-4 ${isValidatingImages ? 'animate-pulse text-yellow-500' : 'text-gray-600'}`}
+            />
+            Check Broken Images
           </button>
 
           <div className="mx-3 border-t border-gray-100 my-0.5" />
@@ -189,6 +230,13 @@ const OptionsMenu: React.FC = () => {
         isOpen={showBrokenPageLinks}
         onClose={() => setShowBrokenPageLinks(false)}
         results={brokenPageLinksResults}
+      />
+
+      {/* Broken Images Dialog */}
+      <BrokenImagesDialog
+        isOpen={showBrokenImages}
+        onClose={() => setShowBrokenImages(false)}
+        results={brokenImagesResults}
       />
     </div>
   )
