@@ -1,5 +1,5 @@
 import { GitCommit, GitStatus } from '../../../shared/types/git'
-import { FileContentWithDate } from '@shared/types/file'
+import { FileContentWithDate, FileNode } from '@shared/types/file'
 
 export interface IFileAdapter {
   readFile(workspacePath: string, filePath: string): Promise<FileContentWithDate>
@@ -30,5 +30,6 @@ export interface IGitAdapter {
 
 export interface IWorkspaceAdapter {
   openDialog(): Promise<any>
-  getFileTree(workspacePath: string): Promise<any[]>
+  getFileTree(workspacePath: string): Promise<FileNode[]>
+  getImages(workspacePath: string, imagesDir: string): Promise<FileNode[]>
 }

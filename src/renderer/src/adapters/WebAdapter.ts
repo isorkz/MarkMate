@@ -1,6 +1,6 @@
 import { IFileAdapter, IGitAdapter, IWorkspaceAdapter } from './interfaces'
 import { GitCommit, GitStatus } from '../../../shared/types/git'
-import { FileContentWithDate } from '@shared/types/file'
+import { FileContentWithDate, FileNode } from '@shared/types/file'
 
 const API_BASE_URL = '/api'
 
@@ -168,7 +168,11 @@ export class WebWorkspaceAdapter implements IWorkspaceAdapter {
     return ApiClient.get('/workspace/info')
   }
 
-  async getFileTree(_workspacePath: string): Promise<any[]> {
+  async getFileTree(_workspacePath: string): Promise<FileNode[]> {
     return ApiClient.get('/workspace/file-tree')
+  }
+
+  async getImages(_workspacePath: string, imagesDir: string): Promise<FileNode[]> {
+    return ApiClient.post('/workspace/get-images', { imagesDir })
   }
 }

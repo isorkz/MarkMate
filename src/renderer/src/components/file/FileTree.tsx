@@ -92,7 +92,7 @@ const FileTree: React.FC = () => {
     }
   }
 
-  const handleContextMenu = (e: React.MouseEvent, node: any) => {
+  const handleContextMenu = (e: React.MouseEvent, node: FileNode) => {
     e.preventDefault()
     e.stopPropagation() // Prevent background context menu from triggering
     setContextMenu({
@@ -100,7 +100,8 @@ const FileTree: React.FC = () => {
         id: node.id || node.path,
         name: node.name,
         path: node.path,
-        type: node.type
+        type: node.type,
+        lastModified: node.lastModified
       },
       position: { x: e.clientX, y: e.clientY }
     })
@@ -383,7 +384,7 @@ const FileTree: React.FC = () => {
 
       {showCreateMenu && (
         <FileContextMenu
-          node={{ id: 'root', name: 'root', path: '', type: 'folder' }}
+          node={{ id: 'root', name: 'root', path: '', type: 'folder', lastModified: new Date() }}
           position={showCreateMenu}
           onClose={() => setShowCreateMenu(null)}
           onNewFile={onNewFile}

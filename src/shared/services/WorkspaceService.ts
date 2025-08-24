@@ -1,14 +1,6 @@
 import * as fs from 'fs/promises'
 import * as path from 'path'
-
-interface FileNode {
-  id: string
-  name: string
-  path: string
-  type: 'file' | 'folder'
-  children?: FileNode[]
-  isExpanded?: boolean
-}
+import { FileNode } from '../types/file'
 
 export class WorkspaceService {
   // Get workspace file tree
@@ -26,6 +18,8 @@ export class WorkspaceService {
           continue
         }
         
+        const stats = await fs.stat(itemPath)
+        
         if (item.isDirectory()) {
           const childNodes = await buildFileTree(itemPath, itemRelativePath)
           children.push({
@@ -34,7 +28,7 @@ export class WorkspaceService {
             path: itemRelativePath,
             type: 'folder',
             children: childNodes,
-            isExpanded: false
+            lastModified: stats.mtime
           })
         } else if (item.name.endsWith('.md')) {
           children.push({
@@ -42,6 +36,7 @@ export class WorkspaceService {
             name: item.name.replace(/\.md$/, ''), // Remove .md extension for display
             path: itemRelativePath,
             type: 'file',
+            lastModified: stats.mtime
           })
         }
       }
@@ -56,5 +51,48 @@ export class WorkspaceService {
     }
     
     return await buildFileTree(workspacePath)
+  }
+
+  // Get image files from specified image directory
+  static async getImages(workspacePath: string, imagesDir: string): Promise<FileNode[]> {
+    const imagesPath = path.join(workspacePath, imagesDir)
+      
+      // Check if image directory exists
+      try {
+        await fs.access(imagesPath)
+      } catch (error) {
+        // Directory doesn't exist, return empty array
+        return []
+      }
+      
+      const items = await fs.readdir(imagesPath, { withFileTypes: true })
+      const imageFiles: FileNode[] = []
+      
+      // Define supported image extensions
+      const imageExtensions = ['.png', '.jpg', '.jpeg']
+      
+      for (const item of items) {
+        // Only process files (no subdirectories)
+        if (item.isFile()) {
+          const extension = path.extname(item.name).toLowerCase()
+          
+          // Check if it's an image file
+          if (imageExtensions.includes(extension)) {
+            const itemPath = path.join(imagesPath, item.name)
+            const stats = await fs.stat(itemPath)
+            
+            imageFiles.push({
+              id: `${imagesDir}/${item.name}`,
+              name: item.name,
+              path: `${imagesDir}/${item.name}`,
+              type: 'file',
+              lastModified: stats.mtime
+            })
+          }
+        }
+      }
+      
+      // Sort by name
+      return imageFiles.sort((a, b) => a.name.localeCompare(b.name))
   }
 }

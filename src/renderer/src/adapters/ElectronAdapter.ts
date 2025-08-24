@@ -1,6 +1,6 @@
 import { IFileAdapter, IGitAdapter, IWorkspaceAdapter } from './interfaces'
 import { GitCommit, GitStatus } from '../../../shared/types/git'
-import { FileContentWithDate } from '@shared/types/file'
+import { FileContentWithDate, FileNode } from '@shared/types/file'
 
 export class ElectronFileAdapter implements IFileAdapter {
   async readFile(workspacePath: string, filePath: string): Promise<FileContentWithDate> {
@@ -96,7 +96,11 @@ export class ElectronWorkspaceAdapter implements IWorkspaceAdapter {
     return window.electron.ipcRenderer.invoke('workspace:open-dialog')
   }
 
-  async getFileTree(workspacePath: string): Promise<any[]> {
+  async getFileTree(workspacePath: string): Promise<FileNode[]> {
     return window.electron.ipcRenderer.invoke('workspace:get-file-tree', workspacePath)
+  }
+
+  async getImages(workspacePath: string, imagesDir: string): Promise<FileNode[]> {
+    return window.electron.ipcRenderer.invoke('workspace:get-images', workspacePath, imagesDir)
   }
 }

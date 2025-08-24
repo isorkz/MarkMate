@@ -34,4 +34,14 @@ export function setupWorkspaceHandlers() {
       throw error
     }
   })
+
+  // Get images from specified directory
+  ipcMain.handle('workspace:get-images', async (_, workspacePath: string, imagesDir: string) => {
+    try {
+      return await WorkspaceService.getImages(workspacePath, imagesDir)
+    } catch (error) {
+      console.error('Error reading images from directory:', error)
+      throw error
+    }
+  })
 }
