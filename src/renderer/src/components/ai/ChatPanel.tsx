@@ -1,7 +1,14 @@
 import React from 'react'
 import { Settings } from 'lucide-react'
+import { useSettingsStore } from '../../stores/settingsStore'
 
 const ChatPanel: React.FC = () => {
+  const { openSettings } = useSettingsStore()
+
+  const handleSetModel = () => {
+    openSettings('ai')
+  }
+
   return (
     <div className="flex-1 overflow-y-auto p-4">
       {/* Welcome Message */}
@@ -13,7 +20,10 @@ const ChatPanel: React.FC = () => {
           Please configure your AI model to get started.
         </p>
         <div className="flex justify-center">
-          <button className="flex items-center gap-2 bg-black text-white px-6 py-2 rounded-lg text-sm hover:bg-gray-800">
+          <button 
+            onClick={handleSetModel}
+            className="flex items-center gap-2 bg-black text-white px-6 py-2 rounded-lg text-sm hover:bg-gray-800"
+          >
             <Settings className="w-4 h-4" />
             Set model
           </button>
