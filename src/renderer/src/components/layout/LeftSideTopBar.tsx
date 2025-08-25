@@ -11,10 +11,9 @@ const LeftSideTopBar: React.FC = () => {
 
 
   return (
-    <div 
-      className={`fixed top-0 left-0 h-10 z-50 flex items-center justify-end ${
-        appearanceSettings.sidebarVisible ? 'w-sidebar' : 'w-32'
-      }`} 
+    <div
+      className={`fixed top-0 left-0 h-10 z-50 flex items-center justify-end ${appearanceSettings.sidebarVisible ? 'w-sidebar' : 'w-32'
+        }`}
       style={{ WebkitAppRegion: 'drag' }}
     >
       {/* Sidebar toggle button - positioned at the right */}

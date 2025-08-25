@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { useWorkspaceStore } from '../../stores/workspaceStore'
 import { useFileSystemStore } from '../../stores/fileSystemStore'
-import { Folder, ChevronDown, Check, Plus } from 'lucide-react'
+import { Folder, ChevronDown, Check, Plus, Folders } from 'lucide-react'
 import { loadFileTree } from '../../utils/fileOperations'
 import WorkspaceContextMenu from './WorkspaceContextMenu'
 import { adapters } from '../../adapters'
@@ -72,7 +72,7 @@ const WorkspaceSelector: React.FC<WorkspaceSelectorProps> = ({ onCreateFile, onC
         className="w-full flex items-center justify-between px-2 py-1.5 text-sm text-gray-700 rounded-md hover:bg-gray-100 transition-colors"
       >
         <div className="flex items-center gap-2 min-w-0">
-          <Folder className="w-4 h-4 text-gray-500" />
+          <Folders className="w-4 h-4 text-gray-500" />
           <span className="font-medium truncate">
             {currentWorkspace ? currentWorkspace.name : 'Select workspace'}
           </span>

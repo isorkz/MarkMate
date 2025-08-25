@@ -192,11 +192,11 @@ const OptionsMenu: React.FC = () => {
     <div ref={menuRef} className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="p-1 hover:bg-gray-200 rounded transition-colors"
+        className="p-1 text-gray-900 hover:bg-gray-200 rounded transition-colors"
         style={{ WebkitAppRegion: 'no-drag' }}
         title="Options"
       >
-        <MoreHorizontal className="w-4 h-4" />
+        <MoreHorizontal size={20} />
       </button>
 
       {isOpen && (
@@ -238,7 +238,7 @@ const OptionsMenu: React.FC = () => {
             className="flex items-center gap-2 w-full px-3 py-2 hover:bg-gray-100 transition-colors disabled:opacity-50"
           >
             <Unlink
-              className={`w-4 h-4 ${isValidatingPageLinks ? 'animate-pulse text-yellow-500' : 'text-gray-600'}`}
+              className={`w-4 h-4 ${isValidatingPageLinks ? 'animate-pulse text-yellow-500' : ''}`}
             />
             Check Broken PageLinks
           </button>
@@ -249,7 +249,7 @@ const OptionsMenu: React.FC = () => {
             className="flex items-center gap-2 w-full px-3 py-2 hover:bg-gray-100 transition-colors disabled:opacity-50"
           >
             <Image
-              className={`w-4 h-4 ${isValidatingImages ? 'animate-pulse text-yellow-500' : 'text-gray-600'}`}
+              className={`w-4 h-4 ${isValidatingImages ? 'animate-pulse text-yellow-500' : ''}`}
             />
             Check Broken Images
           </button>
@@ -260,7 +260,7 @@ const OptionsMenu: React.FC = () => {
             className="flex items-center gap-2 w-full px-3 py-2 hover:bg-gray-100 transition-colors disabled:opacity-50"
           >
             <Trash2
-              className={`w-4 h-4 ${isFindingUnusedImages ? 'animate-pulse text-yellow-500' : 'text-gray-600'}`}
+              className={`w-4 h-4 ${isFindingUnusedImages ? 'animate-pulse text-yellow-500' : ''}`}
             />
             Cleanup Unused Images in <em>.images</em>
           </button>
