@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-export type SettingsType = 'general' | 'appearance' | 'sync' | 'web'
+export type SettingsType = 'general' | 'appearance' | 'sync' | 'web' | 'ai'
 
 interface GeneralSettings {
   
@@ -28,11 +28,17 @@ interface WebSettings {
   accessToken: string;
 }
 
+interface AISettings {
+  isOpen: boolean;
+  isMaximized: boolean;
+}
+
 interface SettingsStore {
   generalSettings: GeneralSettings;
   appearanceSettings: AppearanceSettings;
   syncSettings: SyncSettings;
   webSettings: WebSettings;
+  aiSettings: AISettings;
   
   // UI state
   isOpen: boolean;
@@ -46,6 +52,9 @@ interface SettingsStore {
   updateAppearanceSettings: (settings: Partial<AppearanceSettings>) => void;
   updateSyncSettings: (settings: Partial<SyncSettings>) => void;
   updateWebSettings: (settings: Partial<WebSettings>) => void;
+  updateAISettings: (settings: Partial<AISettings>) => void;
+  toggleAIAssistant: () => void;
+  toggleAIMaximize: () => void;
   resetSettings: () => void;
 }
 
@@ -73,6 +82,11 @@ const defaultWebSettings: WebSettings = {
   accessToken: ''
 };
 
+const defaultAISettings: AISettings = {
+  isOpen: false,
+  isMaximized: false
+};
+
 export const useSettingsStore = create<SettingsStore>()(
   persist(
     (set) => ({
@@ -80,6 +94,7 @@ export const useSettingsStore = create<SettingsStore>()(
       appearanceSettings: defaultAppearanceSettings,
       syncSettings: defaultSyncSettings,
       webSettings: defaultWebSettings,
+      aiSettings: defaultAISettings,
       
       // UI state
       isOpen: false,
@@ -105,11 +120,24 @@ export const useSettingsStore = create<SettingsStore>()(
       updateWebSettings: (settings) => set(state => ({
         webSettings: { ...state.webSettings, ...settings }
       })),
+
+      updateAISettings: (settings) => set(state => ({
+        aiSettings: { ...state.aiSettings, ...settings }
+      })),
+
+      toggleAIAssistant: () => set(state => ({
+        aiSettings: { ...state.aiSettings, isOpen: !state.aiSettings.isOpen }
+      })),
+
+      toggleAIMaximize: () => set(state => ({
+        aiSettings: { ...state.aiSettings, isMaximized: !state.aiSettings.isMaximized }
+      })),
       
       resetSettings: () => set({ 
         generalSettings: defaultGeneralSettings, 
         appearanceSettings: defaultAppearanceSettings, 
-        syncSettings: defaultSyncSettings 
+        syncSettings: defaultSyncSettings,
+        aiSettings: defaultAISettings
       })
     }),
     {
@@ -127,7 +155,8 @@ export const useSettingsStore = create<SettingsStore>()(
           gitEmail: '',
           gitRemoteUrl: ''
         },
-        webSettings: state.webSettings
+        webSettings: state.webSettings,
+        aiSettings: state.aiSettings
       })
     }
   )

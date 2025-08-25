@@ -9,7 +9,6 @@ const LeftSideTopBar: React.FC = () => {
     updateAppearanceSettings({ sidebarVisible: !appearanceSettings.sidebarVisible })
   }
 
-
   return (
     <div
       className={`fixed top-0 left-0 h-10 z-50 flex items-center justify-end ${appearanceSettings.sidebarVisible ? 'w-sidebar' : 'w-32'

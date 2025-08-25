@@ -7,12 +7,13 @@ import MainContent from './MainContent'
 import WorkspaceOpener from '../workspace/WorkspaceOpener'
 import LeftSideTopBar from './LeftSideTopBar'
 import FullSearch from '../search/FullSearch'
+import AIAssistantPanel from '../ai/AIAssistantPanel'
 import { useFullSearch } from '@renderer/hooks/useFullSearch'
 
 const AppLayout: React.FC = () => {
   const { currentWorkspace } = useWorkspaceStore()
   const { toggleTOC, toggleSourceEditor } = useEditorStore()
-  const { updateAppearanceSettings, appearanceSettings } = useSettingsStore()
+  const { updateAppearanceSettings, appearanceSettings, aiSettings } = useSettingsStore()
 
   // Full search functionality
   const {
@@ -78,6 +79,9 @@ const AppLayout: React.FC = () => {
       {appearanceSettings.sidebarVisible && <Sidebar />}
 
       <MainContent />
+
+      {/* AI Chat Panel */}
+      {aiSettings.isOpen && <AIAssistantPanel />}
 
       <FullSearch
         isOpen={showSearch}

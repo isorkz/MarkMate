@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { MoreHorizontal, Settings, GalleryVerticalEnd, RefreshCw, Unlink, Image, Trash2 } from 'lucide-react'
+import { MoreHorizontal, Settings, GalleryVerticalEnd, RefreshCw, Unlink, Image, Trash2, Bot } from 'lucide-react'
 import VersionHistory from '../version/VersionHistory'
 import toast from 'react-hot-toast'
 import { useSettingsStore } from '../../stores/settingsStore'
@@ -33,7 +33,7 @@ const OptionsMenu: React.FC = () => {
   const menuRef = useRef<HTMLDivElement>(null)
 
   const { tabs, activeTabId } = useEditorStore()
-  const { openSettings } = useSettingsStore()
+  const { openSettings, toggleAIAssistant } = useSettingsStore()
   const { currentWorkspace } = useWorkspaceStore()
 
   const activeTab = tabs.find(tab => tab.id === activeTabId) || null
@@ -189,7 +189,7 @@ const OptionsMenu: React.FC = () => {
   }
 
   return (
-    <div ref={menuRef} className="relative">
+    <div ref={menuRef} className="relative flex items-center gap-2">
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="p-1 text-gray-900 hover:bg-gray-200 rounded transition-colors"
@@ -197,6 +197,16 @@ const OptionsMenu: React.FC = () => {
         title="Options"
       >
         <MoreHorizontal size={20} />
+      </button>
+
+      {/* AI Chat Button - positioned after MoreHorizontal */}
+      <button
+        onClick={toggleAIAssistant}
+        className="p-1 text-gray-900 hover:bg-gray-200 rounded transition-colors"
+        style={{ WebkitAppRegion: 'no-drag' }}
+        title="AI Assistant"
+      >
+        <Bot size={20} />
       </button>
 
       {isOpen && (
