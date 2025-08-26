@@ -1,14 +1,14 @@
 import React, { useState } from 'react'
 import { Plus, Edit2, Trash2, Settings } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { useSettingsStore } from '../../stores/settingsStore'
+import { useAIStore } from '../../stores/aiStore'
 import { AIModel } from '../../../../shared/types/ai'
 
 const AISettings: React.FC = () => {
-  const { aiSettings, addAIModel, updateAIModel, deleteAIModel, setDefaultAIModel, updateAISettings } = useSettingsStore()
-  const currentModelId = aiSettings?.currentModelId
-  const models = aiSettings.models || []
-  const options = aiSettings?.options || { temperature: 0.7, maxTokens: 204800 }
+  const { config, addModel, updateModel, deleteModel, setDefaultModel, updateOptions } = useAIStore()
+  const currentModelId = config.currentModelId
+  const models = config.models as AIModel[]
+  const options = config.options
 
   const [showAddForm, setShowAddForm] = useState(false)
   const [editingModel, setEditingModel] = useState<AIModel | null>(null)
@@ -56,12 +56,12 @@ const AISettings: React.FC = () => {
 
   const handleDeleteModel = (modelId: string) => {
     if (window.confirm('Are you sure you want to delete this model?')) {
-      deleteAIModel(modelId)
+      deleteModel(modelId)
     }
   }
 
   const handleSetDefault = (modelId: string) => {
-    setDefaultAIModel(modelId)
+    setDefaultModel(modelId)
   }
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -93,9 +93,9 @@ const AISettings: React.FC = () => {
     }
 
     if (editingModel) {
-      updateAIModel(editingModel.id, modelData)
+      updateModel(editingModel.id, modelData)
     } else {
-      addAIModel(modelData)
+      addModel(modelData)
     }
 
     setShowAddForm(false)
@@ -164,7 +164,6 @@ const AISettings: React.FC = () => {
                   onClick={() => handleDeleteModel(model.id)}
                   className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   title="Delete Model"
-                  disabled={models.length === 1}
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
@@ -299,7 +298,7 @@ const AISettings: React.FC = () => {
               step="0.1"
               className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               value={options.temperature}
-              onChange={(e) => updateAISettings({ options: { ...options, temperature: parseFloat(e.target.value) } })}
+              onChange={(e) => updateOptions({ temperature: parseFloat(e.target.value) })}
             />
             <p className="text-xs text-gray-500 mt-1">Controls randomness (0.0 - 2.0)</p>
           </div>
@@ -313,7 +312,7 @@ const AISettings: React.FC = () => {
               max="500000"
               className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               value={options.maxTokens}
-              onChange={(e) => updateAISettings({ options: { ...options, maxTokens: parseInt(e.target.value) } })}
+              onChange={(e) => updateOptions({ maxTokens: parseInt(e.target.value) })}
             />
             <p className="text-xs text-gray-500 mt-1">Maximum response length</p>
           </div>

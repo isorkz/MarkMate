@@ -1,16 +1,7 @@
 import * as fs from 'fs/promises'
 import * as path from 'path'
 import { AIConfig } from '../types/ai'
-import { DEFAULT_TEMPERATURE, DEFAULT_MAX_TOKENS } from '../constants/ai'
-
-const DEFAULT_AI_CONFIG: AIConfig = {
-  models: [],
-  currentModelId: null,
-  options: {
-    temperature: DEFAULT_TEMPERATURE,
-    maxTokens: DEFAULT_MAX_TOKENS
-  }
-}
+import { DEFAULT_AI_CONFIG } from '../constants/ai'
 
 export class AIService {
   /**

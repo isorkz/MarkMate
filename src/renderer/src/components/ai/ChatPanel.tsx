@@ -1,10 +1,12 @@
 import React from 'react'
 import { Settings } from 'lucide-react'
 import { useSettingsStore } from '../../stores/settingsStore'
+import { useAIStore } from '../../stores/aiStore'
 
 const ChatPanel: React.FC = () => {
-  const { openSettings, aiSettings } = useSettingsStore()
-  const hasModels = aiSettings.models.length > 0
+  const { openSettings } = useSettingsStore()
+  const { config } = useAIStore()
+  const hasModels = config.models.length > 0
   const hasChatMessages = false // Placeholder for actual chat messages
 
   const handleSetModel = () => {
