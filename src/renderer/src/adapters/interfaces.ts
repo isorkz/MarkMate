@@ -1,5 +1,6 @@
 import { GitCommit, GitStatus } from '../../../shared/types/git'
 import { FileContentWithDate, FileNode } from '@shared/types/file'
+import { AIConfig } from '../../../shared/types/ai'
 
 export interface IFileAdapter {
   readFile(workspacePath: string, filePath: string): Promise<FileContentWithDate>
@@ -32,4 +33,10 @@ export interface IWorkspaceAdapter {
   openDialog(): Promise<any>
   getFileTree(workspacePath: string): Promise<FileNode[]>
   getImages(workspacePath: string, imagesDir: string): Promise<FileNode[]>
+}
+
+export interface IAIAdapter {
+  readConfig(workspacePath: string, configFilePath: string): Promise<AIConfig>
+  writeConfig(workspacePath: string, configFilePath: string, config: AIConfig): Promise<void>
+  getAIKey(): Promise<string | null>
 }

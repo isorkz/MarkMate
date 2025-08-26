@@ -206,7 +206,7 @@ const OptionsMenu: React.FC = () => {
         style={{ WebkitAppRegion: 'no-drag' }}
         title="AI Assistant"
       >
-        <Bot size={20} />
+        <Bot size={19} />
       </button>
 
       {isOpen && (

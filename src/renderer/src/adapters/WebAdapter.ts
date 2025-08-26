@@ -1,6 +1,7 @@
-import { IFileAdapter, IGitAdapter, IWorkspaceAdapter } from './interfaces'
+import { IFileAdapter, IGitAdapter, IWorkspaceAdapter, IAIAdapter } from './interfaces'
 import { GitCommit, GitStatus } from '../../../shared/types/git'
 import { FileContentWithDate, FileNode } from '@shared/types/file'
+import { AIConfig } from '../../../shared/types/ai'
 
 const API_BASE_URL = '/api'
 
@@ -174,5 +175,19 @@ export class WebWorkspaceAdapter implements IWorkspaceAdapter {
 
   async getImages(_workspacePath: string, imagesDir: string): Promise<FileNode[]> {
     return ApiClient.post('/workspace/get-images', { imagesDir })
+  }
+}
+
+export class WebAIAdapter implements IAIAdapter {
+  async readConfig(_workspacePath: string, configFilePath: string): Promise<AIConfig> {
+    return ApiClient.post('/ai/read-config', { configFilePath })
+  }
+
+  async writeConfig(_workspacePath: string, configFilePath: string, config: AIConfig): Promise<void> {
+    await ApiClient.post('/ai/write-config', { configFilePath, config })
+  }
+
+  async getAIKey(): Promise<string | null> {
+    return ApiClient.get('/ai/get-ai-key')
   }
 }

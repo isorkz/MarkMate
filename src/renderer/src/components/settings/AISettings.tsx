@@ -1,51 +1,116 @@
 import React, { useState } from 'react'
 import { Plus, Edit2, Trash2, Settings } from 'lucide-react'
-
-interface AIModel {
-  id: string
-  name: string
-  provider: 'azure' | 'openai' | 'ollama'
-  model: string
-  apiKey?: string
-  baseURL?: string
-  isDefault: boolean
-}
+import toast from 'react-hot-toast'
+import { useSettingsStore } from '../../stores/settingsStore'
+import { AIModel } from '../../../../shared/types/ai'
 
 const AISettings: React.FC = () => {
-  // Mock data - will be replaced with actual store
-  const [models, setModels] = useState<AIModel[]>([
-    {
-      id: '1',
-      name: 'GPT-4o',
-      provider: 'azure',
-      model: 'gpt-4o',
-      apiKey: '***hidden***',
-      baseURL: 'https://your-resource.openai.azure.com',
-      isDefault: true
-    }
-  ])
+  const { aiSettings, addAIModel, updateAIModel, deleteAIModel, setDefaultAIModel, updateAISettings } = useSettingsStore()
+  const currentModelId = aiSettings?.currentModelId
+  const models = aiSettings.models || []
+  const options = aiSettings?.options || { temperature: 0.7, maxTokens: 204800 }
 
   const [showAddForm, setShowAddForm] = useState(false)
   const [editingModel, setEditingModel] = useState<AIModel | null>(null)
+  const [formData, setFormData] = useState<{
+    name: string
+    provider: 'azure' | 'openai'
+    model: string
+    apiKey: string
+    baseURL: string
+  }>({
+    name: '',
+    provider: 'openai',
+    model: '',
+    apiKey: '',
+    baseURL: ''
+  })
+
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      provider: 'openai',
+      model: '',
+      apiKey: '',
+      baseURL: ''
+    })
+  }
 
   const handleAddModel = () => {
-    setShowAddForm(true)
+    resetForm()
     setEditingModel(null)
+    setShowAddForm(true)
   }
 
   const handleEditModel = (model: AIModel) => {
+    setFormData({
+      name: model.name,
+      provider: model.provider,
+      model: model.model,
+      apiKey: model.apiKey || '',
+      baseURL: model.baseURL || ''
+    })
     setEditingModel(model)
     setShowAddForm(true)
   }
 
   const handleDeleteModel = (modelId: string) => {
     if (window.confirm('Are you sure you want to delete this model?')) {
-      setModels(models.filter(m => m.id !== modelId))
+      deleteAIModel(modelId)
     }
   }
 
   const handleSetDefault = (modelId: string) => {
-    setModels(models.map(m => ({ ...m, isDefault: m.id === modelId })))
+    setDefaultAIModel(modelId)
+  }
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (!formData.name.trim()) {
+      toast.error('Model name is required')
+      return
+    }
+    if (!formData.model.trim()) {
+      toast.error('Model identifier is required')
+      return
+    }
+    if (!formData.apiKey.trim()) {
+      toast.error('API key is required for this provider')
+      return
+    }
+    if (formData.provider === 'azure' && !formData.baseURL.trim()) {
+      toast.error('Base URL is required for Azure OpenAI')
+      return
+    }
+
+    const modelData = {
+      name: formData.name.trim(),
+      provider: formData.provider,
+      model: formData.model.trim(),
+      apiKey: formData.apiKey.trim() || undefined,
+      baseURL: formData.baseURL.trim() || undefined
+    }
+
+    if (editingModel) {
+      updateAIModel(editingModel.id, modelData)
+    } else {
+      addAIModel(modelData)
+    }
+
+    setShowAddForm(false)
+    resetForm()
+    setEditingModel(null)
+  }
+
+  const handleCancel = () => {
+    setShowAddForm(false)
+    resetForm()
+    setEditingModel(null)
+  }
+
+  const handleInputChange = (field: keyof typeof formData, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }))
   }
 
   return (
@@ -53,39 +118,34 @@ const AISettings: React.FC = () => {
       <div className="mb-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-2">AI Models</h3>
         <p className="text-sm text-gray-600">
-          Configure AI models for the assistant. You can add multiple providers and switch between them.
+          Configure AI models for the assistant.
         </p>
       </div>
 
       {/* Models List */}
-      <div className="space-y-4 mb-6">
+      <div className="space-y-2 mb-6">
         {models.map((model) => (
           <div
             key={model.id}
-            className={`border rounded-lg p-4 ${model.isDefault ? 'border-blue-200 bg-blue-50' : 'border-gray-200'
+            className={`border rounded-lg p-3 ${model.id === currentModelId ? 'border-blue-200 bg-blue-50' : 'border-gray-200'
               }`}
           >
             <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <h4 className="font-medium text-gray-900">{model.name}</h4>
-                  {model.isDefault && (
-                    <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
-                      Default
-                    </span>
-                  )}
-                </div>
-                <div className="text-sm text-gray-600">
-                  <div>Provider: <span className="font-mono">{model.provider}</span></div>
-                  <div>Model: <span className="font-mono">{model.model}</span></div>
-                  {model.baseURL && (
-                    <div>Base URL: <span className="font-mono text-xs">{model.baseURL}</span></div>
-                  )}
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                <h4 className="font-medium text-gray-900 truncate pl-2">{model.name}</h4>
+                <div className="text-sm flex items-center gap-2">
+                  <span className="px-2 py-1 text-xs bg-blue-100 text-gray-700 rounded-md font-mono">
+                    {model.provider}
+                  </span>
                 </div>
               </div>
 
               <div className="flex items-center gap-2">
-                {!model.isDefault && (
+                {model.id === currentModelId ? (
+                  <span className="px-3 py-1 text-xs bg-blue-100 text-blue-800 rounded-md whitespace-nowrap">
+                    Default
+                  </span>
+                ) : (
                   <button
                     onClick={() => handleSetDefault(model.id)}
                     className="px-3 py-1 text-xs text-blue-600 hover:bg-blue-100 rounded-md transition-colors"
@@ -102,9 +162,9 @@ const AISettings: React.FC = () => {
                 </button>
                 <button
                   onClick={() => handleDeleteModel(model.id)}
-                  className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                  className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   title="Delete Model"
-                  disabled={model.isDefault}
+                  disabled={models.length === 1}
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
@@ -118,7 +178,7 @@ const AISettings: React.FC = () => {
       {!showAddForm && (
         <button
           onClick={handleAddModel}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors mb-6"
         >
           <Plus className="w-4 h-4" />
           Add Model
@@ -135,82 +195,86 @@ const AISettings: React.FC = () => {
             </h4>
           </div>
 
-          <form className="space-y-4">
+          <form className="space-y-4" onSubmit={handleSubmit}>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Model Name
+                Model Name <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="e.g., GPT-4o, Claude-3"
-                defaultValue={editingModel?.name || ''}
+                value={formData.name}
+                onChange={(e) => handleInputChange('name', e.target.value)}
+                required
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Provider
+                Provider <span className="text-red-500">*</span>
               </label>
               <select
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                defaultValue={editingModel?.provider || 'openai'}
+                value={formData.provider}
+                onChange={(e) => handleInputChange('provider', e.target.value)}
               >
                 <option value="openai">OpenAI</option>
                 <option value="azure">Azure OpenAI</option>
-                <option value="ollama">Ollama (Local)</option>
               </select>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Model
+                Model <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="e.g., gpt-4o, gpt-3.5-turbo"
-                defaultValue={editingModel?.model || ''}
+                value={formData.model}
+                onChange={(e) => handleInputChange('model', e.target.value)}
+                required
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                API Key
+                API Key <span className="text-red-500">*</span>
               </label>
               <input
                 type="password"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Your API key (stored locally)"
-                defaultValue={editingModel?.apiKey || ''}
+                placeholder={'Your API key'}
+                value={formData.apiKey}
+                onChange={(e) => handleInputChange('apiKey', e.target.value)}
+                required
               />
-              <p className="text-xs text-gray-500 mt-1">
-                Or set via environment variable: MARKMATE_API_KEY
-              </p>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Base URL
+                Base URL {formData.provider === 'azure' && <span className="text-red-500">*</span>}
               </label>
               <input
                 type="url"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="e.g., https://your-resource.openai.azure.com"
-                defaultValue={editingModel?.baseURL || ''}
+                value={formData.baseURL}
+                onChange={(e) => handleInputChange('baseURL', e.target.value)}
               />
             </div>
 
             <div className="flex items-center gap-3 pt-2">
               <button
-                type="button"
+                type="submit"
                 className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"
               >
                 {editingModel ? 'Update Model' : 'Add Model'}
               </button>
               <button
                 type="button"
-                onClick={() => setShowAddForm(false)}
+                onClick={handleCancel}
                 className="px-4 py-2 text-gray-600 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors text-sm"
               >
                 Cancel
@@ -219,6 +283,42 @@ const AISettings: React.FC = () => {
           </form>
         </div>
       )}
+
+      {/* AI Options */}
+      <div className="mb-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">AI Options</h3>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Temperature
+            </label>
+            <input
+              type="number"
+              min="0"
+              max="2"
+              step="0.1"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              value={options.temperature}
+              onChange={(e) => updateAISettings({ options: { ...options, temperature: parseFloat(e.target.value) } })}
+            />
+            <p className="text-xs text-gray-500 mt-1">Controls randomness (0.0 - 2.0)</p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Max Tokens
+            </label>
+            <input
+              type="number"
+              min="1"
+              max="500000"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              value={options.maxTokens}
+              onChange={(e) => updateAISettings({ options: { ...options, maxTokens: parseInt(e.target.value) } })}
+            />
+            <p className="text-xs text-gray-500 mt-1">Maximum response length</p>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

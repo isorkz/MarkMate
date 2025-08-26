@@ -1,6 +1,7 @@
-import { IFileAdapter, IGitAdapter, IWorkspaceAdapter } from './interfaces'
+import { IFileAdapter, IGitAdapter, IWorkspaceAdapter, IAIAdapter } from './interfaces'
 import { GitCommit, GitStatus } from '../../../shared/types/git'
 import { FileContentWithDate, FileNode } from '@shared/types/file'
+import { AIConfig } from '../../../shared/types/ai'
 
 export class ElectronFileAdapter implements IFileAdapter {
   async readFile(workspacePath: string, filePath: string): Promise<FileContentWithDate> {
@@ -102,5 +103,19 @@ export class ElectronWorkspaceAdapter implements IWorkspaceAdapter {
 
   async getImages(workspacePath: string, imagesDir: string): Promise<FileNode[]> {
     return window.electron.ipcRenderer.invoke('workspace:get-images', workspacePath, imagesDir)
+  }
+}
+
+export class ElectronAIAdapter implements IAIAdapter {
+  async readConfig(workspacePath: string, configFilePath: string): Promise<AIConfig> {
+    return window.electron.ipcRenderer.invoke('ai-config:read', workspacePath, configFilePath)
+  }
+
+  async writeConfig(workspacePath: string, configFilePath: string, config: AIConfig): Promise<void> {
+    await window.electron.ipcRenderer.invoke('ai-config:write', workspacePath, configFilePath, config)
+  }
+
+  async getAIKey(): Promise<string | null> {
+    return window.electron.ipcRenderer.invoke('ai-config:get-ai-key')
   }
 }
