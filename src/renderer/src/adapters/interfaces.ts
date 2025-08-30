@@ -1,6 +1,6 @@
 import { GitCommit, GitStatus } from '../../../shared/types/git'
 import { FileContentWithDate, FileNode } from '@shared/types/file'
-import { AIConfig } from '../../../shared/types/ai'
+import { AIConfig, AIModel, ChatMessage, AIOptions, ChatSession, ChatSessionInfo } from '../../../shared/types/ai'
 
 export interface IFileAdapter {
   readFile(workspacePath: string, filePath: string): Promise<FileContentWithDate>
@@ -36,7 +36,13 @@ export interface IWorkspaceAdapter {
 }
 
 export interface IAIAdapter {
-  readConfig(workspacePath: string, configFilePath: string): Promise<AIConfig>
-  writeConfig(workspacePath: string, configFilePath: string, config: AIConfig): Promise<void>
-  getAIKey(): Promise<string | null>
+  readConfig(workspacePath: string): Promise<AIConfig>
+  writeConfig(workspacePath: string, config: AIConfig): Promise<void>
+  setAIKey(apiKey: string): Promise<void>
+  streamChat(model: AIModel, messages: ChatMessage[], options: AIOptions): Promise<string>
+  validateModel(model: AIModel): Promise<{ isValid: boolean; error?: string }>
+  saveChatSession(workspacePath: string, session: ChatSession): Promise<void>
+  loadChatSessions(workspacePath: string): Promise<ChatSessionInfo[]>
+  loadChatSession(workspacePath: string, sessionId: string): Promise<ChatSession | null>
+  deleteChatSession(workspacePath: string, sessionId: string): Promise<void>
 }

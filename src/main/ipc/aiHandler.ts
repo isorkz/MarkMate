@@ -1,11 +1,12 @@
 import { ipcMain } from 'electron'
 import { AIService } from '../../shared/services'
+import { AIModel, ChatMessage, AIOptions, ChatSession, AIConfig } from '../../shared/types/ai'
 
 export function setupAIHandlers() {
   // Read AI configuration
-  ipcMain.handle('ai-config:read', async (_, workspacePath: string, configFilePath: string) => {
+  ipcMain.handle('ai-config:read', async (_, workspacePath: string) => {
     try {
-      return await AIService.readConfig(workspacePath, configFilePath)
+      return await AIService.readConfig(workspacePath)
     } catch (error) {
       console.error('Error reading AI config:', error)
       throw error
@@ -13,9 +14,9 @@ export function setupAIHandlers() {
   })
 
   // Write AI configuration
-  ipcMain.handle('ai-config:write', async (_, workspacePath: string, configFilePath: string, config: any) => {
+  ipcMain.handle('ai-config:write', async (_, workspacePath: string, config: AIConfig) => {
     try {
-      await AIService.writeConfig(workspacePath, configFilePath, config)
+      await AIService.writeConfig(workspacePath, config)
       return true
     } catch (error) {
       console.error('Error writing AI config:', error)
@@ -23,12 +24,85 @@ export function setupAIHandlers() {
     }
   })
 
-  // Get environment variable API key
-  ipcMain.handle('ai-config:get-ai-key', () => {
+  // Set environment variable API key
+  ipcMain.handle('ai-config:set-ai-key', (_, apiKey: string) => {
     try {
-      return process.env.MARKMATE_AI_KEY || null
+      process.env.MARKMATE_AI_KEY = apiKey
     } catch (error) {
-      console.error('Error getting AI key from environment variable:', error)
+      console.error('Error setting AI key to environment variable:', error)
+      throw error
+    }
+  })
+
+  // Stream chat with AI
+  ipcMain.handle('ai-chat:stream', async (_, model: AIModel, messages: ChatMessage[], options: AIOptions) => {
+    try {
+      // Validate model configuration
+      const validation = AIService.validateModel(model)
+      if (!validation.isValid) {
+        throw new Error(validation.error)
+      }
+
+      const chunks: string[] = []
+      
+      // Collect all streaming chunks
+      for await (const chunk of AIService.streamChat(model, messages, options)) {
+        chunks.push(chunk)
+      }
+      
+      return chunks.join('')
+    } catch (error) {
+      console.error('Error in AI chat stream:', error)
+      throw error
+    }
+  })
+
+  // Validate AI model configuration
+  ipcMain.handle('ai-chat:validate-model', (_, model: AIModel) => {
+    try {
+      return AIService.validateModel(model)
+    } catch (error) {
+      console.error('Error validating AI model:', error)
+      return { isValid: false, error: 'Validation failed' }
+    }
+  })
+
+  // Save chat session
+  ipcMain.handle('ai-session:save', async (_, workspacePath: string, session: ChatSession) => {
+    try {
+      await AIService.saveChatSession(workspacePath, session)
+    } catch (error) {
+      console.error('Error saving chat session:', error)
+      throw error
+    }
+  })
+
+  // Load chat sessions list
+  ipcMain.handle('ai-session:load-list', async (_, workspacePath: string) => {
+    try {
+      return await AIService.loadChatSessions(workspacePath)
+    } catch (error) {
+      console.error('Error loading chat sessions:', error)
+      throw error
+    }
+  })
+
+  // Load specific chat session
+  ipcMain.handle('ai-session:load', async (_, workspacePath: string, sessionId: string) => {
+    try {
+      return await AIService.loadChatSession(workspacePath, sessionId)
+    } catch (error) {
+      console.error('Error loading chat session:', error)
+      throw error
+    }
+  })
+
+  // Delete chat session
+  ipcMain.handle('ai-session:delete', async (_, workspacePath: string, sessionId: string) => {
+    try {
+      await AIService.deleteChatSession(workspacePath, sessionId)
+    } catch (error) {
+      console.error('Error deleting chat session:', error)
       throw error
     }
   })

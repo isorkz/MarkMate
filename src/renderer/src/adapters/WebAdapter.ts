@@ -1,7 +1,7 @@
 import { IFileAdapter, IGitAdapter, IWorkspaceAdapter, IAIAdapter } from './interfaces'
 import { GitCommit, GitStatus } from '../../../shared/types/git'
 import { FileContentWithDate, FileNode } from '@shared/types/file'
-import { AIConfig } from '../../../shared/types/ai'
+import { AIConfig, AIModel, ChatMessage, AIOptions, ChatSession, ChatSessionInfo } from '../../../shared/types/ai'
 
 const API_BASE_URL = '/api'
 
@@ -179,15 +179,39 @@ export class WebWorkspaceAdapter implements IWorkspaceAdapter {
 }
 
 export class WebAIAdapter implements IAIAdapter {
-  async readConfig(_workspacePath: string, configFilePath: string): Promise<AIConfig> {
-    return ApiClient.post('/ai/read-config', { configFilePath })
+  async readConfig(_workspacePath: string): Promise<AIConfig> {
+    return ApiClient.post('/ai/read-config')
   }
 
-  async writeConfig(_workspacePath: string, configFilePath: string, config: AIConfig): Promise<void> {
-    await ApiClient.post('/ai/write-config', { configFilePath, config })
+  async writeConfig(_workspacePath: string, config: AIConfig): Promise<void> {
+    await ApiClient.post('/ai/write-config', { config })
   }
 
-  async getAIKey(): Promise<string | null> {
-    return ApiClient.get('/ai/get-ai-key')
+  async setAIKey(apiKey: string): Promise<void> {
+    await ApiClient.post('/ai/set-ai-key', { apiKey })
+  }
+
+  async streamChat(model: AIModel, messages: ChatMessage[], options: AIOptions): Promise<string> {
+    return ApiClient.post('/ai/stream-chat', { model, messages, options })
+  }
+
+  async validateModel(model: AIModel): Promise<{ isValid: boolean; error?: string }> {
+    return ApiClient.post('/ai/validate-model', { model })
+  }
+
+  async saveChatSession(_workspacePath: string, session: ChatSession): Promise<void> {
+    await ApiClient.post('/ai/save-session', { session })
+  }
+
+  async loadChatSessions(_workspacePath: string): Promise<ChatSessionInfo[]> {
+    return ApiClient.get('/ai/load-sessions')
+  }
+
+  async loadChatSession(_workspacePath: string, sessionId: string): Promise<ChatSession | null> {
+    return ApiClient.post('/ai/load-session', { sessionId })
+  }
+
+  async deleteChatSession(_workspacePath: string, sessionId: string): Promise<void> {
+    await ApiClient.post('/ai/delete-session', { sessionId })
   }
 }

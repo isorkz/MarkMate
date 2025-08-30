@@ -3,7 +3,7 @@ export interface AIModel {
   name: string
   provider: 'azure' | 'openai'
   model: string
-  apiKey?: string
+  apiKey: string
   baseURL?: string
 }
 
@@ -20,9 +20,11 @@ export interface ImageUrl {
 
 export type MessageContent = string | MultimodalContent[]
 
+export type MessageRole = 'user' | 'assistant' | 'system'
+
 export interface ChatMessage {
   id: string
-  role: 'user' | 'assistant' | 'system'
+  role: MessageRole
   content: MessageContent
   timestamp: string
   metadata?: {
@@ -30,6 +32,8 @@ export interface ChatMessage {
     tokenUsage?: number
   }
 }
+
+export type ChatSessionInfo = Omit<ChatSession, 'messages'>
 
 export interface ChatSession {
   id: string
@@ -44,9 +48,8 @@ export interface AIOptions {
   maxTokens?: number
 }
 
-// Configuration stored in file (without sensitive data like API keys)
 export interface AIConfig {
-  models: Omit<AIModel, 'apiKey'>[]
+  models: AIModel[]
   currentModelId: string | null
   options: AIOptions
 }

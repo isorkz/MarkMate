@@ -5,7 +5,7 @@ import { useAIStore } from '../../stores/aiStore'
 import { AIModel } from '../../../../shared/types/ai'
 
 const AISettings: React.FC = () => {
-  const { config, addModel, updateModel, deleteModel, setDefaultModel, updateOptions } = useAIStore()
+  const { config, addModel, updateModel, deleteModel, setDefaultModel, updateModelOptions } = useAIStore()
   const currentModelId = config.currentModelId
   const models = config.models as AIModel[]
   const options = config.options
@@ -88,7 +88,7 @@ const AISettings: React.FC = () => {
       name: formData.name.trim(),
       provider: formData.provider,
       model: formData.model.trim(),
-      apiKey: formData.apiKey.trim() || undefined,
+      apiKey: formData.apiKey.trim(),
       baseURL: formData.baseURL.trim() || undefined
     }
 
@@ -298,7 +298,7 @@ const AISettings: React.FC = () => {
               step="0.1"
               className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               value={options.temperature}
-              onChange={(e) => updateOptions({ temperature: parseFloat(e.target.value) })}
+              onChange={(e) => updateModelOptions({ temperature: parseFloat(e.target.value) })}
             />
             <p className="text-xs text-gray-500 mt-1">Controls randomness (0.0 - 2.0)</p>
           </div>
@@ -312,7 +312,7 @@ const AISettings: React.FC = () => {
               max="500000"
               className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               value={options.maxTokens}
-              onChange={(e) => updateOptions({ maxTokens: parseInt(e.target.value) })}
+              onChange={(e) => updateModelOptions({ maxTokens: parseInt(e.target.value) })}
             />
             <p className="text-xs text-gray-500 mt-1">Maximum response length</p>
           </div>

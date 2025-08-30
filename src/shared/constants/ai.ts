@@ -3,7 +3,7 @@ import { AIConfig } from '../types/ai'
 // AI configuration file paths
 export const AI_CONFIG_DIR = '.ai'
 export const AI_CONFIG_FILE = 'config.json'
-export const AI_CONFIG_PATH = `${AI_CONFIG_DIR}/${AI_CONFIG_FILE}`
+export const AI_SESSIONS_DIR = 'sessions'
 
 // Default AI options
 export const DEFAULT_TEMPERATURE = 0.7

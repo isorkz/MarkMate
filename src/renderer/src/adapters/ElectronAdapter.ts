@@ -1,7 +1,7 @@
 import { IFileAdapter, IGitAdapter, IWorkspaceAdapter, IAIAdapter } from './interfaces'
 import { GitCommit, GitStatus } from '../../../shared/types/git'
 import { FileContentWithDate, FileNode } from '@shared/types/file'
-import { AIConfig } from '../../../shared/types/ai'
+import { AIConfig, AIModel, ChatMessage, AIOptions, ChatSession, ChatSessionInfo } from '../../../shared/types/ai'
 
 export class ElectronFileAdapter implements IFileAdapter {
   async readFile(workspacePath: string, filePath: string): Promise<FileContentWithDate> {
@@ -107,15 +107,39 @@ export class ElectronWorkspaceAdapter implements IWorkspaceAdapter {
 }
 
 export class ElectronAIAdapter implements IAIAdapter {
-  async readConfig(workspacePath: string, configFilePath: string): Promise<AIConfig> {
-    return window.electron.ipcRenderer.invoke('ai-config:read', workspacePath, configFilePath)
+  async readConfig(workspacePath: string): Promise<AIConfig> {
+    return window.electron.ipcRenderer.invoke('ai-config:read', workspacePath)
   }
 
-  async writeConfig(workspacePath: string, configFilePath: string, config: AIConfig): Promise<void> {
-    await window.electron.ipcRenderer.invoke('ai-config:write', workspacePath, configFilePath, config)
+  async writeConfig(workspacePath: string, config: AIConfig): Promise<void> {
+    await window.electron.ipcRenderer.invoke('ai-config:write', workspacePath, config)
   }
 
-  async getAIKey(): Promise<string | null> {
-    return window.electron.ipcRenderer.invoke('ai-config:get-ai-key')
+  async setAIKey(apiKey: string): Promise<void> {
+    await window.electron.ipcRenderer.invoke('ai-config:set-ai-key', apiKey)
+  }
+
+  async streamChat(model: AIModel, messages: ChatMessage[], options: AIOptions): Promise<string> {
+    return window.electron.ipcRenderer.invoke('ai-chat:stream', model, messages, options)
+  }
+
+  async validateModel(model: AIModel): Promise<{ isValid: boolean; error?: string }> {
+    return window.electron.ipcRenderer.invoke('ai-chat:validate-model', model)
+  }
+
+  async saveChatSession(workspacePath: string, session: ChatSession): Promise<void> {
+    await window.electron.ipcRenderer.invoke('ai-session:save', workspacePath, session)
+  }
+
+  async loadChatSessions(workspacePath: string): Promise<ChatSessionInfo[]> {
+    return window.electron.ipcRenderer.invoke('ai-session:load-list', workspacePath)
+  }
+
+  async loadChatSession(workspacePath: string, sessionId: string): Promise<ChatSession | null> {
+    return window.electron.ipcRenderer.invoke('ai-session:load', workspacePath, sessionId)
+  }
+
+  async deleteChatSession(workspacePath: string, sessionId: string): Promise<void> {
+    await window.electron.ipcRenderer.invoke('ai-session:delete', workspacePath, sessionId)
   }
 }
