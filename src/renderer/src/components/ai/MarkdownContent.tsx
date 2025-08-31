@@ -16,17 +16,25 @@ const MarkdownContent: React.FC<MarkdownContentProps> = ({ content, isStreaming 
         components={{
           code({ node, className, children, ...props }) {
             const match = /language-(\w+)/.exec(className || '')
-            return match ? (
-              <ChatCodeBlock
-                language={match[1]}
-                value={String(children).replace(/\n$/, '')}
-                {...props}
-              />
-            ) : (
-              <code className={className} {...props}>
-                {children}
-              </code>
-            )
+
+            // Check if it's inline code by checking if className starts with 'language-'
+            // Block code has 'language-xxx' or no className, inline code typically has no className
+            const isBlockCode = className?.startsWith('language-') || String(children).includes('\n')
+
+            if (isBlockCode) {
+              return (
+                <ChatCodeBlock
+                  language={match ? match[1] : ''}
+                  value={String(children).replace(/\n$/, '')}
+                />
+              )
+            } else {
+              return (
+                <code className={className} {...props}>
+                  {children}
+                </code>
+              )
+            }
           },
         }}
       >

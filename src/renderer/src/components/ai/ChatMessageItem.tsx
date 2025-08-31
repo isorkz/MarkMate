@@ -77,10 +77,9 @@ const ChatMessageItem: React.FC<ChatMessageProps> = ({ message, isStreaming }) =
       {/* Message Content with Actions */}
       <div className="flex-1 max-w-[80%] relative">
         <div
-          className={`rounded-lg select-text px-4 py-3 ${
-            isEditing 
-              ? 'bg-white border border-gray-200'
-              : isUser
+          className={`rounded-lg select-text px-4 py-3 ${isEditing
+            ? 'bg-white border border-gray-200'
+            : isUser
               ? 'bg-blue-500 text-white'
               : 'bg-white border border-gray-200'
             }`}
