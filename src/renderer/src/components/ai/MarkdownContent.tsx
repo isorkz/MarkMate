@@ -53,7 +53,7 @@ const MarkdownContent: React.FC<MarkdownContentProps> = ({ content, isStreaming 
                 {children}
               </a>
             )
-          },
+          }
         }}
       >
         {content}
