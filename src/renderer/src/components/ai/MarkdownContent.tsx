@@ -36,6 +36,24 @@ const MarkdownContent: React.FC<MarkdownContentProps> = ({ content, isStreaming 
               )
             }
           },
+          a({ href, children, ...props }) {
+            return (
+              <a
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => {
+                  e.preventDefault()
+                  if (href) {
+                    window.open(href, '_blank')
+                  }
+                }}
+                {...props}
+              >
+                {children}
+              </a>
+            )
+          },
         }}
       >
         {content}
