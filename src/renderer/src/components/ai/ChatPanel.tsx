@@ -2,6 +2,7 @@ import React, { useEffect } from 'react'
 import { Settings } from 'lucide-react'
 import { useSettingsStore } from '../../stores/settingsStore'
 import { useAIStore } from '../../stores/aiStore'
+import ChatMessageItem from './ChatMessageItem'
 
 const ChatPanel: React.FC = () => {
   const { openSettings } = useSettingsStore()
@@ -25,24 +26,13 @@ const ChatPanel: React.FC = () => {
     <div className="flex-1 overflow-y-auto p-4">
       {/* Messages */}
       {hasChatMessages ? (
-        <div className="space-y-4">
+        <div className="space-y-1">
           {messages.map((message) => (
-            <div
+            <ChatMessageItem
               key={message.id}
-              className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-            >
-              <div
-                className={`rounded-2xl px-4 py-2 max-w-xs shadow-sm ${message.role === 'user'
-                  ? 'bg-blue-500 text-white rounded-br-sm'
-                  : 'bg-gray-100 text-gray-900 rounded-bl-sm'
-                  }`}
-              >
-                {typeof message.content === 'string' ? message.content : JSON.stringify(message.content)}
-                {isStreaming && streamingMessageId === message.id && (
-                  <span className="inline-block w-2 h-4 bg-current opacity-75 animate-pulse ml-1">|</span>
-                )}
-              </div>
-            </div>
+              message={message}
+              isStreaming={isStreaming && streamingMessageId === message.id}
+            />
           ))}
 
           {/* Error Message */}
