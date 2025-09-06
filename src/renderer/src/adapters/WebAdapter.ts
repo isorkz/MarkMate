@@ -16,39 +16,16 @@ const getAccessToken = (): string => {
 }
 
 class ApiClient {
-  static async post(endpoint: string, data: any = {}) {
+  private static async makeRequest(endpoint: string, options: RequestInit = {}) {
     const token = getAccessToken()
-    const headers: any = {
-      'Content-Type': 'application/json'
-    }
+    const headers: any = { ...options.headers }
     
     if (token) {
       headers['Authorization'] = `Bearer ${token}`
     }
 
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(data)
-    })
-
-    if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error || 'API request failed')
-    }
-
-    return response.json()
-  }
-
-  static async get(endpoint: string) {
-    const token = getAccessToken()
-    const headers: any = {}
-    
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`
-    }
-
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      ...options,
       headers
     })
 
@@ -57,7 +34,29 @@ class ApiClient {
       throw new Error(error.error || 'API request failed')
     }
 
+    return response
+  }
+
+  static async post(endpoint: string, data: any = {}) {
+    const response = await this.makeRequest(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    })
     return response.json()
+  }
+
+  static async get(endpoint: string) {
+    const response = await this.makeRequest(endpoint)
+    return response.json()
+  }
+
+  static async postStream(endpoint: string, data: any = {}) {
+    return this.makeRequest(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    })
   }
 }
 
@@ -69,7 +68,6 @@ export class WebFileAdapter implements IFileAdapter {
       lastModified: new Date(result.lastModified)
     }
   }
-
 
   async writeFile(_workspacePath: string, filePath: string, content: string): Promise<void> {
     await ApiClient.post('/file/write', { filePath, content })
@@ -191,14 +189,6 @@ export class WebAIAdapter implements IAIAdapter {
     await ApiClient.post('/ai/set-ai-key', { apiKey })
   }
 
-  async streamChat(model: AIModel, messages: ChatMessage[], options: AIOptions): Promise<string> {
-    return ApiClient.post('/ai/stream-chat', { model, messages, options })
-  }
-
-  async validateModel(model: AIModel): Promise<{ isValid: boolean; error?: string }> {
-    return ApiClient.post('/ai/validate-model', { model })
-  }
-
   async saveChatSession(_workspacePath: string, session: ChatSession): Promise<void> {
     await ApiClient.post('/ai/save-session', { session })
   }
@@ -213,5 +203,40 @@ export class WebAIAdapter implements IAIAdapter {
 
   async deleteChatSession(_workspacePath: string, sessionId: string): Promise<void> {
     await ApiClient.post('/ai/delete-session', { sessionId })
+  }
+
+  async validateModel(model: AIModel): Promise<{ isValid: boolean; error?: string }> {
+    return ApiClient.post('/ai/validate-model', { model })
+  }
+
+  async streamChat(model: AIModel, messages: ChatMessage[], options: AIOptions, onChunk: (chunk: string) => void, onComplete: () => void, onError: (error: string) => void): Promise<void> {
+    try {
+      const response = await ApiClient.postStream('/ai/stream-chat', { model, messages, options })
+
+      if (!response.body) {
+        onError('No response body')
+        return
+      }
+
+      const reader = response.body.getReader()
+      const decoder = new TextDecoder()
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+          
+          const chunk = decoder.decode(value, { stream: true })
+          if (chunk) {
+            onChunk(chunk)
+          }
+        }
+        onComplete()
+      } finally {
+        reader.releaseLock()
+      }
+    } catch (error) {
+      onError(error instanceof Error ? error.message : 'Unknown error')
+    }
   }
 }

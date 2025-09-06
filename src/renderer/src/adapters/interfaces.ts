@@ -39,10 +39,10 @@ export interface IAIAdapter {
   readConfig(workspacePath: string): Promise<AIConfig>
   writeConfig(workspacePath: string, config: AIConfig): Promise<void>
   setAIKey(apiKey: string): Promise<void>
-  streamChat(model: AIModel, messages: ChatMessage[], options: AIOptions): Promise<string>
-  validateModel(model: AIModel): Promise<{ isValid: boolean; error?: string }>
   saveChatSession(workspacePath: string, session: ChatSession): Promise<void>
   loadChatSessions(workspacePath: string): Promise<ChatSessionInfo[]>
   loadChatSession(workspacePath: string, sessionId: string): Promise<ChatSession | null>
   deleteChatSession(workspacePath: string, sessionId: string): Promise<void>
+  validateModel(model: AIModel): Promise<{ isValid: boolean; error?: string }>
+  streamChat(model: AIModel, messages: ChatMessage[], options: AIOptions, onChunk: (chunk: string) => void, onComplete: () => void, onError: (error: string) => void): Promise<void>
 }

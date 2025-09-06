@@ -49,7 +49,7 @@ const createEmptyChatSession = (): ChatSession => ({
 })
 
 const createChatMessage = (role: MessageRole, content: string): ChatMessage => ({
-  id: `msg-${Date.now()}`,
+  id: `msg-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
   role,
   content,
   timestamp: new Date().toISOString()
@@ -286,8 +286,8 @@ export const useAIStore = create<AIStore>((set, get) => ({
     return message
   },
 
-  // Update a message content (for streaming)
-  updateMessage: (id: string, content: string, append: boolean = false) => {
+  // Update a message content
+  updateMessage: (id: string, content: string, persist: boolean = true) => {
     set(state => {
       if (!state.currentSession) return state
       
@@ -295,9 +295,7 @@ export const useAIStore = create<AIStore>((set, get) => ({
         if (msg.id === id) {
           return {
             ...msg,
-            content: append ? 
-              (typeof msg.content === 'string' ? msg.content + content : content) : 
-              content
+            content
           }
         }
         return msg
@@ -320,11 +318,13 @@ export const useAIStore = create<AIStore>((set, get) => ({
       }
     })
     
-    // Auto-save session after updating message
-    const state = get()
-    if (state.currentSession) {
-      const session = state.currentSession
-      setTimeout(() => saveCurrentSession(session), 100)
+    // Conditionally save session
+    if (persist) {
+      const state = get()
+      if (state.currentSession) {
+        const session = state.currentSession
+        setTimeout(() => saveCurrentSession(session), 100)
+      }
     }
   },
 
@@ -345,46 +345,68 @@ export const useAIStore = create<AIStore>((set, get) => ({
       // Add user message
       get().addMessage('user', content)
       
-      // Set streaming state
-      set({ isStreaming: true })
-      
       // Get all messages for context
       const currentState = get()
       const messages = currentState.currentSession?.messages || []
       
-      // Call AI API
-      const response = await adapters.aiAdapter.streamChat(
+      // Create empty assistant message for streaming
+      const assistantMessage = get().addMessage('assistant', '')
+      
+      // Set streaming state
+      set({ 
+        isStreaming: true,
+        streamingMessageId: assistantMessage.id
+      })
+      
+      // Stream AI response
+      let fullResponse = ''
+      
+      await adapters.aiAdapter.streamChat(
         model,
         messages,
-        state.config.options
-      )
-      
-      // Add assistant message with response
-      get().addMessage('assistant', response)
-      
-      // Update session title if it's the first message
-      const finalState = get()
-      if (finalState.currentSession && finalState.currentSession.messages.length === 2) {
-        const updatedSession = {
-          ...finalState.currentSession,
-          title: content.slice(0, 50) + (content.length > 50 ? '...' : '')
+        state.config.options,
+        (chunk: string) => {
+          // Handle chunk
+          fullResponse += chunk
+          get().updateMessage(assistantMessage.id, fullResponse, false)
+        },
+        () => {
+          // Handle completion
+          // Update session title if it's the first message
+          const finalState = get()
+          if (finalState.currentSession && finalState.currentSession.messages.length === 2) {
+            const updatedSession = {
+              ...finalState.currentSession,
+              title: content.slice(0, 50) + (content.length > 50 ? '...' : '')
+            }
+            
+            set({
+              currentSession: updatedSession,
+              sessions: finalState.sessions.map(s => 
+                s.id === updatedSession.id ? updatedSession : s
+              )
+            })
+          }
+          
+          // Final persist after streaming is complete
+          get().updateMessage(assistantMessage.id, fullResponse, true)
+        },
+        (error: string) => {
+          // Handle error
+          console.error('Stream chat error:', error)
+          set({ error })
         }
-        
-        set({
-          currentSession: updatedSession,
-          sessions: finalState.sessions.map(s => 
-            s.id === updatedSession.id ? updatedSession : s
-          )
-        })
-      }
-      
+      )
     } catch (error) {
       console.error('Error sending message:', error)
       const errorMessage = error instanceof Error ? error.message : 'Failed to send message'
       set({ error: errorMessage })
     } finally {
       // Reset streaming state
-      set({ isStreaming: false })
+      set({ 
+        isStreaming: false,
+        streamingMessageId: null
+      })
     }
   }
 }))

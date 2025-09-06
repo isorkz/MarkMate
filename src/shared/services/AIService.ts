@@ -70,90 +70,6 @@ export class AIService {
   }
 
   /**
-   * Stream chat with AI model
-   */
-  static async *streamChat(
-    model: AIModel,
-    messages: ChatMessage[],
-    options: AIOptions
-  ): AsyncGenerator<string, void, unknown> {
-    try {
-      // Create AI provider and model instance
-      let aiProvider
-      
-      switch (model.provider) {
-        case 'openai':
-          aiProvider = createOpenAI({
-            apiKey: model.apiKey,
-            ...(model.baseURL && { baseURL: model.baseURL })
-          })
-          break
-        case 'azure':
-          // https://ai-sdk.dev/providers/ai-sdk-providers/azure
-          if (!model.baseURL) {
-            throw new Error('Base URL is required for Azure OpenAI')
-          }
-          // Extract resource name from baseURL
-          const resourceMatch = model.baseURL.match(/https:\/\/(.*?)\.openai\.azure\.com/)
-          if (!resourceMatch) {
-            throw new Error('Invalid Azure OpenAI baseURL format')
-          }
-          aiProvider = createAzure({
-            resourceName: resourceMatch[1],
-            apiKey: model.apiKey,
-            // apiVersion: '2025-04-01-preview'  // https://learn.microsoft.com/en-us/azure/ai-foundry/openai/api-version-lifecycle?tabs=key
-          })
-          break
-        default:
-          throw new Error(`Unsupported provider: ${model.provider}`)
-      }
-      
-      const aiModel = aiProvider.chat(model.model)
-
-      // Format messages for AI SDK
-      const formattedMessages = messages.map(msg => ({
-        role: msg.role as 'user' | 'assistant' | 'system',
-        content: typeof msg.content === 'string' ? msg.content : JSON.stringify(msg.content)
-      }))
-
-      // Stream chat completion
-      const result = await streamText({
-        model: aiModel,
-        messages: formattedMessages,
-        temperature: options.temperature || DEFAULT_TEMPERATURE
-      })
-
-      // Yield text chunks as they arrive
-      for await (const textPart of result.textStream) {
-        yield textPart
-      }
-      
-    } catch (error) {
-      console.error('Error in AI chat stream:', error)
-      throw error
-    }
-  }
-
-  /**
-   * Validate AI model configuration
-   */
-  static validateModel(model: AIModel): { isValid: boolean; error?: string } {
-    if (!model.apiKey) {
-      return { isValid: false, error: 'API key is required' }
-    }
-
-    if (!model.model) {
-      return { isValid: false, error: 'Model name is required' }
-    }
-
-    if (model.provider === 'azure' && !model.baseURL) {
-      return { isValid: false, error: 'Base URL is required for Azure OpenAI' }
-    }
-
-    return { isValid: true }
-  }
-
-  /**
    * Save a chat session to file
    */
   static async saveChatSession(workspacePath: string, session: ChatSession): Promise<void> {
@@ -232,6 +148,127 @@ export class AIService {
       await fs.unlink(sessionPath)
     } catch (error) {
       console.error('Error deleting chat session:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Validate AI model configuration
+   */
+  static validateModel(model: AIModel): { isValid: boolean; error?: string } {
+    if (!model.apiKey) {
+      return { isValid: false, error: 'API key is required' }
+    }
+
+    if (!model.model) {
+      return { isValid: false, error: 'Model name is required' }
+    }
+
+    if (model.provider === 'azure' && !model.baseURL) {
+      return { isValid: false, error: 'Base URL is required for Azure OpenAI' }
+    }
+
+    return { isValid: true }
+  }
+
+  /**
+   * Core streaming logic - shared by platform-specific methods
+   */
+  private static async streamChat(
+    model: AIModel,
+    messages: ChatMessage[],
+    options: AIOptions,
+    abortSignal?: AbortSignal
+  ) {
+    try {
+      // Create AI provider and model instance
+      let aiProvider
+      
+      switch (model.provider) {
+        case 'openai':
+          aiProvider = createOpenAI({
+            apiKey: model.apiKey,
+            ...(model.baseURL && { baseURL: model.baseURL })
+          })
+          break
+        case 'azure':
+          // https://ai-sdk.dev/providers/ai-sdk-providers/azure
+          if (!model.baseURL) {
+            throw new Error('Base URL is required for Azure OpenAI')
+          }
+          // Extract resource name from baseURL
+          const resourceMatch = model.baseURL.match(/https:\/\/(.*?)\.openai\.azure\.com/)
+          if (!resourceMatch) {
+            throw new Error('Invalid Azure OpenAI baseURL format')
+          }
+          aiProvider = createAzure({
+            resourceName: resourceMatch[1],
+            apiKey: model.apiKey,
+            // apiVersion: '2025-04-01-preview'  // https://learn.microsoft.com/en-us/azure/ai-foundry/openai/api-version-lifecycle?tabs=key
+          })
+          break
+        default:
+          throw new Error(`Unsupported provider: ${model.provider}`)
+      }
+      
+      const aiModel = aiProvider.chat(model.model)
+
+      // Format messages for AI SDK
+      const formattedMessages = messages.map(msg => ({
+        role: msg.role as 'user' | 'assistant' | 'system',
+        content: typeof msg.content === 'string' ? msg.content : JSON.stringify(msg.content)
+      }))
+
+      // Stream chat completion
+      return await streamText({
+        model: aiModel,
+        messages: formattedMessages,
+        temperature: options.temperature || DEFAULT_TEMPERATURE,
+        abortSignal
+      })
+      
+    } catch (error) {
+      console.error('Error in AI chat stream:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Stream chat for Electron - returns AsyncIterable with cancellation
+   */
+  static async streamChatForElectron(
+    model: AIModel,
+    messages: ChatMessage[],
+    options: AIOptions
+  ): Promise<{ stream: AsyncIterable<string>; cancel: () => void }> {
+    try {
+      const abortController = new AbortController()
+      const result = await this.streamChat(model, messages, options, abortController.signal)
+      
+      return {
+        stream: result.textStream,
+        cancel: () => abortController.abort()
+      }
+    } catch (error) {
+      console.error('Error in AI chat stream for Electron:', error)
+      throw error
+    }
+  }
+  
+  /**
+   * Stream chat for Web - returns HTTP Response
+   */
+  static async streamChatForWeb(
+    model: AIModel,
+    messages: ChatMessage[],
+    options: AIOptions,
+    abortSignal?: AbortSignal
+  ): Promise<Response> {
+    try {
+      const result = await this.streamChat(model, messages, options, abortSignal)
+      return result.toTextStreamResponse()
+    } catch (error) {
+      console.error('Error in AI chat stream for Web:', error)
       throw error
     }
   }

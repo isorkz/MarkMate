@@ -29,12 +29,14 @@ app.get('/health', (req, res) => {
 import fileRoutes from './routes/file'
 import gitRoutes from './routes/git'
 import workspaceRoutes from './routes/workspace'
+import aiRoutes from './routes/ai'
 
 // Apply authentication to all API routes
 app.use('/api', tokenAuth)
 app.use('/api/file', fileRoutes)
 app.use('/api/git', gitRoutes)
 app.use('/api/workspace', workspaceRoutes)
+app.use('/api/ai', aiRoutes)
 
 // Serve React app for all other routes (SPA fallback)
 app.get('*', (req, res) => {

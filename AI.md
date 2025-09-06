@@ -79,3 +79,20 @@ The `config.json` file stores non-sensitive model configurations:
 - ✅ Configuration files can be safely committed to git
 - ✅ Each session requires fresh key input (unless environment variable is set)
 - ✅ No risk of accidentally sharing sensitive information
+
+## Streaming Architecture
+
+### Data Flow
+
+**For Electron version:**
+```
+UI → ElectronAdapter → IPC → AIHandler → AIService.streamChatForElectron() → return AsyncIterable<string>
+```
+
+**Challenge**: IPC cannot serialize callback functions
+**Solution**: Event-based streaming with unique stream IDs
+
+**For Web version:**
+```
+UI → WebAdapter → HTTP API → Router → AIService.streamChatForWeb() → return HTTP Response Stream
+```

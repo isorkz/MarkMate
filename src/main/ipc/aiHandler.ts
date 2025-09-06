@@ -34,39 +34,6 @@ export function setupAIHandlers() {
     }
   })
 
-  // Stream chat with AI
-  ipcMain.handle('ai-chat:stream', async (_, model: AIModel, messages: ChatMessage[], options: AIOptions) => {
-    try {
-      // Validate model configuration
-      const validation = AIService.validateModel(model)
-      if (!validation.isValid) {
-        throw new Error(validation.error)
-      }
-
-      const chunks: string[] = []
-      
-      // Collect all streaming chunks
-      for await (const chunk of AIService.streamChat(model, messages, options)) {
-        chunks.push(chunk)
-      }
-      
-      return chunks.join('')
-    } catch (error) {
-      console.error('Error in AI chat stream:', error)
-      throw error
-    }
-  })
-
-  // Validate AI model configuration
-  ipcMain.handle('ai-chat:validate-model', (_, model: AIModel) => {
-    try {
-      return AIService.validateModel(model)
-    } catch (error) {
-      console.error('Error validating AI model:', error)
-      return { isValid: false, error: 'Validation failed' }
-    }
-  })
-
   // Save chat session
   ipcMain.handle('ai-session:save', async (_, workspacePath: string, session: ChatSession) => {
     try {
@@ -104,6 +71,44 @@ export function setupAIHandlers() {
     } catch (error) {
       console.error('Error deleting chat session:', error)
       throw error
+    }
+  })
+
+  // Validate AI model configuration
+  ipcMain.handle('ai-chat:validate-model', (_, model: AIModel) => {
+    try {
+      return AIService.validateModel(model)
+    } catch (error) {
+      console.error('Error validating AI model:', error)
+      return { isValid: false, error: 'Validation failed' }
+    }
+  })
+
+  // Stream chat with AI
+  ipcMain.handle('ai-chat:stream', async (event, streamId: string, model: AIModel, messages: ChatMessage[], options: AIOptions) => {
+    try {
+      // Validate model configuration
+      const validation = AIService.validateModel(model)
+      if (!validation.isValid) {
+        event.sender.send('ai-chat:stream-chunk', { id: streamId, error: validation.error })
+        return
+      }
+
+      // Get stream from AIService
+      const { stream } = await AIService.streamChatForElectron(model, messages, options)
+      
+      // Stream chunks to renderer
+      for await (const chunk of stream) {
+        event.sender.send('ai-chat:stream-chunk', { id: streamId, chunk })
+      }
+      
+      // Signal completion
+      event.sender.send('ai-chat:stream-chunk', { id: streamId, complete: true })
+      
+    } catch (error) {
+      console.error('Error in AI chat stream:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      event.sender.send('ai-chat:stream-chunk', { id: streamId, error: errorMessage })
     }
   })
 }

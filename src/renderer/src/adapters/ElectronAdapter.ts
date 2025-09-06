@@ -119,14 +119,6 @@ export class ElectronAIAdapter implements IAIAdapter {
     await window.electron.ipcRenderer.invoke('ai-config:set-ai-key', apiKey)
   }
 
-  async streamChat(model: AIModel, messages: ChatMessage[], options: AIOptions): Promise<string> {
-    return window.electron.ipcRenderer.invoke('ai-chat:stream', model, messages, options)
-  }
-
-  async validateModel(model: AIModel): Promise<{ isValid: boolean; error?: string }> {
-    return window.electron.ipcRenderer.invoke('ai-chat:validate-model', model)
-  }
-
   async saveChatSession(workspacePath: string, session: ChatSession): Promise<void> {
     await window.electron.ipcRenderer.invoke('ai-session:save', workspacePath, session)
   }
@@ -141,5 +133,34 @@ export class ElectronAIAdapter implements IAIAdapter {
 
   async deleteChatSession(workspacePath: string, sessionId: string): Promise<void> {
     await window.electron.ipcRenderer.invoke('ai-session:delete', workspacePath, sessionId)
+  }
+
+  async validateModel(model: AIModel): Promise<{ isValid: boolean; error?: string }> {
+    return window.electron.ipcRenderer.invoke('ai-chat:validate-model', model)
+  }
+
+  async streamChat(model: AIModel, messages: ChatMessage[], options: AIOptions, onChunk: (chunk: string) => void, onComplete: () => void, onError: (error: string) => void): Promise<void> {
+    const streamId = `stream-${Date.now()}-${Math.random()}`
+    
+    // Set up event listener for stream chunks
+    const chunkHandler = (_event: any, data: { id: string, chunk?: string, error?: string, complete?: boolean }) => {
+      if (data.id === streamId) {
+        if (data.error) {
+          onError(data.error)
+          window.electron.ipcRenderer.removeListener('ai-chat:stream-chunk', chunkHandler)
+        } else if (data.complete) {
+          onComplete()
+          window.electron.ipcRenderer.removeListener('ai-chat:stream-chunk', chunkHandler)
+        } else if (data.chunk !== undefined) {
+          onChunk(data.chunk)
+        }
+      }
+    }
+    
+    // Register the event listener
+    window.electron.ipcRenderer.on('ai-chat:stream-chunk', chunkHandler)
+    
+    // Start the stream
+    window.electron.ipcRenderer.invoke('ai-chat:stream', streamId, model, messages, options)
   }
 }
