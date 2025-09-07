@@ -18,7 +18,7 @@ export default defineConfig(({ mode }) => {
     build: {
       outDir: resolve(__dirname, 'web-server/dist/frontend'),
       emptyOutDir: true,
-      chunkSizeWarningLimit: 1500,
+      chunkSizeWarningLimit: 2000,
       rollupOptions: {
         output: {
           manualChunks: {

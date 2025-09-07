@@ -1,5 +1,5 @@
 import express from 'express'
-import { AIService } from '../../../src/shared/services'
+import { AIPersistService } from '../../../src/shared/services'
 import { config } from '../config/environment'
 
 const router = express.Router()
@@ -7,7 +7,7 @@ const router = express.Router()
 // Read AI configuration
 router.post('/read-config', async (req, res, next) => {
   try {
-    const aiConfig = await AIService.readConfig(config.workspacePath)
+    const aiConfig = await AIPersistService.readConfig(config.workspacePath)
     res.json(aiConfig)
   } catch (error) {
     next(error)
@@ -18,7 +18,7 @@ router.post('/read-config', async (req, res, next) => {
 router.post('/write-config', async (req, res, next) => {
   try {
     const { config: aiConfig } = req.body
-    await AIService.writeConfig(config.workspacePath, aiConfig)
+    await AIPersistService.writeConfig(config.workspacePath, aiConfig)
     res.json({ success: true })
   } catch (error) {
     next(error)
@@ -42,7 +42,7 @@ router.post('/set-ai-key', async (req, res, next) => {
 router.post('/save-session', async (req, res, next) => {
   try {
     const { session } = req.body
-    await AIService.saveChatSession(config.workspacePath, session)
+    await AIPersistService.saveChatSession(config.workspacePath, session)
     res.json({ success: true })
   } catch (error) {
     next(error)
@@ -52,7 +52,7 @@ router.post('/save-session', async (req, res, next) => {
 // Load chat sessions list
 router.get('/load-sessions', async (req, res, next) => {
   try {
-    const sessions = await AIService.loadChatSessions(config.workspacePath)
+    const sessions = await AIPersistService.loadChatSessions(config.workspacePath)
     res.json(sessions)
   } catch (error) {
     next(error)
@@ -63,7 +63,7 @@ router.get('/load-sessions', async (req, res, next) => {
 router.post('/load-session', async (req, res, next) => {
   try {
     const { sessionId } = req.body
-    const session = await AIService.loadChatSession(config.workspacePath, sessionId)
+    const session = await AIPersistService.loadChatSession(config.workspacePath, sessionId)
     res.json(session)
   } catch (error) {
     next(error)
@@ -74,7 +74,7 @@ router.post('/load-session', async (req, res, next) => {
 router.post('/delete-session', async (req, res, next) => {
   try {
     const { sessionId } = req.body
-    await AIService.deleteChatSession(config.workspacePath, sessionId)
+    await AIPersistService.deleteChatSession(config.workspacePath, sessionId)
     res.json({ success: true })
   } catch (error) {
     next(error)

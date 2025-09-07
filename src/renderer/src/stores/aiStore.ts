@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { AIModel, AIConfig, AIOptions, ChatMessage, ChatSession, MessageRole, ChatSessionInfo } from '../../../shared/types/ai'
 import { DEFAULT_AI_CONFIG, DEFAULT_CHAT_TITLE } from '../../../shared/constants/ai'
-import { AIService } from '../../../shared/services/AIService'
+import { AIChatService } from '../../../shared/services/AIChatService'
 import { adapters } from '../adapters'
 import { persistAIConfig, saveCurrentSession } from '../utils/aiPersistHelper'
 import { useWorkspaceStore } from './workspaceStore'
@@ -337,7 +337,7 @@ export const useAIStore = create<AIStore>((set, get) => ({
   // Send a message and get AI response
   streamChat: async (content: string, model: AIModel) => {
     // Validate model configuration
-    const validation = AIService.validateModel(model)
+    const validation = AIChatService.validateModel(model)
     if (!validation.isValid) {
       set({ error: validation.error })
       return
@@ -375,7 +375,7 @@ export const useAIStore = create<AIStore>((set, get) => ({
       // Get all messages for context (refresh after adding messages)
       const messages = get().currentSession?.messages || []
 
-      await AIService.streamChat(
+      await AIChatService.streamChat(
         model, 
         messages, 
         config.options,
