@@ -1,13 +1,12 @@
 import { IFileAdapter, IGitAdapter, IWorkspaceAdapter, IAIAdapter } from './interfaces'
 import { GitCommit, GitStatus } from '../../../shared/types/git'
 import { FileContentWithDate, FileNode } from '@shared/types/file'
-import { AIConfig, AIModel, ChatMessage, AIOptions, ChatSession, ChatSessionInfo } from '../../../shared/types/ai'
+import { AIConfig, ChatSession, ChatSessionInfo } from '../../../shared/types/ai'
 
 export class ElectronFileAdapter implements IFileAdapter {
   async readFile(workspacePath: string, filePath: string): Promise<FileContentWithDate> {
     return window.electron.ipcRenderer.invoke('file:read', workspacePath, filePath)
   }
-
 
   async writeFile(workspacePath: string, filePath: string, content: string): Promise<void> {
     await window.electron.ipcRenderer.invoke('file:write', workspacePath, filePath, content)
@@ -117,14 +116,6 @@ export class ElectronAIAdapter implements IAIAdapter {
 
   async setAIKey(apiKey: string): Promise<void> {
     await window.electron.ipcRenderer.invoke('ai-config:set-ai-key', apiKey)
-  }
-
-  async streamChat(model: AIModel, messages: ChatMessage[], options: AIOptions): Promise<string> {
-    return window.electron.ipcRenderer.invoke('ai-chat:stream', model, messages, options)
-  }
-
-  async validateModel(model: AIModel): Promise<{ isValid: boolean; error?: string }> {
-    return window.electron.ipcRenderer.invoke('ai-chat:validate-model', model)
   }
 
   async saveChatSession(workspacePath: string, session: ChatSession): Promise<void> {

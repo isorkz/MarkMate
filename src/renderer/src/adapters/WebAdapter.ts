@@ -1,7 +1,7 @@
 import { IFileAdapter, IGitAdapter, IWorkspaceAdapter, IAIAdapter } from './interfaces'
 import { GitCommit, GitStatus } from '../../../shared/types/git'
 import { FileContentWithDate, FileNode } from '@shared/types/file'
-import { AIConfig, AIModel, ChatMessage, AIOptions, ChatSession, ChatSessionInfo } from '../../../shared/types/ai'
+import { AIConfig, ChatSession, ChatSessionInfo } from '../../../shared/types/ai'
 
 const API_BASE_URL = '/api'
 
@@ -189,14 +189,6 @@ export class WebAIAdapter implements IAIAdapter {
 
   async setAIKey(apiKey: string): Promise<void> {
     await ApiClient.post('/ai/set-ai-key', { apiKey })
-  }
-
-  async streamChat(model: AIModel, messages: ChatMessage[], options: AIOptions): Promise<string> {
-    return ApiClient.post('/ai/stream-chat', { model, messages, options })
-  }
-
-  async validateModel(model: AIModel): Promise<{ isValid: boolean; error?: string }> {
-    return ApiClient.post('/ai/validate-model', { model })
   }
 
   async saveChatSession(_workspacePath: string, session: ChatSession): Promise<void> {

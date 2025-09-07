@@ -1,9 +1,10 @@
 import React, { useState, useRef, KeyboardEvent } from 'react'
-import { Send, Paperclip, Dice6, Plus } from 'lucide-react'
+import { Send, Paperclip, Dice6, Plus, CircleStop } from 'lucide-react'
 import { useAIStore } from '../../stores/aiStore'
+import toast from 'react-hot-toast'
 
 const InputPanel: React.FC = () => {
-  const { config, sendMessage, isStreaming, setDefaultModel } = useAIStore()
+  const { config, streamChat, isStreaming, isCancelling, cancelStreamChat, setDefaultModel } = useAIStore()
   const [input, setInput] = useState('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
@@ -11,21 +12,23 @@ const InputPanel: React.FC = () => {
   const hasModels = config.models.length > 0
 
   const handleSend = async () => {
-    if (!input.trim() || isStreaming) return
-
-    if (!currentModel) {
-      return
-    }
+    if (!input.trim() || isStreaming || !currentModel) return
 
     try {
-      await sendMessage(input.trim(), currentModel)
+      await streamChat(input.trim(), currentModel)
+    } catch (error) {
+      // Errors handled in chat
+      toast.error('Error sending message.')
+    } finally {
       setInput('')
       if (textareaRef.current) {
         textareaRef.current.style.height = 'auto'
       }
-    } catch (error) {
-      // Errors handled in chat
     }
+  }
+
+  const handleCancel = () => {
+    cancelStreamChat()
   }
 
   const handleKeyPress = (e: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -107,14 +110,24 @@ const InputPanel: React.FC = () => {
               <Paperclip className="w-4 h-4" />
             </button>
             <button
-              onClick={handleSend}
-              className={`p-1 hover:bg-gray-100 rounded transition-colors disabled:opacity-50 disabled:hover:bg-transparent ${input.trim() && !isStreaming ? 'text-blue-500' : 'text-gray-400'
+              onClick={isStreaming ? handleCancel : handleSend}
+              className={`p-1 hover:bg-gray-100 rounded transition-colors disabled:opacity-50 disabled:hover:bg-transparent ${isStreaming
+                ? (isCancelling ? 'text-gray-400' : 'text-blue-500')
+                : (!isStreaming && input.trim() ? 'text-blue-500' : 'text-gray-400')
                 }`}
-              title={isStreaming ? "Generating response..." : "Send Message"}
-              disabled={!hasModels || !input.trim() || isStreaming}
+              title={
+                isStreaming
+                  ? (isCancelling ? "Cancelling..." : "Cancel")
+                  : "Send Message"
+              }
+              disabled={!hasModels || (!isStreaming && !input.trim()) || isCancelling}
             >
               {isStreaming ? (
-                <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                isCancelling ? (
+                  <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+                ) : (
+                  <CircleStop className="w-4 h-4" />
+                )
               ) : (
                 <Send className="w-4 h-4" />
               )}

@@ -18,3 +18,5 @@ export const DEFAULT_AI_CONFIG: AIConfig = {
     maxTokens: DEFAULT_MAX_TOKENS
   }
 }
+
+export const DEFAULT_CHAT_TITLE = 'New Chat'

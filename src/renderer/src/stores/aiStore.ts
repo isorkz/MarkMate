@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { AIModel, AIConfig, AIOptions, ChatMessage, ChatSession, MessageRole, ChatSessionInfo } from '../../../shared/types/ai'
-import { DEFAULT_AI_CONFIG } from '../../../shared/constants/ai'
+import { DEFAULT_AI_CONFIG, DEFAULT_CHAT_TITLE } from '../../../shared/constants/ai'
+import { AIService } from '../../../shared/services/AIService'
 import { adapters } from '../adapters'
 import { persistAIConfig, saveCurrentSession } from '../utils/aiPersistHelper'
 import { useWorkspaceStore } from './workspaceStore'
@@ -26,7 +27,9 @@ interface AIStore {
   activeSessionId: string | null  // null means draft session
   isStreaming: boolean
   streamingMessageId: string | null
-
+  isCancelling: boolean
+  abortController: AbortController | null
+  
   // Session management
   loadSessions: () => Promise<void>
   createNewSession: () => Promise<void>
@@ -36,20 +39,21 @@ interface AIStore {
 
   // Chat actions
   addMessage: (role: MessageRole, content: string) => ChatMessage
-  updateMessage: (id: string, content: string, append?: boolean) => void
-  sendMessage: (content: string, model: AIModel) => Promise<void>
+  updateMessage: (id: string, content: string, persist?: boolean) => void
+  streamChat: (content: string, model: AIModel) => Promise<void>
+  cancelStreamChat: () => void
 }
 
 const createEmptyChatSession = (): ChatSession => ({
   id: `session-${Date.now()}`,
-  title: 'New Chat',
+  title: DEFAULT_CHAT_TITLE,
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
   messages: []
 })
 
 const createChatMessage = (role: MessageRole, content: string): ChatMessage => ({
-  id: `msg-${Date.now()}`,
+  id: `msg-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
   role,
   content,
   timestamp: new Date().toISOString()
@@ -68,6 +72,8 @@ export const useAIStore = create<AIStore>((set, get) => ({
   activeSessionId: null,
   isStreaming: false,
   streamingMessageId: null,
+  isCancelling: false,
+  abortController: null,
   
   // Clear error
   clearError: () => set({ error: null }),
@@ -286,8 +292,8 @@ export const useAIStore = create<AIStore>((set, get) => ({
     return message
   },
 
-  // Update a message content (for streaming)
-  updateMessage: (id: string, content: string, append: boolean = false) => {
+  // Update a message content
+  updateMessage: (id: string, content: string, persist: boolean = true) => {
     set(state => {
       if (!state.currentSession) return state
       
@@ -295,9 +301,7 @@ export const useAIStore = create<AIStore>((set, get) => ({
         if (msg.id === id) {
           return {
             ...msg,
-            content: append ? 
-              (typeof msg.content === 'string' ? msg.content + content : content) : 
-              content
+            content
           }
         }
         return msg
@@ -320,71 +324,120 @@ export const useAIStore = create<AIStore>((set, get) => ({
       }
     })
     
-    // Auto-save session after updating message
-    const state = get()
-    if (state.currentSession) {
-      const session = state.currentSession
-      setTimeout(() => saveCurrentSession(session), 100)
+    // Conditionally save session
+    if (persist) {
+      const state = get()
+      if (state.currentSession) {
+        const session = state.currentSession
+        setTimeout(() => saveCurrentSession(session), 100)
+      }
     }
   },
 
   // Send a message and get AI response
-  sendMessage: async (content: string, model: AIModel) => {
-    // Clear previous error
-    set({ error: null })
+  streamChat: async (content: string, model: AIModel) => {
+    // Validate model configuration
+    const validation = AIService.validateModel(model)
+    if (!validation.isValid) {
+      set({ error: validation.error })
+      return
+    }
 
-    const state = get()
+    const { addMessage, updateMessage, createNewSession } = get()
+    let { currentSession, config } = get()
     
-    // Check if there's a current session
-    if (!state.currentSession) {
-      // Create a new session
-      get().createNewSession()
+    // Create a new session if none exists
+    if (!currentSession) {
+      await createNewSession()
+      currentSession = get().currentSession
     }
     
     try {
       // Add user message
-      get().addMessage('user', content)
+      addMessage('user', content)
+      
+      // Create empty assistant message for streaming
+      const assistantMessage = addMessage('assistant', '')
       
       // Set streaming state
-      set({ isStreaming: true })
+      const abortController = new AbortController()
+      set({
+        isStreaming: true,
+        streamingMessageId: assistantMessage.id,
+        isCancelling: false,
+        abortController: abortController,
+        error: null   // Clear previous error
+      })
       
-      // Get all messages for context
-      const currentState = get()
-      const messages = currentState.currentSession?.messages || []
-      
-      // Call AI API
-      const response = await adapters.aiAdapter.streamChat(
-        model,
-        messages,
-        state.config.options
+      // Stream AI response
+      let fullResponse = ''
+
+      // Get all messages for context (refresh after adding messages)
+      const messages = get().currentSession?.messages || []
+
+      await AIService.streamChat(
+        model, 
+        messages, 
+        config.options,
+        (chunk: string) => {
+          // Handle chunk
+          fullResponse += chunk
+          updateMessage(assistantMessage.id, fullResponse, false)
+        },
+        () => {
+          // Handle completion
+          // Update session title if it's the first message pair
+          const session = get().currentSession
+          if (session && session.messages.length >= 2 && session.title === DEFAULT_CHAT_TITLE) {
+            const updatedSession = {
+              ...session,
+              title: content.slice(0, 50) + (content.length > 50 ? '...' : '')
+            }
+            
+            set({
+              currentSession: updatedSession,
+              sessions: get().sessions.map(s => 
+                s.id === updatedSession.id ? updatedSession : s
+              )
+            })
+          }
+          
+          // Final persist after streaming is complete
+          updateMessage(assistantMessage.id, fullResponse, true)
+        },
+        (error: string) => {
+          // Handle error
+          set({ error })
+        },
+        () => {
+          // Handle abort
+          const cancelledResponse = fullResponse + '\n\n*(cancelled)*'
+          updateMessage(assistantMessage.id, cancelledResponse, true)
+        },
+        abortController.signal
       )
-      
-      // Add assistant message with response
-      get().addMessage('assistant', response)
-      
-      // Update session title if it's the first message
-      const finalState = get()
-      if (finalState.currentSession && finalState.currentSession.messages.length === 2) {
-        const updatedSession = {
-          ...finalState.currentSession,
-          title: content.slice(0, 50) + (content.length > 50 ? '...' : '')
-        }
-        
-        set({
-          currentSession: updatedSession,
-          sessions: finalState.sessions.map(s => 
-            s.id === updatedSession.id ? updatedSession : s
-          )
-        })
-      }
-      
+
     } catch (error) {
       console.error('Error sending message:', error)
       const errorMessage = error instanceof Error ? error.message : 'Failed to send message'
       set({ error: errorMessage })
     } finally {
       // Reset streaming state
-      set({ isStreaming: false })
+      set({
+        isStreaming: false,
+        streamingMessageId: null,
+        isCancelling: false,
+        abortController: null
+      })
+    }
+  },
+
+  // Cancel current streaming
+  cancelStreamChat: () => {
+    const state = get()
+    if (state.abortController && state.streamingMessageId) {
+      set({ isCancelling: true })
+      state.abortController.abort()
     }
   }
 }))

@@ -1,6 +1,6 @@
 import { ipcMain } from 'electron'
 import { AIService } from '../../shared/services'
-import { AIModel, ChatMessage, AIOptions, ChatSession, AIConfig } from '../../shared/types/ai'
+import { ChatSession, AIConfig } from '../../shared/types/ai'
 
 export function setupAIHandlers() {
   // Read AI configuration
@@ -31,39 +31,6 @@ export function setupAIHandlers() {
     } catch (error) {
       console.error('Error setting AI key to environment variable:', error)
       throw error
-    }
-  })
-
-  // Stream chat with AI
-  ipcMain.handle('ai-chat:stream', async (_, model: AIModel, messages: ChatMessage[], options: AIOptions) => {
-    try {
-      // Validate model configuration
-      const validation = AIService.validateModel(model)
-      if (!validation.isValid) {
-        throw new Error(validation.error)
-      }
-
-      const chunks: string[] = []
-      
-      // Collect all streaming chunks
-      for await (const chunk of AIService.streamChat(model, messages, options)) {
-        chunks.push(chunk)
-      }
-      
-      return chunks.join('')
-    } catch (error) {
-      console.error('Error in AI chat stream:', error)
-      throw error
-    }
-  })
-
-  // Validate AI model configuration
-  ipcMain.handle('ai-chat:validate-model', (_, model: AIModel) => {
-    try {
-      return AIService.validateModel(model)
-    } catch (error) {
-      console.error('Error validating AI model:', error)
-      return { isValid: false, error: 'Validation failed' }
     }
   })
 
