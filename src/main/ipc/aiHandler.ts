@@ -84,6 +84,9 @@ export function setupAIHandlers() {
     }
   })
 
+  // Store active streams for cancellation
+  const activeStreams = new Map<string, AbortController>()
+
   // Stream chat with AI
   ipcMain.handle('ai-chat:stream', async (event, streamId: string, model: AIModel, messages: ChatMessage[], options: AIOptions) => {
     try {
@@ -94,21 +97,42 @@ export function setupAIHandlers() {
         return
       }
 
+      // Create abort controller for this stream
+      const abortController = new AbortController()
+      activeStreams.set(streamId, abortController)
+
       // Get stream from AIService
-      const { stream } = await AIService.streamChatForElectron(model, messages, options)
+      const stream = await AIService.streamChatForElectron(model, messages, options, abortController.signal)
       
       // Stream chunks to renderer
       for await (const chunk of stream) {
+        if (abortController.signal.aborted) {
+          break
+        }
         event.sender.send('ai-chat:stream-chunk', { id: streamId, chunk })
       }
       
-      // Signal completion
-      event.sender.send('ai-chat:stream-chunk', { id: streamId, complete: true })
+      // Signal completion (if not aborted)
+      if (!abortController.signal.aborted) {
+        event.sender.send('ai-chat:stream-chunk', { id: streamId, complete: true })
+      }
       
     } catch (error) {
       console.error('Error in AI chat stream:', error)
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
       event.sender.send('ai-chat:stream-chunk', { id: streamId, error: errorMessage })
+    } finally {
+      // Clean up
+      activeStreams.delete(streamId)
+    }
+  })
+
+  // Cancel stream
+  ipcMain.handle('ai-chat:cancel', async (_, streamId: string) => {
+    const abortController = activeStreams.get(streamId)
+    if (abortController) {
+      abortController.abort()
+      activeStreams.delete(streamId)
     }
   })
 }

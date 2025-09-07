@@ -8,7 +8,6 @@ export class ElectronFileAdapter implements IFileAdapter {
     return window.electron.ipcRenderer.invoke('file:read', workspacePath, filePath)
   }
 
-
   async writeFile(workspacePath: string, filePath: string, content: string): Promise<void> {
     await window.electron.ipcRenderer.invoke('file:write', workspacePath, filePath, content)
   }
@@ -139,28 +138,42 @@ export class ElectronAIAdapter implements IAIAdapter {
     return window.electron.ipcRenderer.invoke('ai-chat:validate-model', model)
   }
 
-  async streamChat(model: AIModel, messages: ChatMessage[], options: AIOptions, onChunk: (chunk: string) => void, onComplete: () => void, onError: (error: string) => void): Promise<void> {
-    const streamId = `stream-${Date.now()}-${Math.random()}`
-    
-    // Set up event listener for stream chunks
-    const chunkHandler = (_event: any, data: { id: string, chunk?: string, error?: string, complete?: boolean }) => {
-      if (data.id === streamId) {
-        if (data.error) {
-          onError(data.error)
-          window.electron.ipcRenderer.removeListener('ai-chat:stream-chunk', chunkHandler)
-        } else if (data.complete) {
-          onComplete()
-          window.electron.ipcRenderer.removeListener('ai-chat:stream-chunk', chunkHandler)
-        } else if (data.chunk !== undefined) {
-          onChunk(data.chunk)
+  async streamChat(model: AIModel, messages: ChatMessage[], options: AIOptions, onChunk: (chunk: string) => void, onComplete: () => void, onError: (error: string) => void, abortController: AbortController): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      const streamId = `stream-${Date.now()}-${Math.random()}`
+      
+      // Set up event listener for stream chunks
+      const chunkHandler = (_event: any, data: { id: string, chunk?: string, error?: string, complete?: boolean }) => {
+        if (data.id === streamId) {
+          if (data.error) {
+            onError(data.error)
+            window.electron.ipcRenderer.removeListener('ai-chat:stream-chunk', chunkHandler)
+            reject(new Error(data.error))
+          } else if (data.complete) {
+            onComplete()
+            window.electron.ipcRenderer.removeListener('ai-chat:stream-chunk', chunkHandler)
+            resolve()
+          } else if (data.chunk !== undefined) {
+            onChunk(data.chunk)
+          }
         }
       }
-    }
-    
-    // Register the event listener
-    window.electron.ipcRenderer.on('ai-chat:stream-chunk', chunkHandler)
-    
-    // Start the stream
-    window.electron.ipcRenderer.invoke('ai-chat:stream', streamId, model, messages, options)
+      
+      // Register the event listener
+      window.electron.ipcRenderer.on('ai-chat:stream-chunk', chunkHandler)
+      
+      // Handle abort signal
+      abortController.signal.addEventListener('abort', () => {
+        // Cancel the stream via IPC
+        window.electron.ipcRenderer.invoke('ai-chat:cancel', streamId)
+        // Cleanup event listener
+        window.electron.ipcRenderer.removeListener('ai-chat:stream-chunk', chunkHandler)
+        // Reject the promise
+        reject(new Error('Request was cancelled'))
+      })
+      
+      // Start the stream
+      window.electron.ipcRenderer.invoke('ai-chat:stream', streamId, model, messages, options)
+    })
   }
 }

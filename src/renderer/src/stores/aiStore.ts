@@ -26,7 +26,8 @@ interface AIStore {
   activeSessionId: string | null  // null means draft session
   isStreaming: boolean
   streamingMessageId: string | null
-
+  isCancelling: boolean
+  
   // Session management
   loadSessions: () => Promise<void>
   createNewSession: () => Promise<void>
@@ -36,8 +37,9 @@ interface AIStore {
 
   // Chat actions
   addMessage: (role: MessageRole, content: string) => ChatMessage
-  updateMessage: (id: string, content: string, append?: boolean) => void
-  sendMessage: (content: string, model: AIModel) => Promise<void>
+  updateMessage: (id: string, content: string, persist?: boolean) => void
+  streamChat: (content: string, model: AIModel) => Promise<void>
+  cancelStreamChat: () => void
 }
 
 const createEmptyChatSession = (): ChatSession => ({
@@ -68,6 +70,7 @@ export const useAIStore = create<AIStore>((set, get) => ({
   activeSessionId: null,
   isStreaming: false,
   streamingMessageId: null,
+  isCancelling: false,
   
   // Clear error
   clearError: () => set({ error: null }),
@@ -329,7 +332,7 @@ export const useAIStore = create<AIStore>((set, get) => ({
   },
 
   // Send a message and get AI response
-  sendMessage: async (content: string, model: AIModel) => {
+  streamChat: async (content: string, model: AIModel) => {
     // Clear previous error
     set({ error: null })
 
@@ -353,9 +356,10 @@ export const useAIStore = create<AIStore>((set, get) => ({
       const assistantMessage = get().addMessage('assistant', '')
       
       // Set streaming state
-      set({ 
+      set({
         isStreaming: true,
-        streamingMessageId: assistantMessage.id
+        streamingMessageId: assistantMessage.id,
+        isCancelling: false,
       })
       
       // Stream AI response
@@ -374,6 +378,7 @@ export const useAIStore = create<AIStore>((set, get) => ({
           // Handle completion
           // Update session title if it's the first message
           const finalState = get()
+          console.log('Stream chat complete')
           if (finalState.currentSession && finalState.currentSession.messages.length === 2) {
             const updatedSession = {
               ...finalState.currentSession,
@@ -392,9 +397,17 @@ export const useAIStore = create<AIStore>((set, get) => ({
           get().updateMessage(assistantMessage.id, fullResponse, true)
         },
         (error: string) => {
-          // Handle error
-          console.error('Stream chat error:', error)
-          set({ error })
+          // Handle error (distinguish between cancellation and real errors)
+          const finalState = get()
+          console.log('Stream chat error handler, isCancelling:', finalState.isCancelling)
+          if (finalState.isCancelling) {
+            // Mark message as cancelled
+            const cancelledResponse = fullResponse + '\n\n*(cancelled)*'
+            get().updateMessage(assistantMessage.id, cancelledResponse, true)
+          } else {
+            console.error('Stream chat error:', error)
+            set({ error })
+          }
         }
       )
     } catch (error) {
@@ -403,10 +416,20 @@ export const useAIStore = create<AIStore>((set, get) => ({
       set({ error: errorMessage })
     } finally {
       // Reset streaming state
-      set({ 
+      set({
         isStreaming: false,
-        streamingMessageId: null
+        streamingMessageId: null,
+        isCancelling: false,
       })
+    }
+  },
+
+  // Cancel current streaming
+  cancelStreamChat: () => {
+    const state = get()
+    if (state.abortController && state.streamingMessageId) {
+      set({ isCancelling: true })
+      state.abortController.abort()
     }
   }
 }))

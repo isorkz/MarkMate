@@ -178,7 +178,7 @@ export class AIService {
     model: AIModel,
     messages: ChatMessage[],
     options: AIOptions,
-    abortSignal?: AbortSignal
+    abortSignal: AbortSignal
   ) {
     try {
       // Create AI provider and model instance
@@ -239,16 +239,12 @@ export class AIService {
   static async streamChatForElectron(
     model: AIModel,
     messages: ChatMessage[],
-    options: AIOptions
-  ): Promise<{ stream: AsyncIterable<string>; cancel: () => void }> {
+    options: AIOptions,
+    abortSignal: AbortSignal
+  ): Promise<AsyncIterable<string>> {
     try {
-      const abortController = new AbortController()
-      const result = await this.streamChat(model, messages, options, abortController.signal)
-      
-      return {
-        stream: result.textStream,
-        cancel: () => abortController.abort()
-      }
+      const result = await this.streamChat(model, messages, options, abortSignal)
+      return result.textStream
     } catch (error) {
       console.error('Error in AI chat stream for Electron:', error)
       throw error
@@ -262,7 +258,7 @@ export class AIService {
     model: AIModel,
     messages: ChatMessage[],
     options: AIOptions,
-    abortSignal?: AbortSignal
+    abortSignal: AbortSignal
   ): Promise<Response> {
     try {
       const result = await this.streamChat(model, messages, options, abortSignal)

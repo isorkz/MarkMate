@@ -51,11 +51,12 @@ class ApiClient {
     return response.json()
   }
 
-  static async postStream(endpoint: string, data: any = {}) {
+  static async postStream(endpoint: string, data: any = {}, signal?: AbortSignal) {
     return this.makeRequest(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
+      body: JSON.stringify(data),
+      signal
     })
   }
 }
@@ -209,9 +210,9 @@ export class WebAIAdapter implements IAIAdapter {
     return ApiClient.post('/ai/validate-model', { model })
   }
 
-  async streamChat(model: AIModel, messages: ChatMessage[], options: AIOptions, onChunk: (chunk: string) => void, onComplete: () => void, onError: (error: string) => void): Promise<void> {
+  async streamChat(model: AIModel, messages: ChatMessage[], options: AIOptions, onChunk: (chunk: string) => void, onComplete: () => void, onError: (error: string) => void, abortController: AbortController): Promise<void> {
     try {
-      const response = await ApiClient.postStream('/ai/stream-chat', { model, messages, options })
+      const response = await ApiClient.postStream('/ai/stream-chat', { model, messages, options }, abortController.signal)
 
       if (!response.body) {
         onError('No response body')
@@ -236,7 +237,11 @@ export class WebAIAdapter implements IAIAdapter {
         reader.releaseLock()
       }
     } catch (error) {
-      onError(error instanceof Error ? error.message : 'Unknown error')
+      if (error instanceof Error && error.name === 'AbortError') {
+        onError('Request was cancelled')
+      } else {
+        onError(error instanceof Error ? error.message : 'Unknown error')
+      }
     }
   }
 }

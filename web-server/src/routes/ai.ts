@@ -104,22 +104,52 @@ router.post('/stream-chat', async (req, res, next) => {
       return res.status(400).json({ error: validation.error })
     }
 
-    // Get streaming response from AIService
-    const streamResponse = await AIService.streamChatForWeb(model, messages, options)
+    // Create abort controller for this request
+    const abortController = new AbortController()
+    
+    // Handle client disconnect/cancel
+    req.on('close', () => {
+      abortController.abort()
+    })
+    
+    req.on('aborted', () => {
+      abortController.abort()
+    })
+
+    // Get streaming response from AIService with abort signal
+    const streamResponse = await AIService.streamChatForWeb(model, messages, options, abortController.signal)
+    
+    // Set appropriate headers for streaming
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8')
+    res.setHeader('Cache-Control', 'no-cache')
+    res.setHeader('Connection', 'keep-alive')
     
     // Express cannot directly return Response objects
     // Use `pipeTo()` to stream Response.body to Express response
     streamResponse.body.pipeTo(new WritableStream({
       write(chunk) {
-        res.write(chunk)
+        if (!res.destroyed) {
+          res.write(chunk)
+        }
       },
       close() {
-        res.end()
+        if (!res.destroyed) {
+          res.end()
+        }
+      },
+      abort() {
+        if (!res.destroyed) {
+          res.destroy()
+        }
       }
     }))
     
   } catch (error) {
     console.error('Stream chat error:', error)
+    if (error.name === 'AbortError') {
+      // Request was cancelled, don't send error response
+      return
+    }
     next(error)
   }
 })
