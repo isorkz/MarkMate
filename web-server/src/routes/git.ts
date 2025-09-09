@@ -114,4 +114,14 @@ router.post('/get-file-sync', async (req, res, next) => {
   }
 })
 
+// Get git status
+router.post('/status', async (req, res, next) => {
+  try {
+    const status = await GitService.gitStatus(config.workspacePath)
+    res.json(status)
+  } catch (error) {
+    next(error)
+  }
+})
+
 export default router

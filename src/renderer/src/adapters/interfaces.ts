@@ -27,6 +27,7 @@ export interface IGitAdapter {
   completeMerge(workspacePath: string, commitMessage: string): Promise<void>
   syncWorkspace(workspacePath: string, commitMessage: string, remote?: string, branch?: string): Promise<void>
   getFileSync(workspacePath: string, filePath: string, remote?: string, branch?: string): Promise<GitStatus>
+  gitStatus(workspacePath: string): Promise<{simpleGitStatus: string, gitStatus: string}>
 }
 
 export interface IWorkspaceAdapter {

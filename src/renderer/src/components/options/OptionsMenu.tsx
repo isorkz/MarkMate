@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { MoreHorizontal, Settings, GalleryVerticalEnd, RefreshCw, Unlink, Image, Trash2, Bot } from 'lucide-react'
+import { MoreHorizontal, Settings, GalleryVerticalEnd, RefreshCw, Unlink, Image, Trash2, Bot, Terminal } from 'lucide-react'
 import VersionHistory from '../version/VersionHistory'
 import toast from 'react-hot-toast'
 import { useSettingsStore } from '../../stores/settingsStore'
@@ -12,6 +12,8 @@ import { BrokenImageLinksValidator, ImageLinkValidationResult } from '@renderer/
 import BrokenImagesDialog from './BrokenImagesDialog'
 import { UnusedImageLinksValidator, UnusedImage } from '@renderer/utils/link-validator/UnusedImageLinksValidator'
 import UnusedImagesDialog from './UnusedImagesDialog'
+import GitStatusDialog from './GitStatusDialog'
+import { adapters } from '../../adapters'
 
 const OptionsMenu: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false)
@@ -29,6 +31,10 @@ const OptionsMenu: React.FC = () => {
   const [showUnusedImages, setShowUnusedImages] = useState(false)
   const [unusedImages, setUnusedImages] = useState<UnusedImage[]>([])
   const [isFindingUnusedImages, setIsFindingUnusedImages] = useState(false)
+
+  const [showGitStatus, setShowGitStatus] = useState(false)
+  const [gitStatusResult, setGitStatusResult] = useState<{ simpleGitStatus: string, gitStatus: string } | null>(null)
+  const [isLoadingGitStatus, setIsLoadingGitStatus] = useState(false)
 
   const menuRef = useRef<HTMLDivElement>(null)
 
@@ -188,6 +194,32 @@ const OptionsMenu: React.FC = () => {
     }
   }
 
+  const handleShowGitStatus = async () => {
+    if (!currentWorkspace || isLoadingGitStatus) {
+      return
+    }
+
+    setIsLoadingGitStatus(true)
+    setIsOpen(false)
+
+    try {
+      const gitAdapter = adapters.gitAdapter
+      if (!gitAdapter) {
+        toast.error('Git adapter not available')
+        return
+      }
+
+      const result = await gitAdapter.gitStatus(currentWorkspace.path)
+      setGitStatusResult(result)
+      setShowGitStatus(true)
+    } catch (error) {
+      console.error('Failed to get git status:', error)
+      toast.error('Failed to get git status')
+    } finally {
+      setIsLoadingGitStatus(false)
+    }
+  }
+
   return (
     <div ref={menuRef} className="relative flex items-center gap-2">
       <button
@@ -238,6 +270,17 @@ const OptionsMenu: React.FC = () => {
                 }`}
             />
             Sync Workspace
+          </button>
+
+          <button
+            onClick={handleShowGitStatus}
+            disabled={isLoadingGitStatus}
+            className="flex items-center gap-2 w-full px-3 py-2 hover:bg-gray-100 transition-colors disabled:opacity-50"
+          >
+            <Terminal
+              className={`w-4 h-4 ${isLoadingGitStatus ? 'animate-pulse text-yellow-500' : ''}`}
+            />
+            [DEBUG] Git Status
           </button>
 
           <div className="mx-3 border-t border-gray-100 my-0.5" />
@@ -316,6 +359,13 @@ const OptionsMenu: React.FC = () => {
         onClose={() => setShowUnusedImages(false)}
         unusedImages={unusedImages}
         onDeleteImages={handleDeleteUnusedImages}
+      />
+
+      {/* Git Status Dialog */}
+      <GitStatusDialog
+        isOpen={showGitStatus}
+        onClose={() => setShowGitStatus(false)}
+        gitStatusResult={gitStatusResult}
       />
     </div>
   )

@@ -35,7 +35,6 @@ export class GitService {
     await git.fetch(remote, branch)
 
     const status = await git.status()
-    console.log('Git status for', filePath, ':', status)
     
     // Check if this specific file is in conflict state
     const isFileInConflict = status.conflicted && status.conflicted.includes(filePath)
@@ -44,7 +43,9 @@ export class GitService {
     const hasLocalChanges = status.modified.includes(filePath) || 
                            status.staged.includes(filePath) ||     // staged changes
                            status.created.includes(filePath) ||
-                           status.not_added.includes(filePath)
+                           status.deleted.includes(filePath) ||
+                           status.not_added.includes(filePath) ||
+                           status.ahead > 0
     const hasRemoteUpdates = (status.behind || 0) > 0
     
     return {
@@ -81,7 +82,7 @@ export class GitService {
     await git.pull(remote, 'main', { '--rebase': 'true' })
 
     // Push local commits to origin
-    if (status.files.length > 0) {
+    if (status.files.length > 0 || status.ahead > 0) {
       await git.push(remote, branch)
     }
   }
@@ -184,5 +185,20 @@ export class GitService {
     const git = simpleGit(workspacePath)
     // Reset the file to HEAD (discard working directory changes)
     await git.checkout(['HEAD', '--', filePath])
+  }
+
+  // Get detailed git status for debugging
+  static async gitStatus(workspacePath: string): Promise<{
+    simpleGitStatus: string,
+    gitStatus: string
+  }> {
+    const git = simpleGit(workspacePath)
+    const simpleGitStatus = await git.status()
+    const gitStatus = await git.raw(['status'])
+    
+    return {
+      simpleGitStatus: JSON.stringify(simpleGitStatus, null, 2),
+      gitStatus
+    }
   }
 }

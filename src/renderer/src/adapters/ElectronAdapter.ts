@@ -89,6 +89,10 @@ export class ElectronGitAdapter implements IGitAdapter {
   async getFileSync(workspacePath: string, filePath: string, remote = 'origin', branch = 'main'): Promise<GitStatus> {
     return window.electron.ipcRenderer.invoke('git:get-file-sync', workspacePath, filePath, remote, branch)
   }
+
+  async gitStatus(workspacePath: string): Promise<{simpleGitStatus: string, gitStatus: string}> {
+    return window.electron.ipcRenderer.invoke('git:status', workspacePath)
+  }
 }
 
 export class ElectronWorkspaceAdapter implements IWorkspaceAdapter {

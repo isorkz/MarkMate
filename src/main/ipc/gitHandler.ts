@@ -101,4 +101,14 @@ export function setupGitHandlers() {
       throw error
     }
   })
+
+  // Get detailed git status for debugging
+  ipcMain.handle('git:status', async (_, workspacePath: string) => {
+    try {
+      return await GitService.gitStatus(workspacePath)
+    } catch (error) {
+      console.error('Failed to get git status:', error)
+      throw error
+    }
+  })
 }

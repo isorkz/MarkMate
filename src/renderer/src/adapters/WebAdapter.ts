@@ -160,6 +160,10 @@ export class WebGitAdapter implements IGitAdapter {
   async getFileSync(_workspacePath: string, filePath: string, remote = 'origin', branch = 'main'): Promise<GitStatus> {
     return ApiClient.post('/git/get-file-sync', { filePath, remote, branch })
   }
+
+  async gitStatus(_workspacePath: string): Promise<{simpleGitStatus: any, gitStatus: string}> {
+    return ApiClient.post('/git/status')
+  }
 }
 
 export class WebWorkspaceAdapter implements IWorkspaceAdapter {
