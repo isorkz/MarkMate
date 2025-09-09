@@ -3,6 +3,8 @@ import { Tab, useEditorStore } from '@renderer/stores/editorStore'
 import { useSettingsStore } from '@renderer/stores/settingsStore'
 import { SyncStatus } from 'src/shared/types/git'
 import { formatDate } from '../../../shared/commonUtils'
+import { loadAIConfigFromFile, loadChatSessions } from './aiPersistHelper'
+import { useAIStore } from '@renderer/stores/aiStore'
 
 export const getSyncStatus = async (workspacePath: string, filePath: string) => {
   try {
@@ -87,7 +89,16 @@ export const syncWorkspace = async (workspacePath: string, commitMessagePrefix: 
     
     // Sync successful, reload all tab contents
     const results = await Promise.all(tabs.map(tab => reloadTabContent(workspacePath, tab)))
-    return results.includes('error') ? 'error' : 'synced'
+    
+    // Reload AI configuration and chat sessions after successful sync
+    const aiReloadResult = await reloadAIConfigAndChats()
+    
+    // Return error if any reload failed
+    if (results.includes('error') || aiReloadResult === 'error') {
+      return 'error'
+    }
+    
+    return 'synced'
     
   } catch (error) {
     console.error('Sync failed:', error)
@@ -114,6 +125,32 @@ const reloadTabContent = async (workspacePath: string, tab: Tab): Promise<SyncSt
   } catch (fileError) {
     console.error(`Failed to reload content for tab ${tab.filePath}:`, fileError)
     useEditorStore.getState().updateTabSyncStatus(tab.id, 'error')
+    return 'error'
+  }
+}
+
+// Reload AI configuration and chat sessions
+const reloadAIConfigAndChats = async (): Promise<SyncStatus> => {
+  try {
+    // Reload config and sessions list
+    await loadAIConfigFromFile()
+    await loadChatSessions()
+    
+    // If there was an active session, reload it to get latest content
+    const state = useAIStore.getState()
+    const activeSessionId = state.activeSessionId
+    if (activeSessionId) {
+      try {
+        await state.loadSession(activeSessionId)
+      } catch (error) {
+        console.error('Failed to reload current session:', error)
+        throw error
+      }
+    }
+    
+    return 'synced'
+  } catch (error) {
+    console.error('Failed to reload AI config and chat sessions after sync:', error)
     return 'error'
   }
 }
