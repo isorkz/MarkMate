@@ -34,8 +34,9 @@ interface AIStore {
   loadSessions: () => Promise<void>
   createNewSession: () => Promise<void>
   loadSession: (id: string) => Promise<void>
-  clearCurrentSession: () => Promise<void>
   deleteSession: (id: string) => Promise<void>
+  clearCurrentSession: () => Promise<void>
+  copyCurrentSession: () => Promise<void>
 
   // Chat actions
   addMessage: (role: MessageRole, content: string) => ChatMessage
@@ -45,7 +46,7 @@ interface AIStore {
 }
 
 const createEmptyChatSession = (): ChatSession => ({
-  id: `session-${Date.now()}`,
+  id: createChatSessionId(),
   title: DEFAULT_CHAT_TITLE,
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
@@ -60,6 +61,8 @@ const createChatMessage = (role: MessageRole, content: string): ChatMessage => (
 })
 
 const createModelId = (): string => `model-${Date.now()}`
+
+const createChatSessionId = (): string => `session-${Date.now()}`
 
 export const useAIStore = create<AIStore>((set, get) => ({
   // Initial state
@@ -218,22 +221,6 @@ export const useAIStore = create<AIStore>((set, get) => ({
     }
   },
 
-  // Clear current session messages
-  clearCurrentSession: async () => {
-    const state = get()
-    
-    if (state.activeSessionId === null) {
-      // If draft session, just reset it
-      set({
-        currentSession: createEmptyChatSession(),
-        activeSessionId: null
-      })
-    } else {
-      // If saved session, delete it and create new draft
-      await get().deleteSession(state.activeSessionId)
-    }
-  },
-
   // Delete a saved session
   deleteSession: async (id: string) => {
     try {
@@ -251,6 +238,54 @@ export const useAIStore = create<AIStore>((set, get) => ({
     } catch (error) {
       console.error('Failed to delete session:', error)
     }
+  },
+
+  // Clear current session messages
+  clearCurrentSession: async () => {
+    const state = get()
+    
+    if (state.activeSessionId === null) {
+      // If draft session, just reset it
+      set({
+        currentSession: createEmptyChatSession(),
+        activeSessionId: null
+      })
+    } else {
+      // If saved session, delete it and create new draft
+      await get().deleteSession(state.activeSessionId)
+    }
+  },
+
+  // Copy current session
+  copyCurrentSession: async () => {
+    const state = get()
+    if (!state.currentSession || state.currentSession.messages.length === 0) {
+      return
+    }
+
+    const workspacePath = useWorkspaceStore.getState().currentWorkspace?.path
+    if (!workspacePath) return
+
+    // Create a copy of the current session with new ID
+    const copiedSession: ChatSession = {
+      ...state.currentSession,
+      id: createChatSessionId(),
+      title: `${state.currentSession.title} (Copy)`,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      messages: [...state.currentSession.messages] // Deep copy messages
+    }
+
+    // Save the copied session to file
+    await adapters.aiAdapter.saveChatSession(workspacePath, copiedSession)
+
+    // Add to sessions list and set as current
+    const { messages, ...sessionInfo } = copiedSession
+    set(state => ({
+      currentSession: copiedSession,
+      activeSessionId: copiedSession.id,
+      sessions: [sessionInfo, ...state.sessions]
+    }))
   },
 
   // Add a message to current session

@@ -5,7 +5,7 @@ import { useAIStore } from '../../stores/aiStore'
 
 const Header: React.FC = () => {
   const { toggleAIAssistant, toggleAIMaximize, aiSettings } = useSettingsStore()
-  const { clearCurrentSession, createNewSession, loadSession, deleteSession, currentSession, sessions, activeSessionId } = useAIStore()
+  const { clearCurrentSession, createNewSession, loadSession, deleteSession, copyCurrentSession, currentSession, sessions, activeSessionId } = useAIStore()
   const [showMoreMenu, setShowMoreMenu] = useState(false)
   const [showSessionSelector, setShowSessionSelector] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
@@ -123,18 +123,7 @@ const Header: React.FC = () => {
         >
           <Plus className="w-4 h-4" />
         </button>
-        <button
-          className="p-1 hover:bg-gray-100 rounded"
-          title="Copy Chat"
-        >
-          <Copy className="w-4 h-4" />
-        </button>
-        <button
-          className="p-1 hover:bg-gray-100 rounded"
-          title="Chat History"
-        >
-          <Clock className="w-4 h-4" />
-        </button>
+
         <div className="relative" ref={menuRef}>
           <button
             onClick={() => setShowMoreMenu(!showMoreMenu)}
@@ -150,6 +139,17 @@ const Header: React.FC = () => {
               <div className="py-1">
                 <button
                   onClick={() => {
+                    copyCurrentSession()
+                    setShowMoreMenu(false)
+                  }}
+                  disabled={!currentSession || currentSession.messages.length === 0}
+                  className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Copy className="w-4 h-4" />
+                  Copy Chat
+                </button>
+                <button
+                  onClick={() => {
                     clearCurrentSession()
                     setShowMoreMenu(false)
                   }}
@@ -159,6 +159,12 @@ const Header: React.FC = () => {
                   <Trash2 className="w-4 h-4" />
                   Clear
                 </button>
+                {/* <button
+                  className="p-1 hover:bg-gray-100 rounded"
+                  title="Chat History"
+                >
+                  <Clock className="w-4 h-4" />
+                </button> */}
               </div>
             </div>
           )}
