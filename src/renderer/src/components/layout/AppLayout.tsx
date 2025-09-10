@@ -8,12 +8,13 @@ import WorkspaceOpener from '../workspace/WorkspaceOpener'
 import LeftSideTopBar from './LeftSideTopBar'
 import FullSearch from '../search/FullSearch'
 import AIAssistantPanel from '../ai/AIAssistantPanel'
+import ResizeHandle from './ResizeHandle'
 import { useFullSearch } from '@renderer/hooks/useFullSearch'
 
 const AppLayout: React.FC = () => {
   const { currentWorkspace } = useWorkspaceStore()
   const { toggleTOC, toggleSourceEditor } = useEditorStore()
-  const { updateAppearanceSettings, appearanceSettings, aiSettings } = useSettingsStore()
+  const { updateAppearanceSettings, updateAISettings, appearanceSettings, aiSettings } = useSettingsStore()
 
   // Full search functionality
   const {
@@ -28,6 +29,16 @@ const AppLayout: React.FC = () => {
 
   const toggleSidebar = () => {
     updateAppearanceSettings({ sidebarVisible: !appearanceSettings.sidebarVisible })
+  }
+
+  const handleFileTreeSidebarResize = (delta: number) => {
+    const newWidth = appearanceSettings.sidebarWidth + delta
+    updateAppearanceSettings({ sidebarWidth: Math.max(200, Math.min(400, newWidth)) })
+  }
+
+  const handleAISidebarResize = (delta: number) => {
+    const newWidth = aiSettings.width - delta // negative because we're resizing from the right
+    updateAISettings({ width: Math.max(250, Math.min(800, newWidth)) })
   }
 
   // Keyboard shortcuts
@@ -76,12 +87,34 @@ const AppLayout: React.FC = () => {
     <div className="h-screen flex bg-white overflow-x-hidden relative">
       <LeftSideTopBar />
 
-      {appearanceSettings.sidebarVisible && <Sidebar />}
+      {appearanceSettings.sidebarVisible && (
+        <>
+          <div style={{ width: appearanceSettings.sidebarWidth }}>
+            <Sidebar />
+          </div>
+          <ResizeHandle
+            direction="vertical"
+            onResize={handleFileTreeSidebarResize}
+            className="flex-shrink-0"
+          />
+        </>
+      )}
 
       <MainContent />
 
       {/* AI Chat Panel */}
-      {aiSettings.isOpen && <AIAssistantPanel />}
+      {aiSettings.isOpen && (
+        <>
+          <ResizeHandle
+            direction="vertical"
+            onResize={handleAISidebarResize}
+            className="flex-shrink-0"
+          />
+          <div style={{ width: aiSettings.width }}>
+            <AIAssistantPanel />
+          </div>
+        </>
+      )}
 
       <FullSearch
         isOpen={showSearch}

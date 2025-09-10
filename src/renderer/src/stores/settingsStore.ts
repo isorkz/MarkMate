@@ -12,6 +12,7 @@ interface AppearanceSettings {
   fontSize: number;
   fontFamily: string;
   sidebarVisible: boolean;
+  sidebarWidth: number;
 }
 
 interface SyncSettings {
@@ -31,6 +32,7 @@ interface WebSettings {
 interface AISettings {
   isOpen: boolean;
   isMaximized: boolean;
+  width: number;
 }
 
 interface SettingsStore {
@@ -66,6 +68,7 @@ const defaultAppearanceSettings: AppearanceSettings = {
   fontSize: 14,
   fontFamily: 'Monaco, monospace',
   sidebarVisible: true,
+  sidebarWidth: 288, // 18rem = 288px
 };
 
 const defaultSyncSettings: SyncSettings = {
@@ -84,7 +87,8 @@ const defaultWebSettings: WebSettings = {
 
 const defaultAISettings: AISettings = {
   isOpen: false,
-  isMaximized: false
+  isMaximized: false,
+  width: 320 // 20rem = 320px
 };
 
 export const useSettingsStore = create<SettingsStore>()(

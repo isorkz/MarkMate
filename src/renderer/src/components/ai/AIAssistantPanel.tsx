@@ -10,7 +10,7 @@ const AIAssistantPanel: React.FC = () => {
   return (
     <div className={`${aiSettings.isMaximized
         ? 'fixed top-0 left-0 w-full h-full z-50'
-        : 'w-80 h-full'
+        : 'h-full'
       } bg-white border-l border-gray-200 flex flex-col`}>
       <Header />
       <ChatPanel />

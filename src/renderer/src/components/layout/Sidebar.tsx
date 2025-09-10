@@ -30,7 +30,7 @@ const Sidebar: React.FC = () => {
   }
 
   return (
-    <div className="w-sidebar bg-gray-50 border-r border-gray-200 flex flex-col">
+    <div className="h-full bg-gray-50 border-r border-gray-200 flex flex-col">
       {/* macOS traffic light buttons space */}
       <div className="h-8"></div>
 
