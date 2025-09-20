@@ -26,7 +26,7 @@ interface SyncSettings {
 }
 
 interface WebSettings {
-  accessToken: string;
+  accessKey: string;
 }
 
 interface AISettings {
@@ -82,7 +82,7 @@ const defaultSyncSettings: SyncSettings = {
 };
 
 const defaultWebSettings: WebSettings = {
-  accessToken: ''
+  accessKey: ''
 };
 
 const defaultAISettings: AISettings = {

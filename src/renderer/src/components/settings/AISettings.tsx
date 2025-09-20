@@ -64,7 +64,7 @@ const AISettings: React.FC = () => {
     setDefaultModel(modelId)
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     if (!formData.name.trim()) {
@@ -92,15 +92,20 @@ const AISettings: React.FC = () => {
       baseURL: formData.baseURL.trim() || undefined
     }
 
-    if (editingModel) {
-      updateModel(editingModel.id, modelData)
-    } else {
-      addModel(modelData)
-    }
+    try {
+      if (editingModel) {
+        await updateModel(editingModel.id, modelData)
+      } else {
+        await addModel(modelData)
+      }
 
-    setShowAddForm(false)
-    resetForm()
-    setEditingModel(null)
+      setShowAddForm(false)
+      resetForm()
+      setEditingModel(null)
+    } catch (error) {
+      console.error('Failed to save model:', error)
+      toast.error(`Failed to ${editingModel ? 'update' : 'add'} model: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    }
   }
 
   const handleCancel = () => {

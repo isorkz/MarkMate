@@ -6,14 +6,14 @@
 
 1. Setup environment variable
 
-For MarkMate web version, workspace path and access token are required:
+For MarkMate web version, workspace path and access key are required:
 * Workspace path must be specified in the environment variable for web version.
-* Access token is used for API authentication.
+* Access key is used for API authentication.
 
 ```bash
 export MARKMATE_WORKSPACE_PATH=/path/to/your/markdown/workspace
 
-export MARKMATE_ACCESS_TOKEN=your-secret-access-token
+export MARKMATE_WEB_ACCESS_KEY=your-web-access-key
 ```
 
 Or you can create a `.env` file and edit it:

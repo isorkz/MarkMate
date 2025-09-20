@@ -16,20 +16,20 @@ const WebSettings: React.FC = () => {
       {/* Access Token */}
       <div className="space-y-4">
         <h4 className="font-medium text-gray-900">Web Access</h4>
-        
+
         <div className="space-y-3">
           <label className="block text-sm font-medium text-gray-700">
-            Access Token
+            Access Key
           </label>
           <input
             type="password"
-            value={webSettings.accessToken}
-            onChange={(e) => updateWebSettings({ accessToken: e.target.value })}
-            placeholder="Enter access token for web version"
+            value={webSettings.accessKey}
+            onChange={(e) => updateWebSettings({ accessKey: e.target.value })}
+            placeholder="Enter access key for web version"
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
           <p className="text-xs text-gray-500">
-            Required for accessing the web version of MarkMate. This token will be used to authenticate API requests.
+            Required for accessing the web version of MarkMate. This access key will be used to authenticate API requests.
           </p>
         </div>
       </div>

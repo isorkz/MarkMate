@@ -2,6 +2,7 @@ import * as fs from 'fs/promises'
 import * as path from 'path'
 import { AIConfig, ChatSession, ChatSessionInfo } from '../types/ai'
 import { AI_CONFIG_DIR, AI_CONFIG_FILE, AI_SESSIONS_DIR, DEFAULT_AI_CONFIG } from '../constants/ai'
+import { CryptoService } from './CryptoService'
 
 export class AIPersistService {
   /**
@@ -13,13 +14,17 @@ export class AIPersistService {
       const data = await fs.readFile(fullPath, 'utf-8')
       const config = JSON.parse(data)
       
-      // Get API key from environment variable
-      const apiKeyFromEnv = process.env.MARKMATE_AI_KEY || ''
+      // Get master password from environment variable
+      const masterPassword = process.env.MARKMATE_MASTER_PASSWORD
       
-      // Merge API key into models for runtime use
+      if (!masterPassword) {
+        throw new Error('MARKMATE_MASTER_PASSWORD environment variable is required')
+      }
+      
+      // Decrypt stored API keys
       const modelsWithKeys = config.models.map(model => ({
         ...model,
-        apiKey: apiKeyFromEnv
+        apiKey: model.apiKey ? CryptoService.decrypt(model.apiKey, masterPassword) : ''
       }))
       
       return {
@@ -28,8 +33,6 @@ export class AIPersistService {
       } as AIConfig
     } catch (error: any) {
       if (error?.code === 'ENOENT') {
-        // File doesn't exist - create default config
-        console.log('AI config not found, creating default config')
         await this.writeConfig(workspacePath, DEFAULT_AI_CONFIG)
         return DEFAULT_AI_CONFIG
       } else {
@@ -50,13 +53,20 @@ export class AIPersistService {
       // Ensure directory exists
       await fs.mkdir(dir, { recursive: true })
       
-      // Create config without API keys for saving
+      // Get master password from environment variable
+      const masterPassword = process.env.MARKMATE_MASTER_PASSWORD
+      
+      if (!masterPassword) {
+        throw new Error('MARKMATE_MASTER_PASSWORD environment variable is required')
+      }
+      
+      // Create config with encrypted API keys for saving
       const configToSave = {
         ...config,
-        models: config.models.map(model => {
-          const { apiKey, ...modelWithoutKey } = model
-          return modelWithoutKey
-        })
+        models: config.models.map(model => ({
+          ...model,
+          apiKey: model.apiKey ? CryptoService.encrypt(model.apiKey, masterPassword) : ''
+        }))
       }
       
       await fs.writeFile(fullPath, JSON.stringify(configToSave, null, 2), 'utf-8')

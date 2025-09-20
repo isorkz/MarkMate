@@ -5,19 +5,20 @@ import { AIConfig, ChatSession, ChatSessionInfo } from '../../../shared/types/ai
 
 const API_BASE_URL = '/api'
 
-// Function to get access token from settings
-const getAccessToken = (): string => {
+// Function to get access key from settings
+const getAccessKey = (): string => {
   try {
     const settings = JSON.parse(localStorage.getItem('settings-storage') || '{}')
-    return settings?.state?.webSettings?.accessToken || ''
+    return settings?.state?.webSettings?.accessKey || ''
   } catch {
+    console.error('Failed to parse web access key from localStorage')
     return ''
   }
 }
 
 class ApiClient {
   static async post(endpoint: string, data: any = {}) {
-    const token = getAccessToken()
+    const token = getAccessKey()
     const headers: any = {
       'Content-Type': 'application/json'
     }
@@ -41,7 +42,7 @@ class ApiClient {
   }
 
   static async get(endpoint: string) {
-    const token = getAccessToken()
+    const token = getAccessKey()
     const headers: any = {}
     
     if (token) {
@@ -69,7 +70,6 @@ export class WebFileAdapter implements IFileAdapter {
       lastModified: new Date(result.lastModified)
     }
   }
-
 
   async writeFile(_workspacePath: string, filePath: string, content: string): Promise<void> {
     await ApiClient.post('/file/write', { filePath, content })

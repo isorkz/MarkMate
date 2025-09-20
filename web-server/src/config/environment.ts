@@ -6,7 +6,7 @@ dotenv.config()
 export const config = {
   port: parseInt(process.env.PORT || '3001', 10),
   workspacePath: process.env.MARKMATE_WORKSPACE_PATH || '',
-  accessToken: process.env.MARKMATE_ACCESS_TOKEN || ''
+  accessKey: process.env.MARKMATE_WEB_ACCESS_KEY || ''
 }
 
 // Validate required environment variables
@@ -15,8 +15,8 @@ if (!config.workspacePath) {
   process.exit(1)
 }
 
-if (!config.accessToken) {
-  console.error('ERROR: MARKMATE_ACCESS_TOKEN environment variable is required')
+if (!config.accessKey) {
+  console.error('ERROR: MARKMATE_WEB_ACCESS_KEY environment variable is required')
   process.exit(1)
 }
 
