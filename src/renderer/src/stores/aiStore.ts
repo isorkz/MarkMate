@@ -42,6 +42,7 @@ interface AIStore {
   addMessage: (role: MessageRole, content: string) => Promise<ChatMessage>
   updateMessage: (id: string, content: string, persist?: boolean) => Promise<void>
   deleteMessage: (id: string) => Promise<void>
+  eraseFromMessage: (id: string) => Promise<void>
   streamChat: (content: string, model: AIModel) => Promise<void>
   cancelStreamChat: () => void
 }
@@ -394,6 +395,43 @@ export const useAIStore = create<AIStore>((set, get) => ({
     })
     
     // Save session after deleting message
+    const state = get()
+    if (state.currentSession) {
+      await saveCurrentSession(state.currentSession)
+    }
+  },
+
+  // Erase current message and all following messages
+  eraseFromMessage: async (id: string) => {
+    set(state => {
+      if (!state.currentSession) return state
+      
+      const messages = state.currentSession.messages
+      const targetIndex = messages.findIndex(msg => msg.id === id)
+      
+      if (targetIndex === -1) return state
+      
+      // Keep only messages before the target message
+      const updatedMessages = messages.slice(0, targetIndex)
+      
+      const updatedSession = {
+        ...state.currentSession,
+        messages: updatedMessages,
+        updatedAt: new Date().toISOString()
+      }
+      
+      return {
+        currentSession: updatedSession,
+        sessions: state.sessions.map(s => 
+          s.id === updatedSession.id ? {
+            ...s,
+            updatedAt: updatedSession.updatedAt
+          } : s
+        )
+      }
+    })
+    
+    // Save session after erasing messages
     const state = get()
     if (state.currentSession) {
       await saveCurrentSession(state.currentSession)

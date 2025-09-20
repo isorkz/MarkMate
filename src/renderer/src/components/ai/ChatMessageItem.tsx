@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { User, Bot, Copy, Edit3, Check, Trash2, MoreHorizontal } from 'lucide-react'
+import { User, Bot, Copy, Edit3, Check, Trash2, MoreHorizontal, Eraser } from 'lucide-react'
 import { ChatMessage } from '@shared/types/ai'
 import MarkdownContent from './MarkdownContent'
 import toast from 'react-hot-toast'
@@ -16,7 +16,7 @@ const ChatMessageItem: React.FC<ChatMessageProps> = ({ message, isStreaming }) =
   const [isEditing, setIsEditing] = useState(false)
   const [editContent, setEditContent] = useState(message.content as string)
   const [showMoreMenu, setShowMoreMenu] = useState(false)
-  const { updateMessage, deleteMessage } = useAIStore()
+  const { updateMessage, deleteMessage, eraseFromMessage } = useAIStore()
   const isUser = message.role === 'user'
   const isSystem = message.role === 'system'
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -88,6 +88,16 @@ const ChatMessageItem: React.FC<ChatMessageProps> = ({ message, isStreaming }) =
     } catch (error) {
       console.error('Failed to delete message:', error)
       toast.error('Failed to delete message')
+    }
+  }
+
+  const handleErase = async () => {
+    try {
+      await eraseFromMessage(message.id)
+      setShowMoreMenu(false)
+    } catch (error) {
+      console.error('Failed to erase messages:', error)
+      toast.error('Failed to erase messages')
     }
   }
 
@@ -194,7 +204,15 @@ const ChatMessageItem: React.FC<ChatMessageProps> = ({ message, isStreaming }) =
 
               {/* More dropdown menu */}
               {showMoreMenu && (
-                <div className="absolute right-0 top-6 bg-gray-700 rounded-md shadow-lg z-10">
+                <div className="absolute right-0 top-6 rounded-md shadow-lg z-10 flex flex-col gap-1">
+                  <button
+                    onClick={handleErase}
+                    className="p-1 rounded bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white opacity-90"
+                    title="Erase from here"
+                  >
+                    <Eraser className="w-3 h-3" />
+                  </button>
+
                   <button
                     onClick={handleDelete}
                     className="p-1 rounded bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white opacity-90"
