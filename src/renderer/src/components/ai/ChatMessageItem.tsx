@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { User, Bot, Copy, Edit3, Check, Trash2, MoreHorizontal, Eraser } from 'lucide-react'
+import { User, Bot, Copy, Edit3, Check, Trash2, MoreHorizontal, Eraser, RotateCcw } from 'lucide-react'
 import { ChatMessage } from '@shared/types/ai'
 import MarkdownContent from './MarkdownContent'
 import toast from 'react-hot-toast'
@@ -16,7 +16,7 @@ const ChatMessageItem: React.FC<ChatMessageProps> = ({ message, isStreaming }) =
   const [isEditing, setIsEditing] = useState(false)
   const [editContent, setEditContent] = useState(message.content as string)
   const [showMoreMenu, setShowMoreMenu] = useState(false)
-  const { updateMessage, deleteMessage, eraseFromMessage } = useAIStore()
+  const { updateMessage, deleteMessage, eraseFromMessage, regenerateChat, config } = useAIStore()
   const isUser = message.role === 'user'
   const isSystem = message.role === 'system'
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -98,6 +98,20 @@ const ChatMessageItem: React.FC<ChatMessageProps> = ({ message, isStreaming }) =
     } catch (error) {
       console.error('Failed to erase messages:', error)
       toast.error('Failed to erase messages')
+    }
+  }
+
+  const handleRegenerate = async () => {
+    try {
+      const currentModel = config.models.find(m => m.id === config.currentModelId)
+      if (!currentModel) {
+        toast.error('Config AI model first')
+        return
+      }
+      await regenerateChat(message.id, currentModel)
+    } catch (error) {
+      console.error('Failed to regenerate message:', error)
+      toast.error('Failed to regenerate message')
     }
   }
 
@@ -190,6 +204,15 @@ const ChatMessageItem: React.FC<ChatMessageProps> = ({ message, isStreaming }) =
               title="Edit"
             >
               <Edit3 className="w-3 h-3" />
+            </button>
+
+            {/* Regenerate message */}
+            <button
+              onClick={handleRegenerate}
+              className="p-1 rounded bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white opacity-90"
+              title="Regenerate"
+            >
+              <RotateCcw className="w-3 h-3" />
             </button>
 
             {/* More menu */}

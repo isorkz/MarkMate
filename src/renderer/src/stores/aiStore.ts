@@ -43,7 +43,8 @@ interface AIStore {
   updateMessage: (id: string, content: string, persist?: boolean) => Promise<void>
   deleteMessage: (id: string) => Promise<void>
   eraseFromMessage: (id: string) => Promise<void>
-  streamChat: (content: string, model: AIModel) => Promise<void>
+  sendChat: (content: string, model: AIModel) => Promise<void>
+  regenerateChat: (id: string, model: AIModel) => Promise<void>
   cancelStreamChat: () => void
 }
 
@@ -65,6 +66,84 @@ const createChatMessage = (role: MessageRole, content: string): ChatMessage => (
 const createModelId = (): string => `model-${Date.now()}`
 
 const createChatSessionId = (): string => `session-${Date.now()}`
+
+// Private helper function for streaming chat
+const streamChat = async (
+  model: AIModel,
+  messages: ChatMessage[],
+  options: AIOptions,
+  assistantMessageId: string,
+  get: () => AIStore,
+  set: (state: Partial<AIStore> | ((state: AIStore) => Partial<AIStore>)) => void
+) => {
+  // Set streaming state
+  const abortController = new AbortController()
+  set({
+    isStreaming: true,
+    streamingMessageId: assistantMessageId,
+    isCancelling: false,
+    abortController: abortController,
+    error: null    // Clear previous error
+  })
+  
+  // Stream AI response
+  let fullResponse = ''
+  
+  try {
+    await AIChatService.streamChat(
+      model,
+      messages,
+      options,
+      (chunk: string) => {
+        fullResponse += chunk
+        get().updateMessage(assistantMessageId, fullResponse, false)
+      },
+      () => {
+        // Handle completion
+        // Update session title if it's the first message pair
+        const session = get().currentSession
+        if (session && session.messages.length >= 2 && session.title === DEFAULT_CHAT_TITLE) {
+          const userMessage = session.messages.find(msg => msg.role === 'user')
+          if (userMessage) {
+            const content = userMessage.content as string
+            const updatedSession = {
+              ...session,
+              title: content.slice(0, 50) + (content.length > 50 ? '...' : '')
+            }
+            
+            set({
+              currentSession: updatedSession,
+              sessions: get().sessions.map(s => 
+                s.id === updatedSession.id ? updatedSession : s
+              )
+            })
+          }
+        }
+        
+        // Final persist after streaming is complete
+        get().updateMessage(assistantMessageId, fullResponse, true)
+      },
+      (error: string) => {
+        // Handle error
+        set({ error })
+      },
+      () => {
+        // Handle abort
+        const cancelledResponse = fullResponse + '\n\n*(cancelled)*'
+        get().updateMessage(assistantMessageId, cancelledResponse, true)
+      },
+      abortController.signal
+    )
+  } finally {
+    // Reset streaming state
+    set({
+      isStreaming: false,
+      streamingMessageId: null,
+      isCancelling: false,
+      abortController: null
+    })
+  }
+}
 
 export const useAIStore = create<AIStore>((set, get) => ({
   // Initial state
@@ -439,7 +518,7 @@ export const useAIStore = create<AIStore>((set, get) => ({
   },
 
   // Send a message and get AI response
-  streamChat: async (content: string, model: AIModel) => {
+  sendChat: async (content: string, model: AIModel) => {
     // Validate model configuration
     const validation = AIChatService.validateModel(model)
     if (!validation.isValid) {
@@ -447,7 +526,7 @@ export const useAIStore = create<AIStore>((set, get) => ({
       return
     }
 
-    const { addMessage, updateMessage, createNewSession } = get()
+    const { addMessage, createNewSession } = get()
     let { currentSession, config } = get()
     
     // Create a new session if none exists
@@ -463,77 +542,76 @@ export const useAIStore = create<AIStore>((set, get) => ({
       // Create empty assistant message for streaming
       const assistantMessage = await addMessage('assistant', '')
       
-      // Set streaming state
-      const abortController = new AbortController()
-      set({
-        isStreaming: true,
-        streamingMessageId: assistantMessage.id,
-        isCancelling: false,
-        abortController: abortController,
-        error: null   // Clear previous error
-      })
-      
-      // Stream AI response
-      let fullResponse = ''
-
       // Get all messages for context (refresh after adding messages)
       const messages = get().currentSession?.messages || []
 
-      await AIChatService.streamChat(
-        model, 
-        messages, 
-        config.options,
-        (chunk: string) => {
-          // Handle chunk
-          fullResponse += chunk
-          updateMessage(assistantMessage.id, fullResponse, false)
-        },
-        () => {
-          // Handle completion
-          // Update session title if it's the first message pair
-          const session = get().currentSession
-          if (session && session.messages.length >= 2 && session.title === DEFAULT_CHAT_TITLE) {
-            const updatedSession = {
-              ...session,
-              title: content.slice(0, 50) + (content.length > 50 ? '...' : '')
-            }
-            
-            set({
-              currentSession: updatedSession,
-              sessions: get().sessions.map(s => 
-                s.id === updatedSession.id ? updatedSession : s
-              )
-            })
-          }
-          
-          // Final persist after streaming is complete
-          updateMessage(assistantMessage.id, fullResponse, true)
-        },
-        (error: string) => {
-          // Handle error
-          set({ error })
-        },
-        () => {
-          // Handle abort
-          const cancelledResponse = fullResponse + '\n\n*(cancelled)*'
-          updateMessage(assistantMessage.id, cancelledResponse, true)
-        },
-        abortController.signal
-      )
+      // Stream AI response
+      await streamChat(model, messages, config.options, assistantMessage.id, get, set)
 
     } catch (error) {
       console.error('Error sending message:', error)
       const errorMessage = error instanceof Error ? error.message : 'Failed to send message'
       set({ error: errorMessage })
-    } finally {
-      // Reset streaming state
-      set({
-        isStreaming: false,
-        streamingMessageId: null,
-        isCancelling: false,
-        abortController: null
-      })
     }
+  },
+
+  // Regenerate message - replace target message with new AI response
+  // For user message: find next assistant message and replace it
+  // For assistant message: find previous user message and regenerate current assistant message
+  // Only replaces the specific target message, does not affect subsequent messages in the conversation
+  regenerateChat: async (id: string, model: AIModel) => {
+    const state = get()
+    if (!state.currentSession) return
+    
+    const messages = state.currentSession.messages
+    const messageIndex = messages.findIndex(msg => msg.id === id)
+    
+    if (messageIndex === -1) return
+    
+    const targetMessage = messages[messageIndex]
+    let userMessageContent = ''
+    let assistantMessageId = ''
+    
+    if (targetMessage.role === 'user') {
+      // User message regenerate: find the next assistant message to replace
+      userMessageContent = targetMessage.content as string
+      
+      // Find the next assistant message after this user message
+      for (let i = messageIndex + 1; i < messages.length; i++) {
+        if (messages[i].role === 'assistant') {
+          assistantMessageId = messages[i].id
+          break
+        }
+      }
+    } else if (targetMessage.role === 'assistant') {
+      // Assistant message regenerate: find the corresponding user message
+      assistantMessageId = targetMessage.id
+      
+      // Find the previous user message
+      for (let i = messageIndex - 1; i >= 0; i--) {
+        if (messages[i].role === 'user') {
+          userMessageContent = messages[i].content as string
+          break
+        }
+      }
+    }
+    
+    if (!userMessageContent) return
+    
+    // If no assistant message to replace, create a new one
+    if (!assistantMessageId) {
+      const assistantMessage = await get().addMessage('assistant', '')
+      assistantMessageId = assistantMessage.id
+    } else {
+      // Clear existing assistant message content
+      await get().updateMessage(assistantMessageId, '', false)
+    }
+    
+    // Get all messages up to the target message for context
+    const contextMessages = messages.slice(0, messageIndex + (targetMessage.role === 'user' ? 1 : 0))
+    
+    // Stream the response
+    await streamChat(model, contextMessages, state.config.options, assistantMessageId, get, set)
   },
 
   // Cancel current streaming
