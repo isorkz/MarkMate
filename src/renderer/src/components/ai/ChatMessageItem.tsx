@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { User, Bot, Copy, Edit3, Check } from 'lucide-react'
+import { User, Bot, Copy, Edit3, Check, Trash2, MoreHorizontal } from 'lucide-react'
 import { ChatMessage } from '@shared/types/ai'
 import MarkdownContent from './MarkdownContent'
 import toast from 'react-hot-toast'
@@ -15,10 +15,12 @@ const ChatMessageItem: React.FC<ChatMessageProps> = ({ message, isStreaming }) =
   const [copied, setCopied] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [editContent, setEditContent] = useState(message.content as string)
-  const { updateMessage } = useAIStore()
+  const [showMoreMenu, setShowMoreMenu] = useState(false)
+  const { updateMessage, deleteMessage } = useAIStore()
   const isUser = message.role === 'user'
   const isSystem = message.role === 'system'
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const moreMenuRef = useRef<HTMLDivElement>(null)
 
   // Auto-resize textarea
   useEffect(() => {
@@ -27,6 +29,22 @@ const ChatMessageItem: React.FC<ChatMessageProps> = ({ message, isStreaming }) =
       textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px'
     }
   }, [editContent, isEditing])
+
+  // Close more menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (moreMenuRef.current && !moreMenuRef.current.contains(event.target as Node)) {
+        setShowMoreMenu(false)
+      }
+    }
+
+    if (showMoreMenu) {
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => document.removeEventListener('mousedown', handleClickOutside)
+    }
+
+    return undefined
+  }, [showMoreMenu])
 
 
   // Don't render system messages in chat
@@ -48,9 +66,14 @@ const ChatMessageItem: React.FC<ChatMessageProps> = ({ message, isStreaming }) =
     setShowActions(false)
   }
 
-  const handleSaveEdit = () => {
-    updateMessage(message.id, editContent)
-    setIsEditing(false)
+  const handleSaveEdit = async () => {
+    try {
+      await updateMessage(message.id, editContent)
+      setIsEditing(false)
+    } catch (error) {
+      console.error('Failed to update message:', error)
+      toast.error('Failed to update message')
+    }
   }
 
   const handleCancelEdit = () => {
@@ -58,11 +81,24 @@ const ChatMessageItem: React.FC<ChatMessageProps> = ({ message, isStreaming }) =
     setIsEditing(false)
   }
 
+  const handleDelete = async () => {
+    try {
+      await deleteMessage(message.id)
+      setShowMoreMenu(false)
+    } catch (error) {
+      console.error('Failed to delete message:', error)
+      toast.error('Failed to delete message')
+    }
+  }
+
   return (
     <div
       className={`group flex gap-3 mb-4 ${isUser ? 'flex-row-reverse' : ''}`}
       onMouseEnter={() => setShowActions(true)}
-      onMouseLeave={() => setShowActions(false)}
+      onMouseLeave={() => {
+        setShowActions(false)
+        setShowMoreMenu(false)
+      }}
     >
       {/* Avatar */}
       <div
@@ -141,10 +177,34 @@ const ChatMessageItem: React.FC<ChatMessageProps> = ({ message, isStreaming }) =
             <button
               onClick={handleEdit}
               className="p-1 rounded bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white opacity-90"
-              title="Edit message"
+              title="Edit"
             >
               <Edit3 className="w-3 h-3" />
             </button>
+
+            {/* More menu */}
+            <div className="relative" ref={moreMenuRef}>
+              <button
+                onClick={() => setShowMoreMenu(!showMoreMenu)}
+                className="p-1 rounded bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white opacity-90 flex"
+                title="More"
+              >
+                <MoreHorizontal className="w-3 h-3" />
+              </button>
+
+              {/* More dropdown menu */}
+              {showMoreMenu && (
+                <div className="absolute right-0 top-6 bg-gray-700 rounded-md shadow-lg z-10">
+                  <button
+                    onClick={handleDelete}
+                    className="p-1 rounded bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white opacity-90"
+                    title="Delete"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>

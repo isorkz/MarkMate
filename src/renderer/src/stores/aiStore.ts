@@ -39,8 +39,9 @@ interface AIStore {
   copyCurrentSession: () => Promise<void>
 
   // Chat actions
-  addMessage: (role: MessageRole, content: string) => ChatMessage
-  updateMessage: (id: string, content: string, persist?: boolean) => void
+  addMessage: (role: MessageRole, content: string) => Promise<ChatMessage>
+  updateMessage: (id: string, content: string, persist?: boolean) => Promise<void>
+  deleteMessage: (id: string) => Promise<void>
   streamChat: (content: string, model: AIModel) => Promise<void>
   cancelStreamChat: () => void
 }
@@ -289,7 +290,7 @@ export const useAIStore = create<AIStore>((set, get) => ({
   },
 
   // Add a message to current session
-  addMessage: (role: MessageRole, content: string): ChatMessage => {
+  addMessage: async (role: MessageRole, content: string): Promise<ChatMessage> => {
     const message = createChatMessage(role, content)
 
     const state = get()
@@ -322,13 +323,13 @@ export const useAIStore = create<AIStore>((set, get) => ({
     }
     
     // Auto-save session after adding message
-    setTimeout(() => saveCurrentSession(updatedSession), 100)
+    await saveCurrentSession(updatedSession)
     
     return message
   },
 
   // Update a message content
-  updateMessage: (id: string, content: string, persist: boolean = true) => {
+  updateMessage: async (id: string, content: string, persist: boolean = true) => {
     set(state => {
       if (!state.currentSession) return state
       
@@ -363,9 +364,39 @@ export const useAIStore = create<AIStore>((set, get) => ({
     if (persist) {
       const state = get()
       if (state.currentSession) {
-        const session = state.currentSession
-        setTimeout(() => saveCurrentSession(session), 100)
+        await saveCurrentSession(state.currentSession)
       }
+    }
+  },
+
+  // Delete a message
+  deleteMessage: async (id: string) => {
+    set(state => {
+      if (!state.currentSession) return state
+      
+      const updatedMessages = state.currentSession.messages.filter(msg => msg.id !== id)
+      
+      const updatedSession = {
+        ...state.currentSession,
+        messages: updatedMessages,
+        updatedAt: new Date().toISOString()
+      }
+      
+      return {
+        currentSession: updatedSession,
+        sessions: state.sessions.map(s => 
+          s.id === updatedSession.id ? {
+            ...s,
+            updatedAt: updatedSession.updatedAt
+          } : s
+        )
+      }
+    })
+    
+    // Save session after deleting message
+    const state = get()
+    if (state.currentSession) {
+      await saveCurrentSession(state.currentSession)
     }
   },
 
@@ -389,10 +420,10 @@ export const useAIStore = create<AIStore>((set, get) => ({
     
     try {
       // Add user message
-      addMessage('user', content)
+      await addMessage('user', content)
       
       // Create empty assistant message for streaming
-      const assistantMessage = addMessage('assistant', '')
+      const assistantMessage = await addMessage('assistant', '')
       
       // Set streaming state
       const abortController = new AbortController()
