@@ -14,7 +14,7 @@ const AISettings: React.FC = () => {
   const [editingModel, setEditingModel] = useState<AIModel | null>(null)
   const [formData, setFormData] = useState<{
     name: string
-    provider: 'azure' | 'openai'
+    provider: 'openai'
     model: string
     apiKey: string
     baseURL: string
@@ -77,10 +77,6 @@ const AISettings: React.FC = () => {
     }
     if (!formData.apiKey.trim()) {
       toast.error('API key is required for this provider')
-      return
-    }
-    if (formData.provider === 'azure' && !formData.baseURL.trim()) {
-      toast.error('Base URL is required for Azure OpenAI')
       return
     }
 
@@ -224,7 +220,6 @@ const AISettings: React.FC = () => {
                 onChange={(e) => handleInputChange('provider', e.target.value)}
               >
                 <option value="openai">OpenAI</option>
-                <option value="azure">Azure OpenAI</option>
               </select>
             </div>
 
@@ -258,12 +253,12 @@ const AISettings: React.FC = () => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Base URL {formData.provider === 'azure' && <span className="text-red-500">*</span>}
+                Base URL
               </label>
               <input
                 type="url"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="e.g., https://your-resource.openai.azure.com"
+                placeholder="e.g., https://sprite.openai.azure.com/openai/v1/"
                 value={formData.baseURL}
                 onChange={(e) => handleInputChange('baseURL', e.target.value)}
               />

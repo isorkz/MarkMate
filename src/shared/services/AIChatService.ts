@@ -1,5 +1,4 @@
 import { createOpenAI } from '@ai-sdk/openai'
-import { createAzure } from '@ai-sdk/azure'
 import { NoOutputGeneratedError, streamText } from 'ai'
 import { AIModel, ChatMessage, AIOptions } from '../types/ai'
 import { DEFAULT_TEMPERATURE } from '../constants/ai'
@@ -15,10 +14,6 @@ export class AIChatService {
 
     if (!model.model) {
       return { isValid: false, error: 'Model name is required' }
-    }
-
-    if (model.provider === 'azure' && !model.baseURL) {
-      return { isValid: false, error: 'Base URL is required for Azure OpenAI' }
     }
 
     return { isValid: true }
@@ -46,22 +41,6 @@ export class AIChatService {
           aiProvider = createOpenAI({
             apiKey: model.apiKey,
             ...(model.baseURL && { baseURL: model.baseURL })
-          })
-          break
-        case 'azure':
-          // https://ai-sdk.dev/providers/ai-sdk-providers/azure
-          if (!model.baseURL) {
-            throw new Error('Base URL is required for Azure OpenAI')
-          }
-          // Extract resource name from baseURL
-          const resourceMatch = model.baseURL.match(/https:\/\/(.*?)\.openai\.azure\.com/)
-          if (!resourceMatch) {
-            throw new Error('Invalid Azure OpenAI baseURL format')
-          }
-          aiProvider = createAzure({
-            resourceName: resourceMatch[1],
-            apiKey: model.apiKey,
-            // apiVersion: '2025-04-01-preview'  // https://learn.microsoft.com/en-us/azure/ai-foundry/openai/api-version-lifecycle?tabs=key
           })
           break
         default:

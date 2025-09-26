@@ -1,7 +1,7 @@
 export interface AIModel {
   id: string
   name: string
-  provider: 'azure' | 'openai'
+  provider: 'openai'
   model: string
   apiKey: string
   baseURL?: string
