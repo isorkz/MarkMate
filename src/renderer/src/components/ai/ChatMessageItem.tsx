@@ -127,7 +127,8 @@ const ChatMessageItem: React.FC<ChatMessageProps> = ({ message, isStreaming }) =
       {/* Avatar */}
       <div
         className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${isUser
-          ? 'bg-blue-500 text-white'
+          // ? 'bg-gray-100 text-gray-600'
+          ? 'bg-neutral-800 text-white'
           : 'bg-gray-100 text-gray-600'
           }`}
       >
@@ -140,7 +141,8 @@ const ChatMessageItem: React.FC<ChatMessageProps> = ({ message, isStreaming }) =
           className={`rounded-lg select-text px-4 py-3 ${isEditing
             ? 'bg-white border border-gray-200'
             : isUser
-              ? 'bg-blue-500 text-white'
+              // ? 'bg-gray-100'
+              ? 'bg-neutral-800 text-white'
               : 'bg-white border border-gray-200'
             }`}
         >
@@ -229,19 +231,19 @@ const ChatMessageItem: React.FC<ChatMessageProps> = ({ message, isStreaming }) =
               {showMoreMenu && (
                 <div className="absolute right-0 top-6 rounded-md shadow-lg z-10 flex flex-col gap-1">
                   <button
-                    onClick={handleErase}
-                    className="p-1 rounded bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white opacity-90"
-                    title="Erase from here"
-                  >
-                    <Eraser className="w-3 h-3" />
-                  </button>
-
-                  <button
                     onClick={handleDelete}
                     className="p-1 rounded bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white opacity-90"
                     title="Delete"
                   >
                     <Trash2 className="w-3 h-3" />
+                  </button>
+
+                  <button
+                    onClick={handleErase}
+                    className="p-1 rounded bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white opacity-90"
+                    title="Erase from here"
+                  >
+                    <Eraser className="w-3 h-3" />
                   </button>
                 </div>
               )}
