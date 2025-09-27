@@ -4,7 +4,7 @@ import { useAIStore } from '../../stores/aiStore'
 import toast from 'react-hot-toast'
 
 const InputPanel: React.FC = () => {
-  const { config, sendChat, isStreaming, isCancelling, cancelStreamChat, setDefaultModel } = useAIStore()
+  const { config, sendUserMessage, chat, isStreaming, isCancelling, cancelStreamChat, setDefaultModel } = useAIStore()
   const [input, setInput] = useState('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
@@ -14,16 +14,23 @@ const InputPanel: React.FC = () => {
   const handleSend = async () => {
     if (!input.trim() || isStreaming || !currentModel) return
 
+    const messageToSend = input.trim()
+
     try {
-      await sendChat(input.trim(), currentModel)
-    } catch (error) {
-      // Errors handled in chat
-      toast.error('Error sending message.')
-    } finally {
+      // First, send and persist user message
+      await sendUserMessage(messageToSend)
+
+      // Clear input after user message is successfully persisted
       setInput('')
       if (textareaRef.current) {
         textareaRef.current.style.height = 'auto'
       }
+
+      // Then get AI response
+      await chat(currentModel)
+
+    } catch (error) {
+      toast.error('Error sending message.')
     }
   }
 

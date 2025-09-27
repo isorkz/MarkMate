@@ -27,6 +27,7 @@ interface AIStore {
   activeSessionId: string | null  // null means draft session
   isStreaming: boolean
   streamingMessageId: string | null
+  isRegenerating: boolean  // true if current streaming is from regeneration
   isCancelling: boolean
   abortController: AbortController | null
   
@@ -43,7 +44,8 @@ interface AIStore {
   updateMessage: (id: string, content: string, persist?: boolean) => Promise<void>
   deleteMessage: (id: string) => Promise<void>
   eraseFromMessage: (id: string) => Promise<void>
-  sendChat: (content: string, model: AIModel) => Promise<void>
+  sendUserMessage: (content: string) => Promise<void>
+  chat: (model: AIModel) => Promise<void>
   regenerateChat: (id: string, model: AIModel) => Promise<void>
   cancelStreamChat: () => void
 }
@@ -156,6 +158,7 @@ export const useAIStore = create<AIStore>((set, get) => ({
   activeSessionId: null,
   isStreaming: false,
   streamingMessageId: null,
+  isRegenerating: false,
   isCancelling: false,
   abortController: null,
   
@@ -517,17 +520,10 @@ export const useAIStore = create<AIStore>((set, get) => ({
     }
   },
 
-  // Send a message and get AI response
-  sendChat: async (content: string, model: AIModel) => {
-    // Validate model configuration
-    const validation = AIChatService.validateModel(model)
-    if (!validation.isValid) {
-      set({ error: validation.error })
-      return
-    }
-
+  // Send user message and persist it immediately
+  sendUserMessage: async (content: string): Promise<void> => {
     const { addMessage, createNewSession } = get()
-    let { currentSession, config } = get()
+    let { currentSession } = get()
     
     // Create a new session if none exists
     if (!currentSession) {
@@ -535,10 +531,23 @@ export const useAIStore = create<AIStore>((set, get) => ({
       currentSession = get().currentSession
     }
     
+    // Add and persist user message
+    await addMessage('user', content)
+  },
+
+  // Get AI response for the conversation
+  chat: async (model: AIModel): Promise<void> => {
+    // Validate model configuration
+    const validation = AIChatService.validateModel(model)
+    if (!validation.isValid) {
+      set({ error: validation.error })
+      return
+    }
+
+    const { addMessage } = get()
+    const { config } = get()
+    
     try {
-      // Add user message
-      await addMessage('user', content)
-      
       // Create empty assistant message for streaming
       const assistantMessage = await addMessage('assistant', '')
       
@@ -549,8 +558,8 @@ export const useAIStore = create<AIStore>((set, get) => ({
       await streamChat(model, messages, config.options, assistantMessage.id, get, set)
 
     } catch (error) {
-      console.error('Error sending message:', error)
-      const errorMessage = error instanceof Error ? error.message : 'Failed to send message'
+      console.error('Error getting AI response:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Failed to get AI response'
       set({ error: errorMessage })
     }
   },
@@ -598,20 +607,28 @@ export const useAIStore = create<AIStore>((set, get) => ({
     
     if (!userMessageContent) return
     
-    // If no assistant message to replace, create a new one
-    if (!assistantMessageId) {
-      const assistantMessage = await get().addMessage('assistant', '')
-      assistantMessageId = assistantMessage.id
-    } else {
-      // Clear existing assistant message content
-      await get().updateMessage(assistantMessageId, '', false)
+    try {
+      // Set regeneration state
+      set({ isRegenerating: true })
+      
+      // If no assistant message to replace, create a new one
+      if (!assistantMessageId) {
+        const assistantMessage = await get().addMessage('assistant', '')
+        assistantMessageId = assistantMessage.id
+      } else {
+        // Clear existing assistant message content
+        await get().updateMessage(assistantMessageId, '', false)
+      }
+      
+      // Get all messages up to the target message for context
+      const contextMessages = messages.slice(0, messageIndex + (targetMessage.role === 'user' ? 1 : 0))
+      
+      // Stream the response
+      await streamChat(model, contextMessages, state.config.options, assistantMessageId, get, set)
+    } finally {
+      // Reset regeneration state
+      set({ isRegenerating: false })
     }
-    
-    // Get all messages up to the target message for context
-    const contextMessages = messages.slice(0, messageIndex + (targetMessage.role === 'user' ? 1 : 0))
-    
-    // Stream the response
-    await streamChat(model, contextMessages, state.config.options, assistantMessageId, get, set)
   },
 
   // Cancel current streaming

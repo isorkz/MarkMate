@@ -127,8 +127,8 @@ const ChatMessageItem: React.FC<ChatMessageProps> = ({ message, isStreaming }) =
       {/* Avatar */}
       <div
         className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${isUser
-          // ? 'bg-gray-100 text-gray-600'
-          ? 'bg-neutral-800 text-white'
+          ? 'bg-gray-100 text-gray-600'
+          // ? 'bg-neutral-800 text-white'
           : 'bg-gray-100 text-gray-600'
           }`}
       >
@@ -141,8 +141,8 @@ const ChatMessageItem: React.FC<ChatMessageProps> = ({ message, isStreaming }) =
           className={`rounded-lg select-text px-4 py-3 ${isEditing
             ? 'bg-white border border-gray-200'
             : isUser
-              // ? 'bg-gray-100'
-              ? 'bg-neutral-800 text-white'
+              ? 'bg-gray-100'
+              // ? 'bg-neutral-800 text-white'
               : 'bg-white border border-gray-200'
             }`}
         >

@@ -6,7 +6,7 @@ import ChatMessageItem from './ChatMessageItem'
 
 const ChatPanel: React.FC = () => {
   const { openSettings } = useSettingsStore()
-  const { config, currentSession, createNewSession, isStreaming, streamingMessageId, error, clearError } = useAIStore()
+  const { config, currentSession, createNewSession, isStreaming, streamingMessageId, isRegenerating, error, clearError } = useAIStore()
   const hasModels = config.models.length > 0
   const messages = currentSession?.messages || []
   const hasChatMessages = messages.length > 0
@@ -20,6 +20,13 @@ const ChatPanel: React.FC = () => {
       createNewSession()
     }
   }, [hasModels, currentSession, createNewSession])
+
+  // Auto-scroll to bottom when AI starts responding (but not during regeneration)
+  useEffect(() => {
+    if (isStreaming && !isRegenerating) {
+      scrollToBottom()
+    }
+  }, [isStreaming, isRegenerating])
 
   const handleSetModel = () => {
     openSettings('ai')
