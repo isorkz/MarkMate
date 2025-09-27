@@ -21,7 +21,8 @@ import { useEditorStore, Tab } from '../../stores/editorStore'
 import { useSettingsStore } from '../../stores/settingsStore'
 import { useWorkspaceStore } from '../../stores/workspaceStore'
 import { useRichEditorSearch } from '../../hooks/useRichEditorSearch'
-import CodeBlock from './CodeBlock'
+import CodeBlock from './codeblock/CodeBlock'
+import { CodeBlockUtils } from './codeblock/CodeBlockUtils'
 import { ImageElementUtils } from './ImageElementUtils'
 import RichEditorSearch from '../search/RichEditorSearch'
 import LinkBubbleMenu from './bubble-menu/LinkBubbleMenu'
@@ -86,7 +87,11 @@ const RichEditor: React.FC<RichEditorProps> = ({ tab }) => {
                 }
               }
               return false
-            }
+            },
+            // Tab - indent in code blocks
+            'Tab': ({ editor }) => CodeBlockUtils.indentTab(editor),
+            // Shift+Tab - unindent in code blocks
+            'Shift-Tab': ({ editor }) => CodeBlockUtils.unindentTab(editor)
           }
         }
       }).configure({ lowlight }),
