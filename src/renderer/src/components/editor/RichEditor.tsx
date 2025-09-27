@@ -62,6 +62,33 @@ const RichEditor: React.FC<RichEditorProps> = ({ tab }) => {
         addNodeView() {
           return ReactNodeViewRenderer(CodeBlock)
         },
+        addKeyboardShortcuts() {
+          return {
+            // Custom Mod-a behavior for code blocks
+            // Select all text within the code block instead of the whole document
+            'Mod-a': ({ editor }) => {
+              // Check if cursor is in a code block
+              const { $from } = editor.state.selection
+              const node = $from.node()
+
+              if (node.type.name === 'codeBlock') {
+                // Get the code block content and select all
+                const codeBlockPos = $from.before()
+                const codeBlockNode = editor.state.doc.nodeAt(codeBlockPos)
+
+                if (codeBlockNode) {
+                  // Select all content within the code block
+                  editor.commands.setTextSelection({
+                    from: codeBlockPos + 1,
+                    to: codeBlockPos + codeBlockNode.nodeSize - 1
+                  })
+                  return true
+                }
+              }
+              return false
+            }
+          }
+        }
       }).configure({ lowlight }),
       Markdown.configure({
         html: true,                  // Allow HTML input/output (see tests in tiptap-markdown source code for examples)

@@ -3,7 +3,7 @@ import React, { useState, useRef } from 'react'
 
 // https://next.tiptap.dev/docs/examples/advanced/syntax-highlighting
 
-// Neet to restart the app to make it effect
+// Need to restart the app to make it effect
 export default ({ node: { attrs: { language: defaultLanguage } }, updateAttributes, extension }) => {
   const [copied, setCopied] = useState(false)
   const codeRef = useRef(null)
