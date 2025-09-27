@@ -258,7 +258,7 @@ const AISettings: React.FC = () => {
               <input
                 type="url"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="e.g., https://sprite.openai.azure.com/openai/v1/"
+                placeholder="e.g., https://<your-endpoint>.openai.azure.com/openai/v1/"
                 value={formData.baseURL}
                 onChange={(e) => handleInputChange('baseURL', e.target.value)}
               />

@@ -11,7 +11,7 @@ For MarkMate web version, workspace path and access key are required:
 * Access key is used for API authentication.
 
 ```bash
-export MARKMATE_WORKSPACE_PATH=/path/to/your/markdown/workspace
+export MARKMATE_WEB_WORKSPACE_PATH=/path/to/your/markdown/workspace
 
 export MARKMATE_WEB_ACCESS_KEY=your-web-access-key
 ```

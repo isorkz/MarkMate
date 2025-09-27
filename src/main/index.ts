@@ -5,6 +5,10 @@ import icon from '../../resources/icon.png?asset'
 import { setupIpcHandlers } from './ipc'
 import { createAppMenu } from './menu'
 
+// Load environment variables from .env file
+import { config } from 'dotenv'
+config()
+
 function createWindow(): BrowserWindow {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
