@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useRef } from 'react'
 import { useEditor, EditorContent, ReactNodeViewRenderer } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
@@ -50,6 +50,8 @@ const RichEditor: React.FC<RichEditorProps> = ({ tab }) => {
   const { updateTabContent, readOnlyMode, showSourceEditor } = useEditorStore()
   const { currentWorkspace } = useWorkspaceStore()
   const { appearanceSettings } = useSettingsStore()
+
+  const lastMarkdownRef = useRef(tab?.content ?? '')
 
   const editor = useEditor({
     extensions: [
@@ -169,16 +171,16 @@ const RichEditor: React.FC<RichEditorProps> = ({ tab }) => {
     content: tab?.content || '',
     onUpdate: ({ editor, transaction }) => {
       try {
-        const hasPageLinkInsertion = transaction?.steps.some((step: any) =>
-          step.slice?.content?.content?.some((node: any) => node.type?.name === 'pageLink')
-        )
-
-        // Only trigger content update if user is actively editing (editor is focused) or inserting page links
-        // This prevents marking tabs as dirty when programmatically setting content 
-        if (!editor.isFocused && !hasPageLinkInsertion) return
+        if (!tab || !transaction?.docChanged) {
+          return
+        }
 
         const markdown = editor.storage.markdown.getMarkdown()
-        updateTabContent(tab.id, markdown)
+
+        if (markdown !== lastMarkdownRef.current) {
+          lastMarkdownRef.current = markdown
+          updateTabContent(tab.id, markdown)
+        }
       } catch (err) {
         console.error('Markdown conversion failed:', err)
         toast.error('Markdown conversion failed')
@@ -237,9 +239,8 @@ const RichEditor: React.FC<RichEditorProps> = ({ tab }) => {
           editor.commands.setContent(tab.content, false)
         }
       } catch (error) {
-        // Fallback: always update if we can't get markdown
-        console.error('Could not get markdown, updating content:', error)
-        editor.commands.setContent(tab.content, false)
+        console.error('Markdown conversion failed:', error)
+        toast.error('Markdown conversion failed')
       }
     }
   }, [tab?.content, editor?.isFocused, showSourceEditor])
@@ -250,6 +251,12 @@ const RichEditor: React.FC<RichEditorProps> = ({ tab }) => {
       editor.setEditable(!readOnlyMode)
     }
   }, [editor, readOnlyMode])
+
+  useEffect(() => {
+    if (tab) {
+      lastMarkdownRef.current = tab.content ?? ''
+    }
+  }, [tab?.id, tab?.content])
 
   // Resolve image paths when content is loaded or workspace/tab changes
   useEffect(() => {
