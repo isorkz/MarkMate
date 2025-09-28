@@ -22,10 +22,11 @@ export function createAppMenu(mainWindow: BrowserWindow, recentFiles: string[] =
         },
         { type: 'separator' },
         { role: 'services' },
-        { type: 'separator' },
-        { role: 'hide' },
-        { role: 'hideOthers' },
-        { role: 'unhide' },
+        // Disable these to show shortcut for highlight text in rich editor.
+        // { type: 'separator' },
+        // { role: 'hide' },
+        // { role: 'hideOthers' },
+        // { role: 'unhide' },
         { type: 'separator' },
         { role: 'quit' }
       ]

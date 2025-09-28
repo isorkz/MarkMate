@@ -122,6 +122,23 @@ const RichEditor: React.FC<RichEditorProps> = ({ tab }) => {
           return {
             'Mod-h': () => this.editor.commands.toggleHighlight(),
           }
+        },
+        addStorage() {
+          const parentStorage = this.parent?.()
+          const parentMarkdown = parentStorage?.markdown
+
+          // Highlight markdown uses <mark>highlighted text</mark>
+          return {
+            ...parentStorage,
+            markdown: {
+              ...parentMarkdown,
+              serialize: {
+                ...parentMarkdown?.serialize,
+                open: '<mark>',
+                close: '</mark>'
+              }
+            }
+          }
         }
       }),
       Image.configure({

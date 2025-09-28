@@ -232,6 +232,14 @@
     border-bottom-color: var(--link-color);
   }
 
+  /* Highlight mark (==text== / highlight button) */
+  .RichEditorView mark,
+  .RichEditorView .highlight {
+    background-color: #fef08a;
+    padding: 0.1em 0.2em;
+    border-radius: 0.25rem;
+  }
+
   /* Emphasis */
   .RichEditorView strong {
     font-weight: 700;
@@ -356,6 +364,12 @@
   .prose-invert .RichEditorView a:hover {
     background: rgba(78, 185, 234, 0.1);
     border-bottom-color: rgb(78, 185, 234);
+  }
+
+  .prose-invert .RichEditorView mark,
+  .prose-invert .RichEditorView .highlight {
+    background-color: rgba(253, 224, 71, 0.75);
+    color: rgba(15, 23, 42, 0.95);
   }
 
   .prose-invert .RichEditorView strong,
