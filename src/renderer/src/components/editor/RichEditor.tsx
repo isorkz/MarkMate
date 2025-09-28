@@ -26,6 +26,7 @@ import { CodeBlockUtils } from './codeblock/CodeBlockUtils'
 import { ImageElementUtils } from './ImageElementUtils'
 import RichEditorSearch from '../search/RichEditorSearch'
 import LinkBubbleMenu from './bubble-menu/LinkBubbleMenu'
+import SelectionBubbleMenu from './bubble-menu/SelectionBubbleMenu'
 // https://github.com/sereneinserenade/tiptap-search-and-replace
 import SearchAndReplace from './extensions/search/SearchAndReplace'
 // Slash commands extension
@@ -311,7 +312,12 @@ const RichEditor: React.FC<RichEditorProps> = ({ tab }) => {
             className={`min-h-full ${appearanceSettings.theme === 'dark' ? 'prose-invert' : ''}`}
           />
 
-          {editor && <LinkBubbleMenu editor={editor} />}
+          {editor && (
+            <>
+              <SelectionBubbleMenu editor={editor} />
+              <LinkBubbleMenu editor={editor} />
+            </>
+          )}
 
           {isOpen && (
             <PageLinkSelector
