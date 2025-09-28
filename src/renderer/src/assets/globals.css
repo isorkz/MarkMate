@@ -20,6 +20,32 @@
 
 @layer components {
 
+  /* Global scrollbar styling */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(86, 89, 96, 0.2) transparent;
+  }
+
+  *::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background-color: rgba(15, 23, 42, 0.2);
+    border-radius: 9999px;
+    transition: background-color 0.2s ease;
+  }
+
+  *:hover::-webkit-scrollbar-thumb,
+  *::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(15, 23, 42, 0.45);
+  }
+
   /* Layout utilities */
   .w-sidebar {
     @apply w-72
@@ -44,6 +70,7 @@
     --text-secondary: rgb(55, 53, 47);
     --link-color: rgb(46, 170, 220);
   }
+
 
   .RichEditorView h1 {
     @apply text-4xl font-bold mb-2 mt-8;
@@ -364,6 +391,19 @@
   .prose-invert .RichEditorView a:hover {
     background: rgba(78, 185, 234, 0.1);
     border-bottom-color: rgb(78, 185, 234);
+  }
+
+  .prose-invert * {
+    scrollbar-color: rgba(255, 255, 255, 0.35) transparent;
+  }
+
+  .prose-invert *::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.35);
+  }
+
+  .prose-invert *:hover::-webkit-scrollbar-thumb,
+  .prose-invert *::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(255, 255, 255, 0.6);
   }
 
   .prose-invert .RichEditorView mark,
