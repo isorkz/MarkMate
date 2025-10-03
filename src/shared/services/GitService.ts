@@ -63,27 +63,51 @@ export class GitService {
     branch: string = 'main'
   ): Promise<void> {
     const git = simpleGit(workspacePath)
-    
+
     // Check if remote exists
     const remotes = await git.getRemotes(true)
     const remoteExists = remotes.some(r => r.name === remote)
     if (!remoteExists) {
       throw new Error(`Remote '${remote}' does not exist`)
     }
-    
+
+    const branchSummary = await git.branch()
+    const currentBranch = branchSummary.current
+    const targetBranch = branch ?? currentBranch ?? 'main'
+
+    if (!currentBranch) {
+      throw new Error('Cannot determine the current branch to sync')
+    }
+
+    if (currentBranch !== targetBranch) {
+      throw new Error(`Current branch '${currentBranch}' does not match target branch '${targetBranch}'`)
+    }
+
     // Commit changes if any
-    const status = await git.status()
-    if (status.files.length > 0) {
+    const statusBeforeCommit = await git.status()
+    const hasLocalChanges = statusBeforeCommit.files.length > 0
+
+    if (hasLocalChanges) {
       await git.add('.')
       await git.commit(commitMessage)
     }
 
-    // Pull latest changes with rebase
-    await git.pull(remote, 'main', { '--rebase': 'true' })
+    // Fetch the latest changes for the branch we're tracking
+    await git.fetch(remote, targetBranch)
 
-    // Push local commits to origin
-    if (status.files.length > 0 || status.ahead > 0) {
-      await git.push(remote, branch)
+    const statusAfterFetch = await git.status()
+    const remoteAhead = statusAfterFetch.behind ?? 0
+
+    if (remoteAhead > 0) {
+      const remoteBranchRef = `${remote}/${targetBranch}`
+      await git.rebase([remoteBranchRef])
+    }
+
+    const statusAfterRebase = await git.status()
+
+    // Push local commits to origin if we created or still have commits ahead of remote
+    if (hasLocalChanges || (statusAfterRebase.ahead ?? 0) > 0) {
+      await git.push(remote, targetBranch)
     }
   }
 
