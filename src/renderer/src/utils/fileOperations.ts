@@ -7,6 +7,7 @@ import { getSyncStatus, completeGitMerge, syncWorkspace } from './syncOperation'
 import { useSettingsStore } from '@renderer/stores/settingsStore'
 import { FileNode } from '@shared/types/file'
 import { PageLinksUpdater } from './PageLinksUpdater'
+import { applySortOrder } from './applySortOrder'
 
 // Helper function to get all markdown files from the file tree
 export const getAllMarkdownFiles = (nodes: FileNode[]): FileNode[] => {
@@ -30,7 +31,8 @@ export const getAllMarkdownFiles = (nodes: FileNode[]): FileNode[] => {
 export const loadFileTree = async (workspacePath: string, setFileTree: (tree: any) => void) => {
   try{
     const newFileTree = await adapters.workspaceAdapter.getFileTree(workspacePath)
-    setFileTree(newFileTree)
+    const orderedTree = applySortOrder(newFileTree, workspacePath)
+    setFileTree(orderedTree)
   } catch (error) {
     console.error('Failed to load workspace file tree:', error)
     throw error

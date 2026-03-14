@@ -1,14 +1,16 @@
-import React, { useState } from 'react'
+import React, { useState, useCallback } from 'react'
 import toast from 'react-hot-toast'
 import { Folder, FolderOpen, FileText, ChevronRight, ChevronDown, Star, Plus } from 'lucide-react'
 import { useFileSystemStore } from '../../stores/fileSystemStore'
 import { useWorkspaceStore } from '../../stores/workspaceStore'
 import { useEditorStore } from '../../stores/editorStore'
+import { useFileOrderStore } from '../../stores/fileOrderStore'
 import FileContextMenu from './FileContextMenu'
 import InlineInput from './InlineInput'
 import { handleNewFile, handleNewFolder, handleRename, handleDelete, loadFileTree, handleOpenFile, handleMoveFile } from '../../utils/fileOperations'
-import { DndContext, DragEndEvent, DragStartEvent, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
-import { DraggableFileNode, DroppableFolder, RootDropZone } from './DraggableFileNode'
+import { DndContext, DragEndEvent, DragStartEvent, DragMoveEvent, DragOverlay, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
+import { DraggableFileNode, RootDropZone } from './DraggableFileNode'
+import type { DropIndicator } from './DraggableFileNode'
 import { FileNode } from '@shared/types/file'
 
 const FileTree: React.FC = () => {
@@ -28,6 +30,19 @@ const FileTree: React.FC = () => {
 
   const [draggedNode, setDraggedNode] = useState<FileNode | null>(null)
   const [showCreateMenu, setShowCreateMenu] = useState<{ x: number; y: number } | null>(null)
+  const [dropIndicator, setDropIndicator] = useState<DropIndicator>(null)
+
+  const { setOrder } = useFileOrderStore()
+
+  // Update visual indicator without unnecessary re-renders
+  const updateDropIndicator = useCallback((indicator: DropIndicator) => {
+    setDropIndicator((prev) => {
+      if (prev?.targetPath === indicator?.targetPath && prev?.position === indicator?.position) {
+        return prev
+      }
+      return indicator
+    })
+  }, [])
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -44,32 +59,173 @@ const FileTree: React.FC = () => {
     }
   }
 
+  // Helper: get parent path from a file/folder path
+  const getParentPath = useCallback((filePath: string): string => {
+    const lastSlash = filePath.lastIndexOf('/')
+    return lastSlash === -1 ? '' : filePath.substring(0, lastSlash)
+  }, [])
+
+  // Helper: get sibling list for a given parent path
+  const getSiblings = useCallback((parentPath: string): FileNode[] => {
+    if (parentPath === '') return fileTree
+
+    const findFolder = (nodes: FileNode[], target: string): FileNode | null => {
+      for (const node of nodes) {
+        if (node.path === target && node.type === 'folder') return node
+        if (node.children) {
+          const found = findFolder(node.children, target)
+          if (found) return found
+        }
+      }
+      return null
+    }
+
+    return findFolder(fileTree, parentPath)?.children || []
+  }, [fileTree])
+
+  // Reorder nodes within the same parent, inserting active before or after target
+  const reorderAtPosition = useCallback(
+    (parentPath: string, activePath: string, targetPath: string, position: 'before' | 'after') => {
+      if (!currentWorkspace) return
+
+      const siblings = getSiblings(parentPath)
+      const paths = siblings.map((n) => n.path)
+
+      // Remove active from current position
+      const newPaths = paths.filter((p) => p !== activePath)
+
+      // Find target index and insert
+      let targetIndex = newPaths.indexOf(targetPath)
+      if (targetIndex === -1) return
+      if (position === 'after') targetIndex += 1
+      newPaths.splice(targetIndex, 0, activePath)
+
+      // Persist the new order
+      setOrder(currentWorkspace.path, parentPath, newPaths)
+
+      // Update file tree in state (reorder in-place without reload)
+      const reorderInTree = (nodes: FileNode[], targetParent: string): FileNode[] => {
+        if (targetParent === '') {
+          const nodeMap = new Map(nodes.map((n) => [n.path, n]))
+          return newPaths.map((p) => nodeMap.get(p)!).filter(Boolean)
+        }
+        return nodes.map((node) => {
+          if (node.path === targetParent && node.children) {
+            const childMap = new Map(node.children.map((n) => [n.path, n]))
+            return { ...node, children: newPaths.map((p) => childMap.get(p)!).filter(Boolean) }
+          }
+          if (node.children) {
+            return { ...node, children: reorderInTree(node.children, targetParent) }
+          }
+          return node
+        })
+      }
+
+      setFileTree(reorderInTree(fileTree, parentPath))
+    },
+    [currentWorkspace, fileTree, getSiblings, setFileTree, setOrder]
+  )
+
+  // Helper to compute drop zone from pointer position
+  const computeDropZone = useCallback(
+    (
+      pointerY: number,
+      overRect: { top: number; height: number },
+      overNode: FileNode
+    ): 'before' | 'after' | 'inside' => {
+      const relativeY = (pointerY - overRect.top) / overRect.height
+      if (overNode.type === 'folder') {
+        if (relativeY < 0.3) return 'before'
+        if (relativeY > 0.7) return 'after'
+        return 'inside'
+      }
+      return relativeY < 0.5 ? 'before' : 'after'
+    },
+    []
+  )
+
+  // Update visual indicators on every pointer move during drag
+  const handleDragMove = useCallback(
+    (event: DragMoveEvent) => {
+      const { over, activatorEvent, delta } = event
+      if (!over || !draggedNode) {
+        updateDropIndicator(null)
+        return
+      }
+
+      const overId = String(over.id)
+      if (overId === 'root') {
+        updateDropIndicator(null)
+        return
+      }
+
+      const overNode = over.data.current?.node as FileNode | undefined
+      if (!overNode || overNode.path === draggedNode.path) {
+        updateDropIndicator(null)
+        return
+      }
+
+      const pointerY = (activatorEvent as PointerEvent).clientY + delta.y
+      const rect = over.rect
+      if (!rect || !rect.height) {
+        updateDropIndicator(
+          overNode.type === 'folder'
+            ? { targetPath: overNode.path, position: 'inside' }
+            : { targetPath: overNode.path, position: 'after' }
+        )
+        return
+      }
+
+      const position = computeDropZone(pointerY, rect, overNode)
+      updateDropIndicator({ targetPath: overNode.path, position })
+    },
+    [draggedNode, updateDropIndicator, computeDropZone]
+  )
+
   const handleDragEnd = async (event: DragEndEvent) => {
-    const { over } = event
-
+    const { over, activatorEvent, delta } = event
     const sourceNode = draggedNode
-    setDraggedNode(null)
 
-    if (!over || !currentWorkspace || !sourceNode) {
+    setDraggedNode(null)
+    updateDropIndicator(null)
+
+    if (!over || !currentWorkspace || !sourceNode) return
+
+    const overId = String(over.id)
+
+    // Case 1: Dropped on root → move to workspace root
+    if (overId === 'root') {
+      await handleMoveFile(currentWorkspace.path, sourceNode, '', setFileTree)
       return
     }
 
-    let targetPath = ''
-    if (over.data.current?.node) {
-      const overNode = over.data.current.node as FileNode
-      if (overNode.type === 'folder') {
-        targetPath = overNode.path
-      } else {
-        // If dropped on a file, move to the parent folder of that file
-        const pathParts = overNode.path.split('/')
-        pathParts.pop() // Remove the file name
-        targetPath = pathParts.join('/')
-      }
+    const overNode = over.data.current?.node as FileNode | undefined
+    if (!overNode) return
+
+    // Compute the drop zone directly from the event — no stale state dependency
+    const pointerY = (activatorEvent as PointerEvent).clientY + delta.y
+    const rect = over.rect
+    let action: 'before' | 'after' | 'inside' = overNode.type === 'folder' ? 'inside' : 'after'
+    if (rect && rect.height) {
+      action = computeDropZone(pointerY, rect, overNode)
     }
 
-    await handleMoveFile(currentWorkspace.path, sourceNode, targetPath, setFileTree)
+    // Case 2: Drop into folder (pointer in center zone)
+    if (action === 'inside' && overNode.type === 'folder') {
+      await handleMoveFile(currentWorkspace.path, sourceNode, overNode.path, setFileTree)
+      return
+    }
 
+    // Case 3: Reorder (before/after)
+    const activeParent = getParentPath(sourceNode.path)
+    const overParent = getParentPath(overNode.path)
 
+    if (activeParent === overParent) {
+      reorderAtPosition(activeParent, sourceNode.path, overNode.path, action as 'before' | 'after')
+    } else {
+      // Different parent → move to the over node's parent folder
+      await handleMoveFile(currentWorkspace.path, sourceNode, overParent, setFileTree)
+    }
   }
 
   const handleNodeClick = async (node: FileNode, isFolder: boolean) => {
@@ -254,15 +410,13 @@ const FileTree: React.FC = () => {
 
     return (
       <div key={node.path}>
-        <DroppableFolder node={node}>
-          <DraggableFileNode node={node} isDraggedItem={isDraggedItem} isEditing={isEditing}>
-            {nodeContent}
-          </DraggableFileNode>
-        </DroppableFolder>
+        <DraggableFileNode node={node} isDraggedItem={isDraggedItem} isEditing={isEditing} dropIndicator={dropIndicator}>
+          {nodeContent}
+        </DraggableFileNode>
 
         {isFolder && isExpanded && (
           <div>
-            {node.children && node.children.map((child: any) => renderNode(child, depth + 1))}
+            {node.children && node.children.map((child: FileNode) => renderNode(child, depth + 1))}
 
             {/* Folder level create input */}
             {editingMode && editingMode.mode === 'create' && editingMode.path === node.path && (
@@ -349,6 +503,7 @@ const FileTree: React.FC = () => {
           sensors={sensors}
           collisionDetection={closestCenter}
           onDragStart={handleDragStart}
+          onDragMove={handleDragMove}
           onDragEnd={handleDragEnd}
         >
           <RootDropZone>
@@ -364,6 +519,19 @@ const FileTree: React.FC = () => {
             )}
             {fileTree.map(node => renderNode(node))}
           </RootDropZone>
+
+          <DragOverlay dropAnimation={null}>
+            {draggedNode && (
+              <div className="bg-white shadow-lg rounded-md border border-blue-200 px-3 py-1.5 text-sm text-gray-700 opacity-90">
+                {draggedNode.type === 'folder' ? (
+                  <Folder className="w-4 h-4 inline mr-1.5" />
+                ) : (
+                  <FileText className="w-4 h-4 inline mr-1.5" />
+                )}
+                {draggedNode.name}
+              </div>
+            )}
+          </DragOverlay>
         </DndContext>
       </div>
 

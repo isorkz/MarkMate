@@ -1,6 +1,8 @@
 import { create } from 'zustand'
 import { useFilePathEventStore } from './events/filePathEventStore'
+import { useFileOrderStore } from './fileOrderStore'
 import { FileNode } from '@shared/types/file';
+import { useWorkspaceStore } from './workspaceStore'
 
 interface FileSystemStore {
   fileTree: FileNode[];
@@ -87,6 +89,12 @@ useFilePathEventStore.subscribe((state) => {
     })
     
     useFileSystemStore.setState({ expandedFolders: newExpanded })
+
+    // Update sort order store
+    const workspace = useWorkspaceStore.getState().currentWorkspace
+    if (workspace) {
+      useFileOrderStore.getState().handlePathRename(workspace.path, oldPath, newPath)
+    }
   }
 })
 
@@ -104,5 +112,11 @@ useFilePathEventStore.subscribe((state) => {
     })
     
     useFileSystemStore.setState({ expandedFolders: newExpanded })
+
+    // Update sort order store
+    const workspace = useWorkspaceStore.getState().currentWorkspace
+    if (workspace) {
+      useFileOrderStore.getState().handlePathDelete(workspace.path, path)
+    }
   }
 })
