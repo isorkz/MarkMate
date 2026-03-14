@@ -12,6 +12,9 @@ import { Markdown } from '@tiptap/markdown'
 import Typography from '@tiptap/extension-typography'
 import Strike from '@tiptap/extension-strike'
 import Highlight from '@tiptap/extension-highlight'
+import Bold from '@tiptap/extension-bold'
+import Italic from '@tiptap/extension-italic'
+import Code from '@tiptap/extension-code'
 import toast from 'react-hot-toast'
 import { useEditorStore, Tab } from '../../stores/editorStore'
 import { useSettingsStore } from '../../stores/settingsStore'
@@ -59,6 +62,9 @@ const RichEditor: React.FC<RichEditorProps> = ({ tab }) => {
         strike: false, // Disable default strike to use custom one with Mod-d shortcut
         link: false, // Disable default Link, we configure our own below
         underline: false, // Disable default Underline, we configure our own below
+        bold: false, // Disable default, re-added below with keepOnSplit: false
+        italic: false,
+        code: false,
       }),
       CodeBlockLowlight.extend({
         addNodeView() {
@@ -97,11 +103,15 @@ const RichEditor: React.FC<RichEditorProps> = ({ tab }) => {
         }
       }).configure({ lowlight }),
       Markdown,
+      Bold.extend({ keepOnSplit: false }),
+      Italic.extend({ keepOnSplit: false }),
+      Code.extend({ keepOnSplit: false }),
       Link.configure({
         openOnClick: false
       }),
-      Underline,
+      Underline.extend({ keepOnSplit: false }),
       Strike.extend({
+        keepOnSplit: false,
         addKeyboardShortcuts() {
           return {
             'Mod-d': () => this.editor.commands.toggleStrike(),
@@ -109,6 +119,7 @@ const RichEditor: React.FC<RichEditorProps> = ({ tab }) => {
         }
       }),
       Highlight.extend({
+        keepOnSplit: false,
         addKeyboardShortcuts() {
           return {
             'Mod-h': () => this.editor.commands.toggleHighlight(),
