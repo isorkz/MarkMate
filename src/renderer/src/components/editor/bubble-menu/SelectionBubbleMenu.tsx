@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
-import { BubbleMenu, Editor } from '@tiptap/react'
+import { BubbleMenu } from '@tiptap/react/menus'
+import type { Editor } from '@tiptap/react'
 import {
   Bold,
   Italic,
@@ -83,10 +84,9 @@ const SelectionBubbleMenu: React.FC<SelectionBubbleMenuProps> = ({ editor }) => 
       editor={editor}
       shouldShow={shouldShow}
       className="bg-white border border-gray-200 rounded-xl shadow-lg"
-      tippyOptions={{
+      options={{
         placement: 'top',
-        moveTransition: 'transform 0.15s ease-out',
-        offset: [0, 12]
+        offset: { mainAxis: 12 }
       }}
     >
       {isLinkInputOpen ? (

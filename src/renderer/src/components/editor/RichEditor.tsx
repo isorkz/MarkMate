@@ -2,18 +2,14 @@ import React, { useEffect, useRef } from 'react'
 import { useEditor, EditorContent, ReactNodeViewRenderer } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
-import Table from '@tiptap/extension-table'
-import TableRow from '@tiptap/extension-table-row'
-import TableCell from '@tiptap/extension-table-cell'
-import TableHeader from '@tiptap/extension-table-header'
+import { Table, TableRow, TableCell, TableHeader } from '@tiptap/extension-table'
 import Link from '@tiptap/extension-link'
 import Image from '@tiptap/extension-image'
 import TaskList from '@tiptap/extension-task-list'
 import TaskItem from '@tiptap/extension-task-item'
 import Underline from '@tiptap/extension-underline'
-import { Markdown } from 'tiptap-markdown'
+import { Markdown } from '@tiptap/markdown'
 import Typography from '@tiptap/extension-typography'
-import BubbleMenu from '@tiptap/extension-bubble-menu'
 import Strike from '@tiptap/extension-strike'
 import Highlight from '@tiptap/extension-highlight'
 import toast from 'react-hot-toast'
@@ -60,7 +56,9 @@ const RichEditor: React.FC<RichEditorProps> = ({ tab }) => {
           levels: [1, 2, 3, 4, 5, 6]
         },
         codeBlock: false, // Disable default code block to use CodeBlockLowlight instead
-        strike: false // Disable default strike to use custom one with Mod-d shortcut
+        strike: false, // Disable default strike to use custom one with Mod-d shortcut
+        link: false, // Disable default Link, we configure our own below
+        underline: false, // Disable default Underline, we configure our own below
       }),
       CodeBlockLowlight.extend({
         addNodeView() {
@@ -98,16 +96,7 @@ const RichEditor: React.FC<RichEditorProps> = ({ tab }) => {
           }
         }
       }).configure({ lowlight }),
-      Markdown.configure({
-        html: true,                  // Allow HTML input/output (see tests in tiptap-markdown source code for examples)
-        tightLists: true,            // No <p> inside <li> in markdown output
-        tightListClass: 'tight',     // Add class to <ul> allowing you to remove <p> margins when tight
-        bulletListMarker: '*',       // <li> prefix in markdown output
-        linkify: false,              // Create links from "https://..." text
-        breaks: false,               // New lines (\n) in markdown input are converted to <br>
-        transformPastedText: false,  // Allow to paste markdown text in the editor
-        transformCopiedText: false,  // Copied text is transformed to markdown
-      }),
+      Markdown,
       Link.configure({
         openOnClick: false
       }),
@@ -125,23 +114,6 @@ const RichEditor: React.FC<RichEditorProps> = ({ tab }) => {
             'Mod-h': () => this.editor.commands.toggleHighlight(),
           }
         },
-        addStorage() {
-          const parentStorage = this.parent?.()
-          const parentMarkdown = parentStorage?.markdown
-
-          // Highlight markdown uses <mark>highlighted text</mark>
-          return {
-            ...parentStorage,
-            markdown: {
-              ...parentMarkdown,
-              serialize: {
-                ...parentMarkdown?.serialize,
-                open: '<mark>',
-                close: '</mark>'
-              }
-            }
-          }
-        }
       }),
       Image.configure({
         inline: true,
@@ -166,16 +138,16 @@ const RichEditor: React.FC<RichEditorProps> = ({ tab }) => {
       PageLink, // handle the page links in the rich editor
       PageLinkParser, // parsing [[page link]] in md content to PageLink nodes when loading file
       Typography,
-      BubbleMenu,
     ],
     content: tab?.content || '',
+    contentType: 'markdown',
     onUpdate: ({ editor, transaction }) => {
       try {
         if (!tab || !transaction?.docChanged) {
           return
         }
 
-        const markdown = editor.storage.markdown.getMarkdown()
+        const markdown = editor.getMarkdown()
 
         if (markdown !== lastMarkdownRef.current) {
           lastMarkdownRef.current = markdown
@@ -233,10 +205,10 @@ const RichEditor: React.FC<RichEditorProps> = ({ tab }) => {
     // If user is typing in the Rich editor, only use onUpdate() to update content
     if (tab && editor && !editor.isFocused) {
       try {
-        const markdown = editor.storage.markdown.getMarkdown()
+        const markdown = editor.getMarkdown()
         if (markdown !== tab.content) {
           // false (default): Silent update - doesn't trigger onUpdate callback
-          editor.commands.setContent(tab.content, false)
+          editor.commands.setContent(tab.content, { emitUpdate: false, contentType: 'markdown' })
         }
       } catch (error) {
         console.error('Markdown conversion failed:', error)

@@ -13,6 +13,11 @@ declare module '@tiptap/core' {
       setPageLink: (attributes: { pageName: string; relativePath: string }) => ReturnType
     }
   }
+  interface Storage {
+    pageLink: {
+      showSelector?: (...args: any[]) => void
+    }
+  }
 }
 
 export const PageLink = Node.create<PageLinkOptions>({
@@ -70,15 +75,8 @@ export const PageLink = Node.create<PageLinkOptions>({
     }
   },
 
-  addStorage() {
-    return {
-      // Serialize the page link node to Markdown content
-      markdown: {
-        serialize: (state: any, node: any) => {
-          state.write(`[[${node.attrs.relativePath}]]`)
-        }
-      }
-    }
+  renderMarkdown(node: any) {
+    return `[[${node.attrs.relativePath}]]`
   },
 
   // Handle when user types [[page link]], convert it to a page link node

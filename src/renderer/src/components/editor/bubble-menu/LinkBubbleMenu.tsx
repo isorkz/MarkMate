@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
-import { BubbleMenu, Editor } from '@tiptap/react'
+import { BubbleMenu } from '@tiptap/react/menus'
+import type { Editor } from '@tiptap/react'
 import { ExternalLink, Edit3, Unlink, Check, X } from 'lucide-react'
 
 interface LinkBubbleMenuProps {

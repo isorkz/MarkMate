@@ -2,9 +2,15 @@
 // This handles the popup behavior, positioning, and lifecycle of the slash commands menu
 
 import { ReactRenderer } from '@tiptap/react'
-import tippy from 'tippy.js'
+import { computePosition, flip, shift, offset } from '@floating-ui/dom'
 import { commandsList } from './commands'
 import { CommandsList, CommandsListRef } from './CommandsList'
+
+function createVirtualElement(clientRect: () => DOMRect | null) {
+  return {
+    getBoundingClientRect: () => clientRect() ?? new DOMRect()
+  }
+}
 
 // Configuration object for TipTap's suggestion plugin
 // Defines how the slash commands popup behaves
@@ -14,19 +20,33 @@ export const suggestion = {
     const filteredItems = commandsList.filter(item =>
       item.title.toLowerCase().startsWith(query.toLowerCase())
     )
-    // Return filtered items (empty array will trigger popup to close)
     return filteredItems
   },
 
   // Render function that creates and manages the popup
   render: () => {
     let reactRenderer: ReactRenderer
-    let popup: any
+    let popup: HTMLElement | null = null
+    let virtualElement: ReturnType<typeof createVirtualElement>
+
+    const updatePosition = () => {
+      if (!popup || !virtualElement) return
+      computePosition(virtualElement, popup, {
+        placement: 'bottom-start',
+        middleware: [offset(4), flip(), shift({ padding: 8 })],
+      }).then(({ x, y }) => {
+        if (popup) {
+          Object.assign(popup.style, {
+            left: `${x}px`,
+            top: `${y}px`,
+          })
+        }
+      })
+    }
 
     return {
       // Called when suggestion popup should appear
       onStart: (props: any) => {
-        // Create React component renderer for the commands list
         reactRenderer = new ReactRenderer(CommandsList, {
           props,
           editor: props.editor,
@@ -36,18 +56,15 @@ export const suggestion = {
           return
         }
 
-        // Create Tippy.js popup with the React component
-        const tippyInstances = tippy('body', {
-          getReferenceClientRect: props.clientRect,
-          appendTo: () => document.body,
-          content: reactRenderer.element,
-          showOnCreate: true,
-          interactive: true,
-          trigger: 'manual',
-          placement: 'bottom-start',
-        })
-        
-        popup = tippyInstances[0]
+        virtualElement = createVirtualElement(props.clientRect)
+
+        popup = document.createElement('div')
+        popup.style.position = 'absolute'
+        popup.style.zIndex = '9999'
+        popup.appendChild(reactRenderer.element)
+        document.body.appendChild(popup)
+
+        updatePosition()
       },
 
       // Called when popup needs to be updated (e.g., position change)
@@ -58,29 +75,26 @@ export const suggestion = {
           return
         }
 
-        // Update popup position
-        popup.setProps({
-          getReferenceClientRect: props.clientRect,
-        })
+        virtualElement = createVirtualElement(props.clientRect)
+        updatePosition()
       },
 
       // Handle keyboard events
       onKeyDown(props: any) {
         if (props.event.key === 'Escape') {
           if (popup) {
-            popup.hide()
+            popup.style.display = 'none'
           }
           return true
         }
 
-        // Delegate keyboard handling to the CommandsList component
         return (reactRenderer?.ref as CommandsListRef)?.onKeyDown(props)
       },
 
       // Cleanup when popup is closed
       onExit() {
         if (popup) {
-          popup.destroy()
+          popup.remove()
           popup = null
         }
         if (reactRenderer) {

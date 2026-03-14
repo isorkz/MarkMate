@@ -62,9 +62,9 @@ export const useRichEditorSearch = (editor: Editor | null) => {
   }, [debouncedSearchTerm, editor])
 
   // Get search results from extension
-  const searchResults = editor?.storage.searchAndReplace || {}
-  const totalMatches = searchResults.results?.length || 0
-  const currentMatchIndex = searchResults.resultIndex || 0
+  const searchResults = editor?.storage.searchAndReplace
+  const totalMatches = searchResults?.results?.length || 0
+  const currentMatchIndex = searchResults?.resultIndex || 0
 
   // Keyboard shortcuts
   useEffect(() => {
