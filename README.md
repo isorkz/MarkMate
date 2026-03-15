@@ -31,4 +31,4 @@ $ npm run build:linux
 
 ## Web Version
 
-See [WEB_VERSION.md](WEB_VERSION.md) for details on setting up the web version of MarkMate.
+See [web_version.md](docs/web_version.md) for details on setting up the web version of MarkMate.
