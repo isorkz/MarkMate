@@ -7,8 +7,9 @@
 1. Setup environment variable
 
 For MarkMate web version, workspace path and access key are required:
-* Workspace path must be specified in the environment variable for web version.
-* Access key is used for API authentication.
+
+- Workspace path must be specified in the environment variable for web version.
+- Access key is used for API authentication.
 
 ```bash
 export MARKMATE_WEB_WORKSPACE_PATH=/path/to/your/markdown/workspace
@@ -23,7 +24,7 @@ cp web-server/.env.example web-server/.env
 ```
 
 2. Setup your git repo for markdown workspace, including github username, email, remote-url:
-https://username:your_token@github.com/username/repo.git
+   https://username:your_token@github.com/username/repo.git
 
 3. Start web version
 
@@ -38,6 +39,8 @@ npm run start:web
 ```
 
 4. Setup `your-secret-access-token` in MarkMate settings modal.
+
+After the web app loads, it automatically opens the workspace configured by `MARKMATE_WEB_WORKSPACE_PATH`. File operations still require the browser to send the matching web access key.
 
 ## Layered Architecture Design
 
