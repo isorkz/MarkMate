@@ -15,6 +15,8 @@ import Highlight from '@tiptap/extension-highlight'
 import Bold from '@tiptap/extension-bold'
 import Italic from '@tiptap/extension-italic'
 import Code from '@tiptap/extension-code'
+import { Paragraph } from '@tiptap/extension-paragraph'
+import type { JSONContent, MarkdownParseHelpers, MarkdownToken } from '@tiptap/core'
 import toast from 'react-hot-toast'
 import { useEditorStore, Tab } from '../../stores/editorStore'
 import { useSettingsStore } from '../../stores/settingsStore'
@@ -41,6 +43,25 @@ import { common, createLowlight } from 'lowlight'
 // Create lowlight instance
 const lowlight = createLowlight(common)
 
+const EMPTY_PARAGRAPH_MARKDOWN = '&nbsp;'
+const NBSP_CHAR = '\u00A0'
+
+const ParagraphWithInlineImages = Paragraph.extend({
+  parseMarkdown: (token: MarkdownToken, helpers: MarkdownParseHelpers): JSONContent => {
+    const content = helpers.parseInline(token.tokens || [])
+
+    if (
+      content.length === 1 &&
+      content[0].type === 'text' &&
+      (content[0].text === EMPTY_PARAGRAPH_MARKDOWN || content[0].text === NBSP_CHAR)
+    ) {
+      return helpers.createNode('paragraph', undefined, [])
+    }
+
+    return helpers.createNode('paragraph', undefined, content)
+  }
+})
+
 interface RichEditorProps {
   tab: Tab
 }
@@ -65,6 +86,7 @@ const RichEditor: React.FC<RichEditorProps> = ({ tab }) => {
         bold: false, // Disable default, re-added below with keepOnSplit: false
         italic: false,
         code: false,
+        paragraph: false
       }),
       CodeBlockLowlight.extend({
         addNodeView() {
@@ -96,13 +118,14 @@ const RichEditor: React.FC<RichEditorProps> = ({ tab }) => {
               return false
             },
             // Tab - indent in code blocks
-            'Tab': ({ editor }) => CodeBlockUtils.indentTab(editor),
+            Tab: ({ editor }) => CodeBlockUtils.indentTab(editor),
             // Shift+Tab - unindent in code blocks
             'Shift-Tab': ({ editor }) => CodeBlockUtils.unindentTab(editor)
           }
         }
       }).configure({ lowlight }),
       Markdown,
+      ParagraphWithInlineImages,
       Bold.extend({ keepOnSplit: false }),
       Italic.extend({ keepOnSplit: false }),
       Code.extend({ keepOnSplit: false }),
@@ -114,7 +137,7 @@ const RichEditor: React.FC<RichEditorProps> = ({ tab }) => {
         keepOnSplit: false,
         addKeyboardShortcuts() {
           return {
-            'Mod-d': () => this.editor.commands.toggleStrike(),
+            'Mod-d': () => this.editor.commands.toggleStrike()
           }
         }
       }),
@@ -122,33 +145,33 @@ const RichEditor: React.FC<RichEditorProps> = ({ tab }) => {
         keepOnSplit: false,
         addKeyboardShortcuts() {
           return {
-            'Mod-h': () => this.editor.commands.toggleHighlight(),
+            'Mod-h': () => this.editor.commands.toggleHighlight()
           }
-        },
+        }
       }),
       Image.configure({
         inline: true,
-        allowBase64: true,
+        allowBase64: true
       }),
       Table.configure({
-        resizable: true,
+        resizable: true
       }),
       TableRow,
       TableHeader,
       TableCell,
       TaskList,
       TaskItem.configure({
-        nested: true,
+        nested: true
       }),
       SearchAndReplace.configure({
-        disableRegex: false,
+        disableRegex: false
       }),
       SlashCommands.configure({
-        suggestion,
+        suggestion
       }),
       PageLink, // handle the page links in the rich editor
       PageLinkParser, // parsing [[page link]] in md content to PageLink nodes when loading file
-      Typography,
+      Typography
     ],
     content: tab?.content || '',
     contentType: 'markdown',
@@ -190,7 +213,7 @@ const RichEditor: React.FC<RichEditorProps> = ({ tab }) => {
           // Check if clipboard contains images
           if (event.clipboardData) {
             const items = Array.from(event.clipboardData.items)
-            const imageItem = items.find(item => item.type.startsWith('image/'))
+            const imageItem = items.find((item) => item.type.startsWith('image/'))
 
             if (imageItem) {
               // Prevent default paste and handle async operation
@@ -210,7 +233,7 @@ const RichEditor: React.FC<RichEditorProps> = ({ tab }) => {
     }
   })
 
-  // Update Rich editor content when user is typing on Source editor or when content changes externally 
+  // Update Rich editor content when user is typing on Source editor or when content changes externally
   useEffect(() => {
     // '!editor.isFocused' ensures when user is only typing on Source editor
     // If user is typing in the Rich editor, only use onUpdate() to update content
@@ -226,7 +249,7 @@ const RichEditor: React.FC<RichEditorProps> = ({ tab }) => {
         toast.error('Markdown conversion failed')
       }
     }
-  }, [tab?.content, editor?.isFocused, showSourceEditor])
+  }, [editor, editor?.isFocused, showSourceEditor, tab, tab?.content])
 
   // Update editor editable state when read-only mode changes
   useEffect(() => {
@@ -239,7 +262,7 @@ const RichEditor: React.FC<RichEditorProps> = ({ tab }) => {
     if (tab) {
       lastMarkdownRef.current = tab.content ?? ''
     }
-  }, [tab?.id, tab?.content])
+  }, [tab, tab?.id, tab?.content])
 
   // Resolve image paths when content is loaded or workspace/tab changes
   useEffect(() => {
@@ -255,14 +278,7 @@ const RichEditor: React.FC<RichEditorProps> = ({ tab }) => {
   }, [editor, currentWorkspace, tab, tab?.content])
 
   // Initialize the page link selector state and functions
-  const {
-    showSelector,
-    isOpen,
-    files,
-    position,
-    onSelect,
-    onClose
-  } = usePageLinkSelector()
+  const { showSelector, isOpen, files, position, onSelect, onClose } = usePageLinkSelector()
 
   // Store the showSelector function for slash commands
   useEffect(() => {
