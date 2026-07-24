@@ -120,6 +120,18 @@
     @apply h-5;
   }
 
+  .RichEditorView [data-type='inline-math'] {
+    display: inline-block;
+    vertical-align: middle;
+  }
+
+  .RichEditorView [data-type='block-math'] {
+    margin: 1rem 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    text-align: center;
+  }
+
   .RichEditorView ul {
     @apply mb-4 pl-6 list-disc;
   }

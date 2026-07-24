@@ -17,6 +17,7 @@ import Italic from '@tiptap/extension-italic'
 import Code from '@tiptap/extension-code'
 import { Paragraph } from '@tiptap/extension-paragraph'
 import type { JSONContent, MarkdownParseHelpers, MarkdownToken } from '@tiptap/core'
+import 'katex/dist/katex.min.css'
 import toast from 'react-hot-toast'
 import { useEditorStore, Tab } from '../../stores/editorStore'
 import { useSettingsStore } from '../../stores/settingsStore'
@@ -37,6 +38,10 @@ import { PageLink } from './extensions/page-link/PageLink'
 import { PageLinkParser } from './extensions/page-link/PageLinkParser'
 import PageLinkSelector from './extensions/page-link/ui/PageLinkSelector'
 import { usePageLinkSelector } from './extensions/page-link/hooks/usePageLinkSelector'
+import {
+  BlockMathWithLatexDelimiters,
+  InlineMathWithLatexDelimiters
+} from './extensions/math/MathExtensions'
 // load all languages with "all" or common languages with "common"
 import { common, createLowlight } from 'lowlight'
 
@@ -125,6 +130,18 @@ const RichEditor: React.FC<RichEditorProps> = ({ tab }) => {
         }
       }).configure({ lowlight }),
       Markdown,
+      BlockMathWithLatexDelimiters.configure({
+        katexOptions: {
+          displayMode: true,
+          throwOnError: false
+        }
+      }),
+      InlineMathWithLatexDelimiters.configure({
+        katexOptions: {
+          displayMode: false,
+          throwOnError: false
+        }
+      }),
       ParagraphWithInlineImages,
       Bold.extend({ keepOnSplit: false }),
       Italic.extend({ keepOnSplit: false }),
