@@ -2,6 +2,7 @@ import React from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import ChatCodeBlock from './ChatCodeBlock'
+import MermaidDiagram from '../MermaidDiagram'
 
 interface MarkdownContentProps {
   content: string
@@ -14,20 +15,23 @@ const MarkdownContent: React.FC<MarkdownContentProps> = ({ content, isStreaming 
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
-          code({ node, className, children, ...props }) {
+          code({ className, children, ...props }) {
             const match = /language-(\w+)/.exec(className || '')
 
             // Check if it's inline code by checking if className starts with 'language-'
             // Block code has 'language-xxx' or no className, inline code typically has no className
-            const isBlockCode = className?.startsWith('language-') || String(children).includes('\n')
+            const isBlockCode =
+              className?.startsWith('language-') || String(children).includes('\n')
 
             if (isBlockCode) {
-              return (
-                <ChatCodeBlock
-                  language={match ? match[1] : ''}
-                  value={String(children).replace(/\n$/, '')}
-                />
-              )
+              const language = match ? match[1] : ''
+              const value = String(children).replace(/\n$/, '')
+
+              if (language.toLowerCase() === 'mermaid') {
+                return <MermaidDiagram definition={value} />
+              }
+
+              return <ChatCodeBlock language={language} value={value} />
             } else {
               return (
                 <code className={className} {...props}>
@@ -58,9 +62,7 @@ const MarkdownContent: React.FC<MarkdownContentProps> = ({ content, isStreaming 
       >
         {content}
       </ReactMarkdown>
-      {isStreaming && (
-        <span className="inline-block w-2 h-5 bg-gray-400 animate-pulse ml-1" />
-      )}
+      {isStreaming && <span className="inline-block w-2 h-5 bg-gray-400 animate-pulse ml-1" />}
     </div>
   )
 }

@@ -150,3 +150,52 @@
   background: #e5e7eb;
   margin: 16px 0;
 }
+
+.mermaid-diagram {
+  display: flex;
+  min-height: 5rem;
+  align-items: center;
+  justify-content: center;
+  overflow-x: auto;
+  margin: 0.75rem 0;
+  padding: 1rem;
+  border: 1px solid rgb(229, 231, 235);
+  border-radius: 0.5rem;
+  background: white;
+  color: rgb(55, 65, 81);
+}
+
+.mermaid-diagram svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+.mermaid-diagram-loading::after {
+  content: 'Rendering Mermaid diagram…';
+  color: rgb(107, 114, 128);
+  font-size: 0.75rem;
+}
+
+.mermaid-diagram-error {
+  min-height: auto;
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 0.25rem;
+  border-color: rgb(254, 202, 202);
+  background: rgb(254, 242, 242);
+  color: rgb(185, 28, 28);
+  font-size: 0.75rem;
+}
+
+.prose-invert .mermaid-diagram {
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgb(31, 41, 55);
+  color: rgb(229, 231, 235);
+}
+
+.prose-invert .mermaid-diagram-error {
+  border-color: rgba(248, 113, 113, 0.5);
+  background: rgba(127, 29, 29, 0.25);
+  color: rgb(254, 202, 202);
+}

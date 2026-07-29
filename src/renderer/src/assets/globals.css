@@ -258,6 +258,61 @@
     border: none;
   }
 
+  .code-block-wrapper {
+    margin: 1.5rem 0;
+  }
+
+  .code-block-wrapper pre {
+    margin: 0;
+  }
+
+  .code-block-toolbar {
+    position: absolute;
+    right: 0.25rem;
+    top: 0.25rem;
+    z-index: 2;
+    display: flex;
+    gap: 0.25rem;
+    opacity: 0;
+    transition: opacity 150ms ease;
+  }
+
+  .code-block-wrapper:hover .code-block-toolbar,
+  .code-block-wrapper:focus-within .code-block-toolbar {
+    opacity: 1;
+  }
+
+  .code-block-action,
+  .code-block-language {
+    border: 0;
+    border-radius: 0.25rem;
+    background: rgb(243, 244, 246);
+    color: rgb(55, 65, 81);
+    font-size: 0.75rem;
+    line-height: 1rem;
+  }
+
+  .code-block-action {
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+  }
+
+  .code-block-action:hover {
+    background: rgb(229, 231, 235);
+  }
+
+  .code-block-language {
+    padding: 0.125rem;
+  }
+
+  .RichEditorView .mermaid-code-block {
+    min-height: 5rem;
+  }
+
+  .RichEditorView .mermaid-source-hidden {
+    display: none;
+  }
+
   /* Links */
   .RichEditorView a {
     color: var(--link-color);
