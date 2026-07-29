@@ -171,6 +171,25 @@
   height: auto;
 }
 
+.mermaid-diagram-trigger {
+  width: 100%;
+  cursor: zoom-in;
+  font: inherit;
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.mermaid-diagram-trigger:hover {
+  border-color: rgb(156, 163, 175);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+}
+
+.mermaid-diagram-trigger:focus-visible {
+  outline: 2px solid rgb(59, 130, 246);
+  outline-offset: 2px;
+}
+
 .mermaid-diagram-loading::after {
   content: 'Rendering Mermaid diagram…';
   color: rgb(107, 114, 128);
@@ -198,4 +217,84 @@
   border-color: rgba(248, 113, 113, 0.5);
   background: rgba(127, 29, 29, 0.25);
   color: rgb(254, 202, 202);
+}
+
+.mermaid-fullscreen-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  background: rgba(15, 23, 42, 0.92);
+  backdrop-filter: blur(4px);
+}
+
+.mermaid-fullscreen-header {
+  display: flex;
+  flex: 0 0 3.5rem;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.25rem;
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.mermaid-fullscreen-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: 0;
+  border-radius: 0.375rem;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  cursor: pointer;
+}
+
+.mermaid-fullscreen-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.mermaid-fullscreen-close:focus-visible {
+  outline: 2px solid white;
+  outline-offset: 2px;
+}
+
+.mermaid-fullscreen-close svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.mermaid-fullscreen-content {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  padding: 0 1.5rem 1.5rem;
+}
+
+.mermaid-fullscreen-diagram {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  align-items: center;
+  justify-content: center;
+  overflow: auto;
+  padding: 1.5rem;
+  border-radius: 0.75rem;
+  background: white;
+}
+
+.mermaid-fullscreen-diagram svg {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+}
+
+.mermaid-fullscreen-dark .mermaid-fullscreen-diagram {
+  background: rgb(17, 24, 39);
 }

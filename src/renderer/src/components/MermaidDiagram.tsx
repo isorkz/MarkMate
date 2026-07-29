@@ -1,4 +1,6 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useId, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
+import { X } from 'lucide-react'
 import { useSettingsStore } from '../stores/settingsStore'
 import { renderMermaid } from '../utils/mermaidRenderer'
 
@@ -22,6 +24,10 @@ const getErrorMessage = (error: unknown): string => {
 
 const MermaidDiagram: React.FC<MermaidDiagramProps> = ({ definition }) => {
   const theme = useSettingsStore((state) => state.appearanceSettings.theme)
+  const dialogTitleId = useId()
+  const triggerRef = useRef<HTMLDivElement>(null)
+  const closeButtonRef = useRef<HTMLButtonElement>(null)
+  const [isFullscreen, setIsFullscreen] = useState(false)
   const [diagram, setDiagram] = useState<DiagramState>({
     svg: '',
     error: '',
@@ -60,6 +66,28 @@ const MermaidDiagram: React.FC<MermaidDiagramProps> = ({ definition }) => {
     }
   }, [definition, theme])
 
+  useEffect(() => {
+    if (!isFullscreen) {
+      return undefined
+    }
+
+    const trigger = triggerRef.current
+
+    const handleKeyDown = (event: KeyboardEvent): void => {
+      if (event.key === 'Escape') {
+        setIsFullscreen(false)
+      }
+    }
+
+    closeButtonRef.current?.focus()
+    window.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+      trigger?.focus()
+    }
+  }, [isFullscreen])
+
   if (diagram.error) {
     return (
       <div className="mermaid-diagram mermaid-diagram-error" role="alert">
@@ -69,13 +97,79 @@ const MermaidDiagram: React.FC<MermaidDiagramProps> = ({ definition }) => {
     )
   }
 
+  if (!diagram.svg) {
+    return (
+      <div
+        className="mermaid-diagram mermaid-diagram-loading"
+        role="status"
+        aria-label="Rendering Mermaid diagram"
+      />
+    )
+  }
+
   return (
-    <div
-      className={`mermaid-diagram ${diagram.isLoading ? 'mermaid-diagram-loading' : ''}`}
-      role="img"
-      aria-label="Mermaid diagram"
-      dangerouslySetInnerHTML={{ __html: diagram.svg }}
-    />
+    <>
+      <div
+        ref={triggerRef}
+        className={`mermaid-diagram mermaid-diagram-trigger ${diagram.isLoading ? 'mermaid-diagram-loading' : ''}`}
+        contentEditable={false}
+        role="button"
+        tabIndex={0}
+        aria-haspopup="dialog"
+        aria-label="Open Mermaid diagram in fullscreen"
+        title="Open fullscreen preview"
+        onClick={(event) => {
+          event.stopPropagation()
+          setIsFullscreen(true)
+        }}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault()
+            event.stopPropagation()
+            setIsFullscreen(true)
+          }
+        }}
+        dangerouslySetInnerHTML={{ __html: diagram.svg }}
+      />
+
+      {isFullscreen &&
+        createPortal(
+          <div
+            className={`mermaid-fullscreen-overlay ${theme === 'dark' ? 'mermaid-fullscreen-dark' : ''}`}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={dialogTitleId}
+            onClick={(event) => {
+              event.stopPropagation()
+              setIsFullscreen(false)
+            }}
+          >
+            <div className="mermaid-fullscreen-header">
+              <span id={dialogTitleId}>Mermaid preview</span>
+              <button
+                ref={closeButtonRef}
+                type="button"
+                className="mermaid-fullscreen-close"
+                aria-label="Close fullscreen preview"
+                title="Close"
+                onClick={() => setIsFullscreen(false)}
+              >
+                <X aria-hidden="true" />
+              </button>
+            </div>
+            <div className="mermaid-fullscreen-content">
+              <div
+                className="mermaid-fullscreen-diagram"
+                role="img"
+                aria-label="Mermaid diagram fullscreen preview"
+                onClick={(event) => event.stopPropagation()}
+                dangerouslySetInnerHTML={{ __html: diagram.svg }}
+              />
+            </div>
+          </div>,
+          document.body
+        )}
+    </>
   )
 }
 
