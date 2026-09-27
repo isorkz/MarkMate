@@ -82,6 +82,7 @@ const SelectionBubbleMenu: React.FC<SelectionBubbleMenuProps> = ({ editor }) => 
   return (
     <BubbleMenu
       editor={editor}
+      pluginKey="selectionBubbleMenu"
       shouldShow={shouldShow}
       className="bg-white border border-gray-200 rounded-xl shadow-lg"
       options={{

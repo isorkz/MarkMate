@@ -36,6 +36,7 @@ import { SlashCommands } from './extensions/slash-commands/SlashCommands'
 import { suggestion } from './extensions/slash-commands/suggestion'
 import { PageLink } from './extensions/page-link/PageLink'
 import { PageLinkParser } from './extensions/page-link/PageLinkParser'
+import { AnchorLinks } from './extensions/anchor-links/AnchorLinks'
 import PageLinkSelector from './extensions/page-link/ui/PageLinkSelector'
 import { usePageLinkSelector } from './extensions/page-link/hooks/usePageLinkSelector'
 import {
@@ -149,6 +150,7 @@ const RichEditor: React.FC<RichEditorProps> = ({ tab }) => {
       Link.configure({
         openOnClick: false
       }),
+      AnchorLinks,
       Underline.extend({ keepOnSplit: false }),
       Strike.extend({
         keepOnSplit: false,

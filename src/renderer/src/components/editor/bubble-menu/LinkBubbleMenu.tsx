@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { BubbleMenu } from '@tiptap/react/menus'
 import type { Editor } from '@tiptap/react'
 import { ExternalLink, Edit3, Unlink, Check, X } from 'lucide-react'
+import { navigateToAnchor } from '../extensions/anchor-links/AnchorLinks'
 
 interface LinkBubbleMenuProps {
   editor: Editor
@@ -66,7 +67,7 @@ const LinkBubbleMenu: React.FC<LinkBubbleMenuProps> = ({ editor }) => {
 
   const handleOpenLink = () => {
     const href = editor.getAttributes('link').href
-    if (href) {
+    if (href && !navigateToAnchor(editor.view, href)) {
       window.open(href, '_blank')
     }
   }
@@ -79,6 +80,7 @@ const LinkBubbleMenu: React.FC<LinkBubbleMenuProps> = ({ editor }) => {
     return (
       <BubbleMenu
         editor={editor}
+        pluginKey="linkBubbleMenu"
         shouldShow={shouldShow}
         className="bg-white border border-gray-200 rounded-lg shadow-lg p-3 space-y-2 min-w-80"
       >
@@ -129,6 +131,7 @@ const LinkBubbleMenu: React.FC<LinkBubbleMenuProps> = ({ editor }) => {
   return (
     <BubbleMenu
       editor={editor}
+      pluginKey="linkBubbleMenu"
       shouldShow={shouldShow}
       className="bg-white border border-gray-200 rounded-xl shadow-lg flex items-center"
     >
