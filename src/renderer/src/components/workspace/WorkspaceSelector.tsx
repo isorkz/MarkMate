@@ -1,7 +1,9 @@
 import React, { useState } from 'react'
 import { useWorkspaceStore } from '../../stores/workspaceStore'
 import { useFileSystemStore } from '../../stores/fileSystemStore'
-import { Folder, ChevronDown, Check, Plus, Folders } from 'lucide-react'
+import { Folder, ChevronDown, Check, Plus, Folders, X } from 'lucide-react'
+import toast from 'react-hot-toast'
+import { useEditorStore } from '../../stores/editorStore'
 import { loadFileTree } from '../../utils/fileOperations'
 import WorkspaceContextMenu from './WorkspaceContextMenu'
 import { adapters } from '../../adapters'
@@ -12,7 +14,7 @@ interface WorkspaceSelectorProps {
 }
 
 const WorkspaceSelector: React.FC<WorkspaceSelectorProps> = ({ onCreateFile, onCreateFolder }) => {
-  const { workspaces, currentWorkspace, setCurrentWorkspace, addWorkspace } = useWorkspaceStore()
+  const { workspaces, currentWorkspace, setCurrentWorkspace, addWorkspace, removeWorkspace } = useWorkspaceStore()
   const { setFileTree } = useFileSystemStore()
   const [showDropdown, setShowDropdown] = useState(false)
   const [contextMenu, setContextMenu] = useState<{
@@ -38,6 +40,35 @@ const WorkspaceSelector: React.FC<WorkspaceSelectorProps> = ({ onCreateFile, onC
       console.error('Failed to open workspace:', error)
     }
     setShowDropdown(false)
+  }
+
+  const handleRemoveWorkspace = async (id: string) => {
+    const state = useWorkspaceStore.getState()
+    if (state.currentWorkspace?.id !== id) {
+      removeWorkspace(id)
+      return
+    }
+
+    if (useEditorStore.getState().tabs.some(tab => tab.hasUnsavedChanges)) {
+      toast.error('Please save your changes before removing this workspace.')
+      return
+    }
+
+    const nextWorkspace = state.workspaces.find(workspace => workspace.id !== id) ?? null
+    useEditorStore.setState({ tabs: [], activeTabId: null })
+    useFileSystemStore.setState({ fileTree: [], expandedFolders: new Set() })
+    removeWorkspace(id)
+    setCurrentWorkspace(nextWorkspace)
+    setShowDropdown(false)
+
+    if (nextWorkspace) {
+      try {
+        await loadFileTree(nextWorkspace.path, setFileTree)
+      } catch (error) {
+        console.error('Failed to load workspace after removal:', error)
+        toast.error('Failed to load the next workspace. Please select it again.')
+      }
+    }
   }
 
   const handleContextMenu = (e: React.MouseEvent) => {
@@ -83,17 +114,30 @@ const WorkspaceSelector: React.FC<WorkspaceSelectorProps> = ({ onCreateFile, onC
       {showDropdown && (
         <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-sm z-20 py-1">
           {workspaces.map((workspace) => (
-            <button
+            <div
               key={workspace.id}
-              onClick={() => handleWorkspaceSelect(workspace)}
-              className="w-full px-3 py-1.5 text-left text-sm hover:bg-gray-50 flex items-center gap-2"
+              className="flex items-center px-1 hover:bg-gray-50"
             >
-              <Folder className="w-4 h-4 text-gray-500" />
-              <span className="truncate text-gray-700">{workspace.name}</span>
-              {workspace.id === currentWorkspace?.id && (
-                <Check className="ml-auto w-3 h-3 text-blue-600" />
-              )}
-            </button>
+              <button
+                onClick={() => handleWorkspaceSelect(workspace)}
+                title={workspace.path}
+                className="min-w-0 flex-1 px-2 py-1.5 text-left text-sm flex items-center gap-2"
+              >
+                <Folder className="w-4 h-4 shrink-0 text-gray-500" />
+                <span className="truncate text-gray-700">{workspace.name}</span>
+                {workspace.id === currentWorkspace?.id && (
+                  <Check className="ml-auto w-3 h-3 shrink-0 text-blue-600" />
+                )}
+              </button>
+              <button
+                onClick={() => handleRemoveWorkspace(workspace.id)}
+                aria-label={`Remove workspace ${workspace.name}`}
+                title="Remove from list (files stay on disk)"
+                className="shrink-0 p-2 rounded text-gray-400 hover:text-red-600 hover:bg-red-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
           ))}
 
           {workspaces.length > 0 && <div className="border-t border-gray-100 my-1" />}
