@@ -10,9 +10,6 @@ export const useFileSearch = () => {
 
   // Flatten file tree to get all files
   const allFiles = useMemo(() => {
-    if (!debouncedSearchTerm.trim()) {
-      return []
-    }
     return getAllMarkdownFiles(fileTree)
   }, [fileTree])
 
